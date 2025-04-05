@@ -23,6 +23,9 @@ exports.login = async (req, res) => {
                 maxAge: 3600000 // 1 hour
             });
 
+            //create a session for the user
+            query = "INSERT INTO UserSessions (session_id, user_id, device_info, login_time, last_activity, current_cookie) VALUES (?, ?, ?, ?, ?, ?)";
+
             res.status(200).json({ message: "Login successful", token });
         } 
         else {
@@ -39,5 +42,5 @@ exports.login = async (req, res) => {
 
 // Register
 exports.register = async (req, res) => {
-    const {}
+
 }

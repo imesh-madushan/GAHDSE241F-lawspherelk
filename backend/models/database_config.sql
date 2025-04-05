@@ -4,6 +4,7 @@ CREATE TABLE UserSessions (
     device_info TEXT NOT NULL, 
     login_time DATETIME DEFAULT CURRENT_TIMESTAMP, 
     last_activity DATETIME DEFAULT CURRENT_TIMESTAMP, 
+    current_cookie TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
 );
 
