@@ -18,10 +18,10 @@ CREATE TABLE Login (
     account_locked BOOLEAN DEFAULT FALSE
 );
 
-CREATE TABLE Roles (
-    role_id VARCHAR(36) PRIMARY KEY,
-    rolename VARCHAR(50) UNIQUE NOT NULL
-);
+-- CREATE TABLE Roles (
+--     role_id VARCHAR(36) PRIMARY KEY,
+--     rolename VARCHAR(50) UNIQUE NOT NULL
+-- );
 
 CREATE TABLE Users (
     user_id VARCHAR(36) PRIMARY KEY,
@@ -30,17 +30,16 @@ CREATE TABLE Users (
     phone VARCHAR(20) NOT NULL,
     address TEXT NOT NULL,
     created_dt DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    role_id VARCHAR(36) NOT NULL,
-    FOREIGN KEY (role_id) REFERENCES Roles(role_id)
+    role ENUM('OIC', 'Crime OIC', 'Sub Inspector', 'Sergeant', 'Police Constable', 'Forensic Leader') NOT NULL,
 );
 
 CREATE TABLE Complaints (
     complain_id VARCHAR(36) PRIMARY KEY,
     description TEXT NOT NULL,
-    complain_dt DATETIME DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR(50),
-    officer_id VARCHAR(36),
-    complainer_id VARCHAR(36),
+    complain_dt DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    officer_id VARCHAR(36) NOT NULL,
+    first_evidance_id VARCHAR(36),
     FOREIGN KEY (officer_id) REFERENCES Users(user_id),
     FOREIGN KEY (complainer_id) REFERENCES Evidance_Witnesses(nic)
 );
@@ -48,12 +47,12 @@ CREATE TABLE Complaints (
 CREATE TABLE Cases (
     case_id VARCHAR(36) PRIMARY KEY,
     topic VARCHAR(255) NOT NULL,
-    case_type VARCHAR(255),
-    status VARCHAR(50),
+    case_type VARCHAR(255) NOT NULL,
+    status VARCHAR(50) NOT NULL,
     started_dt DATETIME,
     end_dt DATETIME,
     leader_id VARCHAR(36),
-    complain_id VARCHAR(36),
+    complain_id VARCHAR(36) NOT NULL,
     FOREIGN KEY (leader_id) REFERENCES Users(user_id),
     FOREIGN KEY (complain_id) REFERENCES Complaints(complain_id)
 );
@@ -82,6 +81,7 @@ CREATE TABLE Evidance (
     type VARCHAR(255),
     location TEXT,
     details TEXT,
+    collected_dt DATETIME NOT NULL,
     officer_id VARCHAR(36),
     investigation_id VARCHAR(36),
     FOREIGN KEY (officer_id) REFERENCES Users(user_id),
