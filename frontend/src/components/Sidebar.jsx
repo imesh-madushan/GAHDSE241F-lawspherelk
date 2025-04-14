@@ -17,10 +17,8 @@ import {
 
 import { useAuth } from '../contexts/AuthContext';
 
-const Sidebar = ({activeItem, setActiveItem }) => {
-  const { user } = useAuth(); 
-
-  const [expanded, setExpanded] = useState(true);
+const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
+  const { user } = useAuth();
 
   // Define menu items with proper icon components
   const menuItems = {
@@ -79,31 +77,40 @@ const Sidebar = ({activeItem, setActiveItem }) => {
   const currentMenuItems = menuItems[user.role] || menuItems['Police Constable'];
 
   return (
-    <div className={`h-screen bg-gray-900 text-white transition-all duration-300 ${expanded ? 'w-64' : 'w-20'}`}>
+    <div className={`h-screen bg-gray-900 text-white transition-all duration-300 ${expanded ? 'w-58' : 'w-20'}`}>
       <div className="p-4 flex justify-between items-center border-b border-gray-700">
         {expanded && <span className="font-bold text-lg">LawSphere LK</span>}
-        <button 
+        <button
           onClick={() => setExpanded(!expanded)}
-          className="p-1 rounded-full hover:bg-gray-700 transition-colors"
+          className="p-1 rounded-full flex hover:bg-gray-700 transition-colors"
           aria-label={expanded ? 'Collapse sidebar' : 'Expand sidebar'}
         >
           {expanded ? <ChevronLeft /> : <ChevronRight />}
         </button>
       </div>
-      
+
       <nav className="mt-4">
         {currentMenuItems.map((item) => (
           <button
             key={item.id}
             onClick={() => setActiveItem(item.id)}
-            className={`flex items-center w-full px-4 py-3 mx-2 mb-1 rounded-lg transition-colors ${
-              activeItem === item.id
-                ? 'bg-blue-600 text-white'
+            className={`flex relative items-center py-3.5 transition-colors hover:cursor-pointer 
+              ${activeItem === item.id
+                ? 'my-8 bg-blue-800 text-white border-l-4 border-blue-500'
                 : 'text-gray-300 hover:bg-gray-700'
-            }`}
+              }
+              ${expanded
+                ? 'mx-2 px-6 w-full rounded-sm rounded-br-xl rounded-tr-xl'
+                : 'w-16 mx-auto rounded-xl '
+              }`}
           >
             <span className={`flex items-center justify-center ${expanded ? 'mr-3' : 'mx-auto'}`}>
-              {React.cloneElement(item.icon, { fontSize: 'small' })}
+              {React.cloneElement(item.icon, {
+                fontSize: `${activeItem === item.id
+                  ? 'medium'
+                  : 'small'
+                  }`
+              })}
             </span>
             {expanded && <span className="text-sm">{item.label}</span>}
           </button>
