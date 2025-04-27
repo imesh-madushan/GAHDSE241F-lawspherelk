@@ -8,6 +8,8 @@ const cookieParser = require('cookie-parser');
 // routes
 const authRoutes = require('./routes/authRoutes');
 const complaintRoutes = require('./routes/complaintRoutes');
+const caseRoutes = require('./routes/caseRoutes');
+const commonRoutes = require('./routes/commonRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -18,6 +20,8 @@ app.use(cookieParser());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/complaints', complaintRoutes);
+app.use('/api/cases', caseRoutes);
+app.use('/api/common', commonRoutes);
 
 app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);

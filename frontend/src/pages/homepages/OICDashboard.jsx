@@ -25,14 +25,22 @@ import FilledButton from '../../components/buttons/FilledButton';
 const OICDashboard = () => {
   const [activeItem, setActiveItem] = useState('dashboard');
   const [recentComplaints, setRecentComplaints] = useState([]);
+  const [recentCases, setRecentCases] = useState([]);
+  const [statsValues, setStatsValues] = useState([]); //to store the stats count
   const [expanded, setExpanded] = useState(true); //to toggle the sidebar and hide the text in navbar
 
   const { user } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
+      //fetching recent complaints from the backend
       try {
-        const { data } = await apiClient.get('/complaints/getAllComplaints');
+        const { data } = await apiClient.get('/complaints/getAllComplaints', {
+          params: {
+            status: 'new',
+            limit: 5,
+          },
+        });
         if (data.complaints) {
           setRecentComplaints(data.complaints);
         }
@@ -40,34 +48,50 @@ const OICDashboard = () => {
       catch (error) {
         console.error('Error fetching complaints:', error);
       }
+
+      //fetching recent cases from the backend
+      try {
+        const { data } = await apiClient.get('/cases/getAllCases', {
+          params: {
+            status: 'inprogress',
+            limit: 5,
+          },
+        });
+        if (data.cases) {
+          setRecentCases(data.cases);
+        }
+      }
+      catch (error) {
+        // if status is 404, 
+        if (error.response && error.response.status === 404) {
+          console.log(error.response.data.message);
+        } else {
+          console.error('Error fetching cases:', error);
+        }
+      }
+
+      //get the all stats count
+      try {
+        const { data } = await apiClient.get('/common/getAllStatsCount')
+        if (data.statsValues) {
+          setStatsValues(data.statsValues);
+        }
+
+        console.log("Stats values: ", data.statsValues);
+      }
+      catch (error) {
+        console.error('Error fetching cases:', error);
+      }
+      
     }
     fetchData();
   }, []);
 
   const stats = [
-    { icon: <Folder />, title: 'Active Cases', value: '24', color: 'blue' },
-    { icon: <Description />, title: 'New Complaints', value: '12', color: 'red' },
-    { icon: <Search />, title: 'Ongoing Investigations', value: '18', color: 'green' },
-    { icon: <People />, title: 'Officers on Duty', value: '42', color: 'purple' }
-  ];
-
-  const recentCases = [
-    {
-      case_id: '8f7d6e5c-4b3a-2d1c-0e9f',
-      topic: 'Robbery at Commercial Bank',
-      case_type: 'Robbery',
-      status: 'In Progress',
-      started_dt: '2025-04-01T08:30:00',
-      leader_name: 'Inspector R. Silva'
-    },
-    {
-      case_id: '1a2b3c4d-5e6f-7g8h-9i0j',
-      topic: 'Missing Person - Amal Fernando',
-      case_type: 'Missing Person',
-      status: 'Open',
-      started_dt: '2025-04-03T14:00:00',
-      leader_name: 'Sub Inspector D. Gunasekara'
-    }
+    { icon: <Folder />, title: 'Active Cases', value: statsValues?.total_active_cases ?? 'no data', color: 'blue' },
+    { icon: <Description />, title: 'New Complaints', value: statsValues?.total_new_complaints ?? 'no data', color: 'red' },
+    { icon: <Search />, title: 'Ongoing Investigations', value: statsValues?.total_active_investigations ?? 'no data', color: 'green' },
+    { icon: <People />, title: 'Officers on Duty', value: statsValues?.x ?? 'no data', color: 'purple' }
   ];
 
   return (
@@ -106,10 +130,10 @@ const OICDashboard = () => {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-bold text-gray-800">Recent Cases</h2>
-                <a href="#allCases" class="inline-flex items-center px-5 py-2.5 text-sm font-sans text-center text-blue-700 hover:text-blue-800  rounded-lg hover:cursor-pointer hover:text-shadow-amber-700">
+                <a href="#allCases" className="inline-flex items-center px-5 py-2.5 text-sm font-sans text-center text-blue-700 hover:text-blue-800  rounded-lg hover:cursor-pointer hover:text-shadow-amber-700">
                   View All
-                  <svg class="w-3.5 h-3.5 ms-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9" />
+                  <svg className="w-3.5 h-3.5 ms-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M1 5h12m0 0L9 1m4 4L9 9" />
                   </svg>
                 </a>
               </div>
@@ -137,10 +161,10 @@ const OICDashboard = () => {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-bold text-gray-800">Recent Complaints</h2>
-                <a href="#allComplains" class="inline-flex items-center px-5 py-2.5 text-sm font-sans text-center text-blue-700 hover:text-blue-800  rounded-lg hover:cursor-pointer hover:text-shadow-amber-700">
+                <a href="#allComplains" className="inline-flex items-center px-5 py-2.5 text-sm font-sans text-center text-blue-700 hover:text-blue-800  rounded-lg hover:cursor-pointer hover:text-shadow-amber-700">
                   View All
-                  <svg class="w-3.5 h-3.5 ms-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9" />
+                  <svg className="w-3.5 h-3.5 ms-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M1 5h12m0 0L9 1m4 4L9 9" />
                   </svg>
                 </a>
               </div>

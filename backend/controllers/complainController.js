@@ -1,10 +1,17 @@
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 const db = require("../config/db");
 
 // get all complaints
 exports.getAllComplaints = async (req, res) => {
-    const query = `SELECT 
+    const filters = {};
+
+    if (req.query.status) {
+        filters.status = req.query.status;
+    }
+    if (req.query.limit) {
+        filters.limit = parseInt(req.query.limit, 10);
+    } 
+    
+    let query = `SELECT 
                 complaints.complain_id,
                 complaints.description,
                 complaints.complain_dt,
@@ -34,9 +41,30 @@ exports.getAllComplaints = async (req, res) => {
                 INNER JOIN cases ON complaints.complain_id = cases.complain_id
                 INNER JOIN evidance ON evidance.evidence_id = complaints.first_evidance_id
                 INNER JOIN evidance_witnesses ON evidance.evidence_id = evidance_witnesses.evidence_id`;
+    
+    //if status filter is provided
+    if (filters.status) {
+        query += ` WHERE complaints.status = ?`;
+    }
+    
+    query += ` ORDER BY complaints.complain_dt DESC`;
+    
+    // if limit filter is provided
+    if (filters.limit) {
+        query += ` LIMIT ?`;
+    }
+    
     try {
-        const [rows] = await db.query(query);
-        console.log()
+        //parameters array for the query
+        const params = [];
+        if (filters.status) params.push(filters.status);
+        if (filters.limit) params.push(filters.limit);
+        
+        const [rows] = await db.query(query, params);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: "No complaints found" });
+        }
         res.status(200).json({message: "Complaints fetched successfully", complaints: rows});
     } 
     catch (error) {

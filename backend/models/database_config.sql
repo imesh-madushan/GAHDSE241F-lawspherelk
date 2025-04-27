@@ -40,15 +40,14 @@ CREATE TABLE Complaints (
     status VARCHAR(50) NOT NULL,
     officer_id VARCHAR(36) NOT NULL,
     first_evidance_id VARCHAR(36),
-    FOREIGN KEY (officer_id) REFERENCES Users(user_id),
-    FOREIGN KEY (complainer_id) REFERENCES Evidance_Witnesses(nic)
+    FOREIGN KEY (officer_id) REFERENCES Users(user_id)
 );
 
 CREATE TABLE Cases (
     case_id VARCHAR(36) PRIMARY KEY,
     topic VARCHAR(255) NOT NULL,
     case_type VARCHAR(255) NOT NULL,
-    status VARCHAR(50) NOT NULL,
+    status ENUM ('oicnotreviewed', 'inprogress', 'closed') NOT NULL,
     started_dt DATETIME,
     end_dt DATETIME,
     leader_id VARCHAR(36),
@@ -90,11 +89,12 @@ CREATE TABLE Evidance (
 
 CREATE TABLE Evidance_Witnesses (
     evidence_id VARCHAR(36),
-    nic VARCHAR(36) PRIMARY KEY,
+    nic VARCHAR(36) NOT NULL,
     name VARCHAR(255) NOT NULL,
     phone VARCHAR(20),
     address TEXT,
     dob DATE,
+    PRIMARY KEY (evidence_id, nic),
     FOREIGN KEY (evidence_id) REFERENCES Evidance(evidence_id)
 );
 

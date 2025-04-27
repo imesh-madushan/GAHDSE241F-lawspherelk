@@ -6,10 +6,7 @@ import OutlinedButton from './buttons/OutlinedButton'; // import the outlined_bu
 const ComplaintCard = ({ complaint, actions }) => {
   const statusColors = {
     'new': 'bg-red-100 text-red-600 border-blue-300',
-    'Under Review': 'bg-yellow-100 text-yellow-800 border-yellow-300',
-    'Assigned': 'bg-green-100 text-green-800 border-green-300',
-    'Rejected': 'bg-red-100 text-red-800 border-red-300',
-    'Resolved': 'bg-gray-100 text-gray-800 border-gray-300',
+    'viewed': 'bg-gray-100 text-gray-800 border-gray-300'
   };
 
   const formatDate = (dateString) => {
@@ -25,7 +22,7 @@ const ComplaintCard = ({ complaint, actions }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden border-l-16 border-1 border-indigo-500">
+    <div className="bg-white rounded-xl my-4 shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden border-l-16 border-1 border-indigo-500">
       <div className="p-5">
         {/* header section */}
         <div className="flex justify-between items-start mb-4">
