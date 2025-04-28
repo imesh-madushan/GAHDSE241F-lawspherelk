@@ -1,11 +1,9 @@
 import './App.css'
 import Dashboard from './pages/homepages/Dashboard'
 import Layout from './pages/Layout';
-import AppRoutes from './routes/AppRoutes';
 import { Route, Router, Routes } from 'react-router-dom';
 import ProtectedRoutes from './utils/ProtectedRoutes';
 import { apiClient } from './config/apiConfig';
-import SingleCaseView from './pages/cases/SingleCaseView';
 
 function App() {
   // temp login
@@ -42,7 +40,7 @@ function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="complaints" element={<div>complaints</div>} />
           <Route path="cases" element={<div>cases</div>} />
-          <Route path="cases/:caseId" element={<SingleCaseView />} />
+          <Route path="cases/:caseId" element={<div>single case page</div>} />
         </Route>
       </Route>
 
