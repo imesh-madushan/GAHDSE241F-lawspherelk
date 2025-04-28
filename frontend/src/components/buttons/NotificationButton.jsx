@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Notifications } from '@mui/icons-material';
 
-const NotificationButton = ({ count = 0, notifications = [] }) => {
+const NotificationButton = ({ count = 0, notifications = [], sideBarExpanded }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   
   const toggleNotifications = () => {
@@ -9,7 +9,7 @@ const NotificationButton = ({ count = 0, notifications = [] }) => {
   };
   
   return (
-    <>
+    <div className="relative">
       <button 
         className="px-3 py-2 flex items-center transition-colors duration-200 relative"
         onClick={toggleNotifications}
@@ -23,7 +23,7 @@ const NotificationButton = ({ count = 0, notifications = [] }) => {
       </button>
       
       {showNotifications && (
-        <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-md shadow-lg py-1 z-50">
+        <div className={`absolute ${sideBarExpanded ? 'left-0' : '-right-20'} bac top-full mt-2 w-72 bg-white/60 backdrop-blur-md rounded-md shadow-lg py-1 z-100`}>
           <div className="px-4 py-2 border-b border-gray-200">
             <div className="flex justify-between items-center">
               <h3 className="font-semibold text-gray-700">Notifications</h3>
@@ -75,7 +75,7 @@ const NotificationButton = ({ count = 0, notifications = [] }) => {
           )}
         </div>
       )}
-    </>
+    </div>
   );
 };
 

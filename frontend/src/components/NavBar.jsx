@@ -20,12 +20,12 @@ const Navbar = ({ expanded }) => {
   return (
     <nav className="bg-blue-900 text-white shadow-lg">
       <div className="px-4">
-        <div className="flex justify-between items-center py-3.5">
+        <div className="flex justify-between items-center py-3">
           <div className="flex items-center space-x-4 ">
             {!expanded && (
               <div className="font-bold text-xl">LawSphere LK</div>
             )}
-           <NotificationButton count={55} notifications={[]} />
+           <NotificationButton count={55} notifications={[]} sideBarExpanded={expanded} />
           </div>
 
           <div className="flex items-center space-x-4 hover:cursor-pointer ">
@@ -45,16 +45,16 @@ const Navbar = ({ expanded }) => {
               
               {/* profile menu dropdown */}
               {showProfileMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                  <a href="#profile" className="block px-4 py-2 text-gray-800 hover:bg-gray-100 flex items-center">
+                <div className="absolute right-0 mt-2 w-48 bg-white/60 backdrop-blur-md rounded-md shadow-lg py-1 z-50">
+                  <a href="#profile" className=" px-4 py-2 text-gray-800 hover:bg-gray-100 flex items-center">
                     <Person fontSize="small" className="mr-2" />
                     Profile
                   </a>
-                  <a href="#settings" className="block px-4 py-2 text-gray-800 hover:bg-gray-100 flex items-center">
+                  <a href="#settings" className=" px-4 py-2 text-gray-800 hover:bg-gray-100 flex items-center">
                     <Settings fontSize="small" className="mr-2" />
                     Settings
                   </a>
-                  <a href="#logout" className="block px-4 py-2 text-gray-800 hover:bg-gray-100 flex items-center">
+                  <a href="#logout" className=" px-4 py-2 text-gray-800 hover:bg-gray-100 flex items-center">
                     <Logout fontSize="small" className="mr-2" />
                     Logout
                   </a>
