@@ -1,7 +1,6 @@
 import './App.css'
 import Dashboard from './pages/homepages/Dashboard'
 import Layout from './pages/Layout';
-import AppRoutes from './routes/AppRoutes';
 import { Route, Router, Routes } from 'react-router-dom';
 import ProtectedRoutes from './utils/ProtectedRoutes';
 import { apiClient } from './config/apiConfig';

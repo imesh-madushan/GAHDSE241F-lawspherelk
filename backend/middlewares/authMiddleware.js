@@ -20,7 +20,7 @@ async function getUserFromCookies(token) {
       if (userRows.length === 0) return null;
 
       return {
-        id: decoded.id,
+        user_id: decoded.id,
         role: userRows[0].role,
         name: userRows[0].name,
         email: userRows[0].email,

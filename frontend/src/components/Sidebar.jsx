@@ -78,7 +78,7 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
       { id: 'settings', label: 'Settings', icon: <Settings /> }
     ]
   };
-  console.log(user);
+
   const currentMenuItems = menuItems[user.role] || menuItems['Police Constable'];
 
   return (

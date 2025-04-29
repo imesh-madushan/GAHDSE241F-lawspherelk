@@ -18,9 +18,9 @@ const ComplaintCard = ({ complaint }) => {
   };
 
   const actions = {
-    view: { icon: <Visibility fontSize='small' />, label: 'View', onClick: () => { } },
-    assign: { icon: <Assignment fontSize='small' />, label: 'Assign', onClick: () => { } },
-    createCase: { icon: <Folder fontSize='small' />, label: 'Create Case', onClick: () => { } }
+    view: { icon: <Visibility fontSize='small' />, label: 'View', onClick: () => { }, styles: 'bg-blue-100 text-blue-800 border-blue-300' },
+    assign: { icon: <Assignment fontSize='small' />, label: 'Assign', onClick: () => { }, styles: 'bg-yellow-100 text-yellow-800 border-yellow-300' },
+    createCase: { icon: <Folder fontSize='small' />, label: 'Create Case', onClick: () => { }, styles: 'bg-green-100 text-green-800 border-green-300' },
   }
 
   //mapping for roles and cases
