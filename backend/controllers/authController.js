@@ -1,36 +1,36 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const db = require("../config/db");
-
+const authService = require("../services/authService");
 const { getUserFromCookies } = require("../middlewares/authMiddleware");
 
 // Login
 exports.login = async (req, res) => {
     const { username, password } = req.body;    
-    const hashedPassword = await bcrypt.hash(password, 10); // hash the password
-    const query = "SELECT * FROM login WHERE username = ?";
-    const values = [username, hashedPassword];
-
-
+    
     try{
-        const [rows] = await db.query(query, values);
-        if (rows.length > 0) {
-            const login = rows[0];
-
-            //check user in usertable as well
-            const query = "SELECT * FROM users WHERE user_id = ?";
-            const values = [login.user_id];
-            const [userRows] = await db.query(query, values);
-
-            if (userRows.length > 0) {
-                const user = userRows[0];
-                login.role = user.role;
+        // Use service instead of direct query
+        const login = await authService.findUserByUsername(username);
+        
+        if (login) {
+            // Verify password using service
+            const passwordMatch = await authService.comparePasswords(password, login.password);
+            
+            if (!passwordMatch) {
+                return res.status(401).json({ message: "Invalid username or password" });
             }
-            else {
+            
+            // Get user details from users table
+            const user = await authService.getUserById(login.user_id);
+            
+            if (!user) {
                 return res.status(401).json({ message: "User not found" });
             }
 
-            const token = jwt.sign({ id: login.user_id, username: login.username, role: login.role}, process.env.JWT_SECRET);
+            const token = jwt.sign({ 
+                id: login.user_id, 
+                username: login.username, 
+                role: user.role
+            }, process.env.JWT_SECRET);
 
             res.cookie("authtoken", token, {
                 httpOnly: true,
@@ -38,14 +38,11 @@ exports.login = async (req, res) => {
                 sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
             });
 
-            //create a session for the user
-            // querySession = "INSERT INTO usersessions (session_id, user_id, device_info, login_time, last_activity, current_cookie) VALUES (?, ?, ?, ?, ?, ?)";
-
             res.status(200).json({ 
                 message: "Login successful", 
                 user: {
                     username: login.username,
-                    role: login.role
+                    role: user.role
                 }
             });
         } 
@@ -57,13 +54,11 @@ exports.login = async (req, res) => {
         console.error("Error during login:", error);
         res.status(500).json({ message: "Internal server error" });
     }
-
 };
-
 
 // Register
 exports.register = async (req, res) => {
-
+    // Implement using authService
 }
 
 // Validate token
@@ -86,7 +81,7 @@ exports.validateCookies = async (req, res) => {
       console.error("Error validating token:", error);
       res.status(500).json({ message: "Internal server error" });
     }
-  };
+};
 
 // Logout
 exports.logout = async (req, res) => {

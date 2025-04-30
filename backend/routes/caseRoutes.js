@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const { getAllCases } = require("../controllers/caseController")
+const { getAllCases, getCaseById } = require("../controllers/caseController");
 
 router.get("/getAllCases", getAllCases);
+router.get("/:id", getCaseById);
 
 module.exports = router;

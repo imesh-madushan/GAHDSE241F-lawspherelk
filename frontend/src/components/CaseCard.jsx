@@ -30,9 +30,9 @@ const CaseCard = ({ caseData }) => {
   }
 
   const actions = {
-    view: { icon: <Visibility fontSize='small' />, label: 'View', onClick: handleViewClick },
-    update: { icon: <Edit fontSize='small' />, label: 'Update', onClick: handleUpdateClick },
-    reassign: { icon: <AssignmentInd fontSize='small' />, label: 'Reassign', onClick: handleReassignClick }
+    view: { icon: <Visibility fontSize='small' />, label: 'View', onClick: handleViewClick, styles: 'bg-blue-100 text-blue-800 border-blue-300' },
+    update: { icon: <Edit fontSize='small' />, label: 'Update', onClick: handleUpdateClick, styles: 'bg-yellow-100 text-yellow-800 border-yellow-300' },
+    reassign: { icon: <AssignmentInd fontSize='small' />, label: 'Reassign', onClick: handleReassignClick, styles: 'bg-green-100 text-green-800 border-green-300' },
   };
 
   //mapping for role and actions
