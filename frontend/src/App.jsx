@@ -5,6 +5,7 @@ import { Route, Router, Routes } from 'react-router-dom';
 import ProtectedRoutes from './utils/ProtectedRoutes';
 import { apiClient } from './config/apiConfig';
 import Login from './pages/login';
+import SingleCaseView from './pages/cases/SingleCaseView';
 
 function App() {
   // temp login
@@ -43,7 +44,7 @@ function App() {
           
           <Route path="complaints" element={<div>complaints</div>} />
           <Route path="cases" element={<div>cases</div>} />
-          <Route path="cases/:caseId" element={<div>single case page</div>} />
+          <Route path="cases/:caseId" element={<SingleCaseView />} />
         </Route>
       </Route>
 
