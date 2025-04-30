@@ -6,7 +6,7 @@ const { getUserFromCookies } = require("../middlewares/authMiddleware");
 // Login
 exports.login = async (req, res) => {
     const { username, password } = req.body;    
-
+    
     try{
         // Use service instead of direct query
         const login = await authService.findUserByUsername(username);

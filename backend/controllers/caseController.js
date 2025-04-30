@@ -37,3 +37,33 @@ exports.getAllCases = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 };
+
+// get case by id
+exports.getCaseById = async (req, res) => {
+    const { id } = req.params;
+    
+    const token = req.cookies.authtoken;
+    if (!token) {
+        return res.status(401).json({ message: "No token provided" });
+    }
+
+    const user = await getUserFromCookies(token);
+    if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+        const caseData = await caseService.getCaseById(id, user.role, user.id);
+        
+        if (!caseData) {
+            return res.status(404).json({ message: "Case not found" });
+        }
+               
+        res.status(200).json({message: "Case fetched successfully", caseData});
+    } 
+    catch (error) {
+        console.error("Error fetching case:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
