@@ -132,6 +132,11 @@ CREATE TABLE ForensicReport_Analysts (
 
 CREATE TABLE CriminalRecord (
     criminal_id VARCHAR(36) PRIMARY KEY,
+    nic VARCHAR(36) UNIQUE NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    phone VARCHAR(20),
+    address TEXT,
+    dob DATE NOT NULL,
     fingerprint_hash TEXT NOT NULL,
     photo TEXT,
     total_crimes INT DEFAULT 0,

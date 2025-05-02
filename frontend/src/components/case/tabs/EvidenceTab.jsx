@@ -34,7 +34,7 @@ const EvidenceTab = ({ caseData, canAddEvidence }) => {
                         <div className="text-sm text-gray-600">
                             <p className="flex items-center mb-1">
                                 <Security fontSize="small" className="mr-1 text-blue-600" />
-                                Officer: {item.officer}
+                                Officer: {item.collected_by}
                             </p>
                             <p className="flex items-center">
                                 <Folder fontSize="small" className="mr-1 text-blue-600" />

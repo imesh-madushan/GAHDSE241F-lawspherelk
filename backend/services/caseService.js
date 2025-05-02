@@ -136,6 +136,7 @@ exports.getCaseById = async (caseId, userRole, userId) => {
       co.reported_dt,
       co.happened_dt,
       cr.criminal_id,
+      cr.name AS criminal_name,
       cr.total_crimes,
       cr.total_risk
     FROM crimeoffence co

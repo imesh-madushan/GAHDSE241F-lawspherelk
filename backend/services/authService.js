@@ -3,8 +3,9 @@ const db = require("../config/db");
 
 // Authentication-related database operations
 exports.findUserByUsername = async (username) => {
-  const query = "SELECT * FROM login WHERE username = ?";
+  const query = "SELECT * FROM Login WHERE username = ?";
   const [rows] = await db.query(query, [username]);
+  console.log(rows);
   return rows.length > 0 ? rows[0] : null;
 };
 
@@ -15,6 +16,9 @@ exports.getUserById = async (userId) => {
 };
 
 exports.comparePasswords = async (plainPassword, hashedPassword) => {
+  if (!plainPassword || !hashedPassword) {
+    throw new Error('Password or hash is missing');
+  }
   return await bcrypt.compare(plainPassword, hashedPassword);
 };
 
