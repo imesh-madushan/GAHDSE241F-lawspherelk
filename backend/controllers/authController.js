@@ -13,8 +13,10 @@ exports.login = async (req, res) => {
         const login = await authService.findUserByUsername(username);
         
         if (login) {
-            // Verify password using service
-            const passwordMatch = await authService.comparePasswords(password, login.password);
+            console.log("Login data:", login); // For debugging
+            
+            // Verify password using service - use password_hash instead of password
+            const passwordMatch = await authService.comparePasswords(password, login.password_hash);
             
             if (!passwordMatch) {
                 return res.status(401).json({ message: "Invalid username or password" });

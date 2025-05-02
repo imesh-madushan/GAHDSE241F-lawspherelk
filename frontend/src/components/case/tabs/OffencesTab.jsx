@@ -1,5 +1,5 @@
 import React from 'react';
-import { Add, CalendarToday, Person, Gavel, Visibility, Balance } from '@mui/icons-material';
+import { Add, CalendarToday, Person, Gavel, Visibility, Assessment } from '@mui/icons-material';
 import OutlinedButton from '../../buttons/OutlinedButton';
 
 const OffencesTab = ({ caseData, canEdit, formatDate }) => {
@@ -10,7 +10,7 @@ const OffencesTab = ({ caseData, canEdit, formatDate }) => {
         styles: 'text-blue-600'
     };
 
-    if (!caseData.offences) {
+    if (!caseData.offences || !Array.isArray(caseData.offences)) {
         return <div className="text-center py-10 text-gray-500">No offence data available.</div>;
     }
 
@@ -24,60 +24,50 @@ const OffencesTab = ({ caseData, canEdit, formatDate }) => {
             {caseData.offences.length > 0 ? (
                 <div className="space-y-6">
                     {caseData.offences.map((offence, index) => (
-                        <div key={offence.id || index} className="rounded-lg bg-white border border-gray-200 shadow-sm overflow-hidden">
+                        <div key={offence.offence_id || index} className="rounded-lg bg-white border border-gray-200 shadow-sm overflow-hidden">
                             {/* Header with offence type and status */}
                             <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50">
                                 <div className="flex items-center">
                                     <Gavel className="text-blue-600 mr-2" />
-                                    <h4 className="font-semibold text-gray-800">{offence.type}</h4>
+                                    <h4 className="font-semibold text-gray-800">{offence.crime_type}</h4>
                                 </div>
                                 <span className={`px-3 py-1 text-xs rounded-full font-medium ${offence.status === 'Confirmed'
                                         ? 'bg-green-100 text-green-800 border border-green-200'
-                                        : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                                        : offence.status === 'Alleged'
+                                            ? 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                                            : 'bg-blue-100 text-blue-800 border border-blue-200'
                                     }`}>
                                     {offence.status}
                                 </span>
                             </div>
 
-                            {/* Offence details */}
+                            {/* Offence details - simplified */}
                             <div className="p-4">
-                                <p className="text-gray-600 mb-4">{offence.description}</p>
-
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
+                                    <div className="space-y-3">
                                         <div className="flex items-start">
-                                            <Balance className="text-blue-600 mr-2 mt-0.5 flex-shrink-0" fontSize="small" />
+                                            <Assessment className="text-blue-600 mr-2 mt-0.5 flex-shrink-0" fontSize="small" />
                                             <div>
-                                                <p className="text-xs text-gray-500">Legal Reference</p>
-                                                <p className="text-sm text-gray-800">{offence.section}</p>
-                                                <p className="text-xs text-gray-600">{offence.act}</p>
+                                                <p className="text-xs text-gray-500">Risk Score</p>
+                                                <p className="text-sm text-gray-800">{offence.risk_score}</p>
                                             </div>
                                         </div>
 
                                         <div className="flex items-start">
                                             <CalendarToday className="text-blue-600 mr-2 mt-0.5 flex-shrink-0" fontSize="small" />
                                             <div>
-                                                <p className="text-xs text-gray-500">Registered On</p>
-                                                <p className="text-sm text-gray-800">{formatDate(offence.registered_dt)}</p>
-                                                <p className="text-xs text-gray-600">By: {offence.registered_by}</p>
+                                                <p className="text-xs text-gray-500">Reported On</p>
+                                                <p className="text-sm text-gray-800">{formatDate(offence.reported_dt)}</p>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="space-y-2">
+                                    <div className="space-y-3">
                                         <div className="flex items-start">
                                             <Person className="text-blue-600 mr-2 mt-0.5 flex-shrink-0" fontSize="small" />
                                             <div>
                                                 <p className="text-xs text-gray-500">Suspect</p>
-                                                <p className="text-sm text-gray-800">{offence.suspect}</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-start">
-                                            <Gavel className="text-blue-600 mr-2 mt-0.5 flex-shrink-0" fontSize="small" />
-                                            <div>
-                                                <p className="text-xs text-gray-500">Punishment</p>
-                                                <p className="text-sm text-gray-800">{offence.punishment}</p>
+                                                <p className="text-sm text-gray-800">{offence.criminal_name || 'No suspect identified'}</p>
                                             </div>
                                         </div>
                                     </div>
