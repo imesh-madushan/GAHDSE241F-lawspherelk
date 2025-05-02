@@ -22,4 +22,4 @@ exports.hashPassword = async (password) => {
   return await bcrypt.hash(password, 10);
 };
 
-// You can add more service methods as needed for registration, etc.
+

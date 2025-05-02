@@ -10,19 +10,20 @@ import SingleCaseView from './pages/cases/SingleCaseView';
 function App() {
   // temp login
   const login = async () => await apiClient.post('/auth/login',
-    {
-      username: 'user1',
-      password: 'abcd1234'
-    },
-    {
-      withCredentials: true,
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    }
-  )
-    .then(res => console.log(res.data))
-    .catch(err => console.log(err.response.data));
+  //   {
+  //     username: 'user1',
+  //     password: 'abcd1234'
+  //   },
+  //   {
+  //     withCredentials: true,
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //     }
+  //   }
+  // )
+  //   .then(res => console.log(res.data))
+  //   .catch(err => console.log(err.response.data)
+  );
 
    //login();
 

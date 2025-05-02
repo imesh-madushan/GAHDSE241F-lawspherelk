@@ -5,7 +5,8 @@ const { getUserFromCookies } = require("../middlewares/authMiddleware");
 
 // Login
 exports.login = async (req, res) => {
-    const { username, password } = req.body;    
+    console.log("Request body received in login:", req.body); // Log the incoming data
+    const { username, password } = req.body; 
     
     try{
         // Use service instead of direct query
