@@ -34,7 +34,7 @@ const OfficerCard = ({
 
     return (
         <div
-            className={`flex items-center justify-between ${containerClasses[size]} border border-blue-100 rounded-lg bg-blue-50 ${className} ${onClick ? 'cursor-pointer hover:bg-blue-100 transition-colors' : ''}`}
+            className={`flex items-center justify-between ${containerClasses[size]} border border-blue-100 rounded-lg bg-gray-50 ${className} ${onClick ? 'cursor-pointer hover:bg-blue-100 transition-colors' : ''}`}
             onClick={onClick}
         >
             <div className="flex items-center">

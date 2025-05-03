@@ -30,9 +30,9 @@ const CaseComplaintCard = ({ complaint, formatDate, onViewFullComplaint }) => {
         <div>
           <p className="text-xs text-blue-600">Status</p>
           <p className="text-gray-800">
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${complaint.status === 'closed' ? 'bg-green-100 text-green-800' :
-                complaint.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-blue-100 text-blue-800'
+            <span className={`px-2 py-1 rounded-md text-xs font-medium ${complaint.status === 'closed' ? 'bg-green-100 text-green-800' :
+              complaint.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                'bg-blue-100 text-blue-800'
               }`}>
               {complaint.status}
             </span>
@@ -40,7 +40,7 @@ const CaseComplaintCard = ({ complaint, formatDate, onViewFullComplaint }) => {
         </div>
 
         {complaintOfficer && (
-          <div className="border-t pt-3 mt-2">
+          <div className="pt-3 mt-2">
             <p className="text-xs text-blue-600 mb-2">Handled By Officer</p>
             <OfficerCard
               officer={complaintOfficer}
