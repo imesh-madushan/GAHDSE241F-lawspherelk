@@ -13,7 +13,7 @@ const EvidenceTab = ({ caseData, canAddEvidence }) => {
                 <h3 className="text-lg font-semibold text-gray-800">Evidence</h3>
                 {canAddEvidence && (
                     <OutlinedButton
-                        action={actions.Add} 
+                        action={actions.Add}
                     />
                 )}
             </div>
@@ -22,23 +22,20 @@ const EvidenceTab = ({ caseData, canAddEvidence }) => {
                 {caseData.evidence.map((item, index) => (
                     <div key={index} className="rounded-lg bg-white p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                         <div className="flex justify-between items-start mb-2">
-                            <span className="px-2 py-1 text-xs rounded-md bg-blue-100 text-blue-800 font-medium">{item.type}</span>
-                            <span className={`px-2 py-1 text-xs rounded-md ${item.status === 'Analyzing'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-green-100 text-green-800'
-                                } font-medium`}>
-                                {item.status}
+                            <span className="px-2 py-1 text-xs rounded-md bg-blue-100 text-blue-800 font-medium">
+                                {item.type || "Unknown Type"}
                             </span>
+                            
                         </div>
-                        <h4 className="font-semibold text-gray-800 mb-2">{item.description}</h4>
+                        <h4 className="font-semibold text-gray-800 mb-2">{item.details || "No description available"}</h4>
                         <div className="text-sm text-gray-600">
                             <p className="flex items-center mb-1">
                                 <Security fontSize="small" className="mr-1 text-blue-600" />
-                                Officer: {item.collected_by}
+                                Officer: {item.collected_by || "Not assigned"}
                             </p>
                             <p className="flex items-center">
                                 <Folder fontSize="small" className="mr-1 text-blue-600" />
-                                Location: {item.location}
+                                Location: {item.location || "No location specified"}
                             </p>
                         </div>
                     </div>

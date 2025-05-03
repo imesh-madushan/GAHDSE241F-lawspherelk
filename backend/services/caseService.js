@@ -63,13 +63,18 @@ exports.getCaseById = async (caseId, userRole, userId) => {
                     c.complain_id,
                     u.name AS leader_name,
                     u.role AS leader_role,
+                    u.profile_pic AS leader_profile,
                     comp.description AS complaint_description,
                     comp.complain_dt,
                     comp.status AS complaint_status,
-                    comp.officer_id AS complaint_officer_id
+                    comp.officer_id AS complaint_officer_id,
+                    co.name AS complaint_officer_name,
+                    co.role AS complaint_officer_role,
+                    co.profile_pic AS complaint_officer_profile
                   FROM cases c
                   LEFT JOIN users u ON c.leader_id = u.user_id
                   LEFT JOIN complaints comp ON c.complain_id = comp.complain_id
+                  LEFT JOIN users co ON comp.officer_id = co.user_id
                   WHERE c.case_id = ?`;
 
   const params = [caseId];
@@ -88,16 +93,41 @@ exports.getCaseById = async (caseId, userRole, userId) => {
   
   const caseData = caseRows[0];
   
-  // Get assigned officers
+  // Create separate complaint object
+  const complaintData = {
+    complain_id: caseData.complain_id,
+    complain_dt: caseData.complain_dt,
+    description: caseData.complaint_description,
+    status: caseData.complaint_status,
+    officer_id: caseData.complaint_officer_id,
+    officer_name: caseData.complaint_officer_name,
+    officer_role: caseData.complaint_officer_role,
+    officer_profile: caseData.complaint_officer_profile
+  };
+  
+  // Remove complaint fields from case object
+  delete caseData.complaint_description;
+  delete caseData.complain_dt;
+  delete caseData.complaint_status;
+  delete caseData.complaint_officer_id;
+  delete caseData.complaint_officer_name;
+  delete caseData.complaint_officer_role;
+  delete caseData.complaint_officer_profile;
+  
+  // Get assigned officers - Enhanced query to include role and profile image
   const [assignedOfficers] = await db.query(`
-    SELECT DISTINCT u.user_id, u.name, u.role 
+    SELECT DISTINCT 
+      u.user_id, 
+      u.name, 
+      u.role,
+      u.profile_pic 
     FROM investigation_officer io
     JOIN users u ON io.officer_id = u.user_id
     JOIN investigation i ON io.investigation_id = i.investigation_id
     WHERE i.case_id = ?
   `, [caseId]);
   
-  // Get evidence
+  // Get evidence with detailed officer information
   const [evidence] = await db.query(`
     SELECT 
       e.evidence_id, 
@@ -106,7 +136,9 @@ exports.getCaseById = async (caseId, userRole, userId) => {
       e.details,
       e.collected_dt,
       u.name as collected_by,
-      u.user_id as officer_id
+      u.user_id as officer_id,
+      u.role as officer_role,
+      u.profile_pic as officer_profile
     FROM evidance e
     JOIN case_evidance ce ON e.evidence_id = ce.evidence_id
     LEFT JOIN users u ON e.officer_id = u.user_id
@@ -144,7 +176,7 @@ exports.getCaseById = async (caseId, userRole, userId) => {
     WHERE co.case_id = ?
   `, [caseId]);
   
-  // Get reports
+  // Get reports with detailed officer information
   const [reports] = await db.query(`
     SELECT 
       r.report_id,
@@ -154,7 +186,9 @@ exports.getCaseById = async (caseId, userRole, userId) => {
       r.status,
       r.created_dt,
       u.name as created_by,
-      u.user_id as officer_id
+      u.user_id as officer_id,
+      u.role as officer_role,
+      u.profile_pic as officer_profile
     FROM reports r
     JOIN report_refrences rr ON r.report_id = rr.report_id
     LEFT JOIN users u ON r.officer_id = u.user_id
@@ -168,7 +202,8 @@ exports.getCaseById = async (caseId, userRole, userId) => {
     evidence,
     investigations,
     offences,
-    reports
+    reports,
+    complaint: complaintData // Add the complaint object separately
   };
 };
 

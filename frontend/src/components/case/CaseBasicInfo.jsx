@@ -3,43 +3,10 @@ import { Description, Person, CalendarToday, Category } from '@mui/icons-materia
 import CustomDropdown from '../dropdowns/CustomDropdown';
 import CustomOfficerDropdown from '../dropdowns/CustomOfficerDropdown';
 import OfficerCard from '../cards/OfficerCard';
-
-// Sample officers data with additional fields including profile images
-const officersList = [
-    {
-        id: "u5e6f7g8-h9i0-j1k2-l3m4-n5o6p7q8r9s0",
-        name: "Inspector Silva",
-        role: "Crime Investigation Department",
-        image: "https://randomuser.me/api/portraits/men/32.jpg"
-    },
-    {
-        id: "u1a2b3c4-d5e6-f7g8-h9i0-j1k2l3m4n5o6",
-        name: "Inspector Perera",
-        role: "Narcotics Bureau",
-        image: "https://randomuser.me/api/portraits/men/43.jpg"
-    },
-    {
-        id: "u7x8y9z0-a1b2-c3d4-e5f6-g7h8i9j0k1l2",
-        name: "Inspector Fernando",
-        role: "Special Task Force",
-        image: "https://randomuser.me/api/portraits/men/57.jpg"
-    },
-    {
-        id: "u3p4q5r6-s7t8-u9v0-w1x2-y3z4a5b6c7d8",
-        name: "Sub Inspector Gunawardena",
-        role: "Criminal Records Division",
-        image: "https://randomuser.me/api/portraits/men/21.jpg"
-    },
-    {
-        id: "u9m8n7o6-p5q4-r3s2-t1u0-v9w8x7y6z5a4",
-        name: "Sub Inspector Jayasinghe",
-        role: "Fraud Investigation Unit",
-        image: "https://randomuser.me/api/portraits/men/67.jpg"
-    }
-];
+import { apiClient } from '../../config/apiConfig';
 
 const CaseBasicInfo = ({ caseData, isEditing, editedCase, handleInputChange, formatDate, canChangeLeader }) => {
-    const [officers, setOfficers] = useState(officersList);
+    const [officers, setOfficers] = useState([]);
 
     const caseTypeOptions = [
         { value: "Theft", label: "Theft" },
@@ -52,13 +19,20 @@ const CaseBasicInfo = ({ caseData, isEditing, editedCase, handleInputChange, for
 
     // In a real app, fetch officers from API
     useEffect(() => {
-        // Sample API call:
-        // async function fetchOfficers() {
-        //   const response = await fetch('/api/officers');
-        //   const data = await response.json();
-        //   setOfficers(data);
-        // }
-        // fetchOfficers();
+        async function fetchOfficers() {
+            try {
+                const response = await apiClient.post('/officer/getAll', {
+                    roles: ["Sub Inspector", "Inspector", "Sergeant"]
+                });
+
+                if (response.data) {
+                    setOfficers(response.data);
+                }
+            } catch (error) {
+                console.error("Error fetching officers:", error);
+            }
+        }
+        fetchOfficers();
     }, []);
 
     // Handle officer selection
@@ -155,20 +129,6 @@ const CaseBasicInfo = ({ caseData, isEditing, editedCase, handleInputChange, for
                 </div>
             </div>
 
-            <div className="mt-4">
-                <label className="block text-gray-700 text-sm mb-1 font-medium">Description</label>
-                {isEditing ? (
-                    <textarea
-                        name="description"
-                        value={editedCase.description}
-                        onChange={handleInputChange}
-                        rows="4"
-                        className="w-full bg-blue-10 border border-blue-200 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                ) : (
-                    <p className="text-gray-600">{caseData.description}</p>
-                )}
-            </div>
         </div>
     );
 };

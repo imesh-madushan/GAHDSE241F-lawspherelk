@@ -30,7 +30,8 @@ CREATE TABLE Users (
     phone VARCHAR(20) NOT NULL,
     address TEXT NOT NULL,
     created_dt DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    role ENUM('OIC', 'Crime OIC', 'Sub Inspector', 'Sergeant', 'Police Constable', 'Forensic Leader') NOT NULL,
+    profile_pic TEXT,
+    role ENUM('OIC', 'Crime OIC', 'Sub Inspector', 'Inspector', 'Sergeant', 'Police Constable', 'Forensic Leader') NOT NULL,
 );
 
 CREATE TABLE Complaints (

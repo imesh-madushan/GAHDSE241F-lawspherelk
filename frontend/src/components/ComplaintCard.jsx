@@ -10,6 +10,7 @@ import {
 } from '@mui/icons-material';
 
 const ComplaintCard = ({ complaint }) => {
+  console.log(complaint);
   const { user } = useAuth();
 
   const statusColors = {

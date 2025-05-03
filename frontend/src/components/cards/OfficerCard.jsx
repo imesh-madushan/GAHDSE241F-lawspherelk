@@ -1,12 +1,12 @@
 import React from 'react';
 import { Person, Visibility } from '@mui/icons-material';
 
-const OfficerCard = ({ 
-    officer, 
-    size = "medium", 
-    showViewButton = false, 
-    className = "", 
-    onClick = null 
+const OfficerCard = ({
+    officer,
+    size = "medium",
+    showViewButton = false,
+    className = "",
+    onClick = null
 }) => {
     // Get initials from name for avatar fallback
     const getInitials = (name) => {
@@ -25,7 +25,7 @@ const OfficerCard = ({
         medium: "h-10 w-10 text-sm",
         large: "h-12 w-12 text-base"
     };
-    
+
     const containerClasses = {
         small: "p-1.5",
         medium: "p-2",
@@ -33,17 +33,17 @@ const OfficerCard = ({
     };
 
     return (
-        <div 
+        <div
             className={`flex items-center justify-between ${containerClasses[size]} border border-blue-100 rounded-lg bg-blue-50 ${className} ${onClick ? 'cursor-pointer hover:bg-blue-100 transition-colors' : ''}`}
             onClick={onClick}
         >
             <div className="flex items-center">
                 {/* Officer Avatar */}
                 <div className={`flex-shrink-0 ${sizeClasses[size]} rounded-full overflow-hidden border-2 border-white shadow-sm`}>
-                    {officer.image ? (
+                    {officer.profilePic || officer.profile_pic || officer.image ? (
                         <img
-                            src={officer.image}
-                            alt={officer.name}
+                            src={officer.profilePic || officer.profile_pic || officer.image}
+                            alt={`${officer.name}`}
                             className="h-full w-full object-cover"
                         />
                     ) : (
@@ -56,7 +56,14 @@ const OfficerCard = ({
                 {/* Officer Info */}
                 <div className="ml-3">
                     <div className="font-medium text-gray-900">{officer.name}</div>
-                    <div className="text-xs text-gray-500">{officer.role || "Officer"}</div>
+                    <div className="flex items-center">
+                        <div className="text-xs text-gray-500">{officer.role || "Officer"}</div>
+                        {officer.type && (
+                            <div className="ml-2 px-1.5 py-0.5 bg-blue-100 text-xs rounded-full text-blue-700">
+                                {officer.type}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 

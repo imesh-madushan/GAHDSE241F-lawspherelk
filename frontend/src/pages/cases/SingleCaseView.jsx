@@ -18,6 +18,7 @@ import InvestigationsTab from '../../components/case/tabs/InvestigationsTab';
 import ReportsTab from '../../components/case/tabs/ReportsTab';
 import OffencesTab from '../../components/case/tabs/OffencesTab';
 import SidebarCard from '../../components/cards/SidebarCard';
+import CaseComplaintCard from '../../components/case/CaseComplaintCard';
 import StatusBadge from '../../components/badges/StatusBadge';
 import { useAuth } from '../../contexts/AuthContext';
 import AssignedOfficers from '../../components/case/AssignedOfficers';
@@ -46,7 +47,11 @@ const SingleCaseView = () => {
     complain_id: '',
     complain_dt: '',
     description: '',
-    witness_name: ''
+    status: '',
+    officer_id: '',
+    officer_name: '',
+    officer_role: '',
+    officer_profile: ''
   });
 
   const [isLoading, setIsLoading] = useState(true);
@@ -114,10 +119,88 @@ const SingleCaseView = () => {
     });
   };
 
+  const handleViewFullComplaint = () => {
+    console.log("View full complaint for ID:", complaint.complain_id);
+  };
+
   const actions = {
     Edit: { icon: <Edit fontSize='small' />, label: 'Edit Case', onClick: handleEditToggle, styles: 'text-blue-700' },
     Cancel: { icon: <Cancel fontSize='small' />, label: 'Cancel', onClick: handleCancelEdit, styles: 'text-red-700' },
     Save: { icon: <Save fontSize='small' />, label: 'Save', onClick: handleSaveChanges, styles: 'text-green-700' },
+  };
+
+  // Process and collect all officers related to the case
+  const processRelatedOfficers = (caseData) => {
+    const uniqueOfficers = new Map();
+
+    // Add case leader if exists
+    if (caseData.leader_id && caseData.leader_name) {
+      uniqueOfficers.set(caseData.leader_id, {
+        id: caseData.leader_id,
+        name: caseData.leader_name,
+        role: caseData.leader_role,
+        profilePic: caseData.leader_profile,
+        type: 'Case Leader'
+      });
+    }
+
+    // Add complaint officer if exists
+    if (caseData.complaint?.officer_id) {
+      uniqueOfficers.set(caseData.complaint.officer_id, {
+        id: caseData.complaint.officer_id,
+        name: caseData.complaint.officer_name || 'Unknown',
+        role: caseData.complaint.officer_role || 'Officer',
+        profilePic: caseData.complaint.officer_profile,
+        type: 'Complaint Officer'
+      });
+    }
+
+    // Add evidence collectors
+    if (caseData.evidence && caseData.evidence.length > 0) {
+      caseData.evidence.forEach(item => {
+        if (item.officer_id) {
+          uniqueOfficers.set(item.officer_id, {
+            id: item.officer_id,
+            name: item.collected_by || 'Unknown',
+            role: item.officer_role || 'Officer',
+            profilePic: item.officer_profile,
+            type: 'Evidence Collector'
+          });
+        }
+      });
+    }
+
+    // Add report creators
+    if (caseData.reports && caseData.reports.length > 0) {
+      caseData.reports.forEach(report => {
+        if (report.officer_id) {
+          uniqueOfficers.set(report.officer_id, {
+            id: report.officer_id,
+            name: report.created_by || 'Unknown',
+            role: report.officer_role || 'Officer',
+            profilePic: report.officer_profile,
+            type: 'Report Creator'
+          });
+        }
+      });
+    }
+
+    // Add investigation officers
+    if (caseData.assignedOfficers && caseData.assignedOfficers.length > 0) {
+      caseData.assignedOfficers.forEach(officer => {
+        if (officer.user_id) {
+          uniqueOfficers.set(officer.user_id, {
+            id: officer.user_id,
+            name: officer.name || 'Unknown',
+            role: officer.role || 'Officer',
+            profilePic: officer.profile_pic,
+            type: 'Investigation Officer'
+          });
+        }
+      });
+    }
+
+    return Array.from(uniqueOfficers.values());
   };
 
   useEffect(() => {
@@ -140,26 +223,17 @@ const SingleCaseView = () => {
           setCaseData(formattedCaseData);
           setEditedCase(formattedCaseData);
 
-          if (data.caseData.complain_id) {
-            setComplaint({
-              complain_id: data.caseData.complain_id,
-              complain_dt: data.caseData.complain_dt,
-              description: data.caseData.complaint_description || 'No description available',
-              witness_name: 'Complainant'
-            });
+          // Set complaint data from the separate complaint object
+          if (data.caseData.complaint) {
+            setComplaint(data.caseData.complaint);
           }
+
+          // Process all related officers
+          const officers = processRelatedOfficers(formattedCaseData);
+          setAllOfficers(officers);
 
           console.log('Case data fetched successfully:', formattedCaseData);
         }
-
-        // try {
-        //   const officersResponse = await apiClient.get('/users/officers');
-        //   if (officersResponse.data && officersResponse.data.officers) {
-        //     setAllOfficers(officersResponse.data.officers);
-        //   }
-        // } catch (error) {
-        //   console.error('Error fetching officers:', error);
-        // }
       } catch (error) {
         console.error('Error fetching case data:', error);
         setError('Failed to load case data. Please try again.');
@@ -242,11 +316,6 @@ const SingleCaseView = () => {
 
             <div className="rounded-xl bg-white shadow-md p-6">
               {activeTab === 'overview' && (
-                // <OverviewTab
-                //   caseData={caseData}
-                //   canUpdateTimeLine={canUpdateTimeLine}
-                //   formatDate={formatDate}
-                // />
                 <div>this is overvire tab </div>
               )}
 
@@ -284,41 +353,14 @@ const SingleCaseView = () => {
           </div>
 
           <div className="space-y-6">
-            <SidebarCard
-              title="Related Complaint"
-              icon={<Assignment />}
-            >
-              <div className="space-y-3">
-                <div>
-                  <p className="text-xs text-blue-600">Complaint ID</p>
-                  <p className="text-gray-800 font-mono">{complaint.complain_id}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-blue-600">Filed On</p>
-                  <p className="text-gray-800">{formatDate(complaint.complain_dt)}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-blue-600">Complainer</p>
-                  <p className="text-gray-800">{complaint.witness_name}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-blue-600">Description</p>
-                  <p className="text-gray-800 text-sm">{complaint.description}</p>
-                </div>
-                <div className="pt-2">
-                  <button className="w-full text-blue-600 hover:text-blue-800 text-sm py-2 border border-blue-500 rounded-md flex items-center justify-center hover:bg-blue-50 transition-colors">
-                    <Visibility fontSize="small" className="mr-1" />
-                    View Full Complaint
-                  </button>
-                </div>
-              </div>
-            </SidebarCard>
+            <CaseComplaintCard
+              complaint={complaint}
+              formatDate={formatDate}
+              onViewFullComplaint={handleViewFullComplaint}
+            />
 
             <AssignedOfficers
-              assignedOfficers={caseData.assignedOfficers}
-              allOfficers={allOfficers}
-              canAssign={canAssignOfficers}
-              onAssignOfficer={handleAssignOfficer}
+              assignedOfficers={allOfficers}
             />
 
             <SidebarCard
