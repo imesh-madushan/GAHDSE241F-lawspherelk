@@ -43,7 +43,7 @@ function App() {
           <Route path="cases" element={<div>cases</div>} />
           <Route path="cases/:caseId" element={<SingleCaseView />} />
           <Route path="complaints" element={<div>complaints</div>} />
-          <Route path="complaints/:complainId" element={<SingleComplainView/>} />
+          <Route path="complaints/:complaintId" element={<SingleComplainView/>} />
         </Route>
       </Route>
 
