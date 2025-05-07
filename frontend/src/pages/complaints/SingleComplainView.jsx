@@ -12,13 +12,17 @@ import {
     LocationOn as MapPin,
     FindInPage as FileSearch,
     PersonAdd as UserPlus,
-    Folder
+    Folder,
+    Close
 } from '@mui/icons-material';
 import { apiClient } from '../../config/apiConfig';
 import { useAuth } from '../../contexts/AuthContext';
 import { format } from 'date-fns';
 import ComplaintHeader from '../../components/complaint/ComplaintHeader';
 import OfficerCard from '../../components/cards/OfficerCard';
+import StatusBadge from '../../components/badges/StatusBadge';
+import OutlinedButton from '../../components/buttons/OutlinedButton';
+import SidebarCard from '../../components/cards/SidebarCard';
 
 const SingleComplaintView = () => {
     const { complaintId } = useParams();
@@ -33,6 +37,10 @@ const SingleComplaintView = () => {
     const [showStartCaseModal, setShowStartCaseModal] = useState(false);
     const [caseTopicInput, setCaseTopicInput] = useState('');
     const [caseTypeInput, setCaseTypeInput] = useState('');
+    const [showCloseModal, setShowCloseModal] = useState(false);
+    const [closeCommentInput, setCloseCommentInput] = useState('');
+    const [showAssignLeaderModal, setShowAssignLeaderModal] = useState(false);
+    const [selectedCaseLeader, setSelectedCaseLeader] = useState('');
 
     // Format date helper function
     const formatDate = (dateString) => {
@@ -42,6 +50,27 @@ const SingleComplaintView = () => {
             return 'N/A';
         }
     };
+
+    const actions = {
+        startCase: {
+            icon: <Briefcase fontSize='small' />,
+            label: 'Start Case',
+            onClick: () => setShowStartCaseModal(true),
+            styles: 'bg-blue-700 w-full text-white h-10'
+        },
+        viewrelatedcase: {
+            icon: <Eye fontSize='small' />,
+            label: 'View Related Case',
+            onClick: () => navigate(`/cases/${complaint.case.case_id}`),
+            styles: 'bg-green-700 w-full text-white h-10'
+        },
+        closeComplaint: {
+            icon: <Close fontSize='small' />,
+            label: 'Close Complaint',
+            onClick: () => setShowCloseModal(true),
+            styles: 'bg-red-700 w-full text-white h-10'
+        },
+    }
 
     useEffect(() => {
         // Fetch complaint data from the backend
@@ -53,7 +82,6 @@ const SingleComplaintView = () => {
 
                 if (data.complaintData) {
                     setComplaint(data.complaintData);
-                    console.log("Fetched complaint data:", data.complaintData);
                 } else {
                     setError("No complaint data returned from server");
                 }
@@ -83,15 +111,20 @@ const SingleComplaintView = () => {
     }, [complaintId, user.role]);
 
     // Determine if current user can start a case (Crime OIC role)
-    const canStartCase = () => {
-        return user.role === "Crime OIC" &&
-            complaint?.status === "viewed" &&
-            !complaint?.case;
-    };
+    console.log(complaint)
 
-    // Determine if current user can assign officer
-    const canAssignOfficer = () => {
-        return user.role === "Crime OIC" || user.role === "OIC";
+    const canStartCase = () => {
+        return (user.role === "Crime OIC" || user.role === "OIC") &&
+            complaint?.case?.status === "oicnotreviewed" &&
+            complaint?.status !== "closed";
+    };
+    const canCloseComplaint = () => {
+        return (user.role === "Crime OIC" || user.role === "OIC") &&
+            complaint?.status !== "closed";
+    };
+    const canViewRelatedCase = () => {
+        return (user.role === "Crime OIC" || user.role === "OIC" || user.user_id === complaint.case?.leader_id) &&
+            complaint.case?.status !== "oicnotreviewed";
     };
 
     const handleAssignOfficer = async () => {
@@ -144,23 +177,59 @@ const SingleComplaintView = () => {
         }
     };
 
-    const getStatusBadge = (status) => {
-        switch (status) {
-            case 'new':
-                return <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">New</span>;
-            case 'viewed':
-                return <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Viewed</span>;
-            case 'assigned':
-                return <span className="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">Assigned</span>;
-            case 'in-progress':
-                return <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">In Progress</span>;
-            case 'closed':
-                return <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">Closed</span>;
-            default:
-                return <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-500">{status}</span>;
+    const handleCloseComplaint = async () => {
+        if (!closeCommentInput) return;
+
+        try {
+            const response = await apiClient.post(`/complaints/${complaintId}/close`, {
+                comment: closeCommentInput
+            });
+
+            if (response.data.success) {
+                // Update the complaint status in the state
+                setComplaint(prev => ({
+                    ...prev,
+                    status: 'closed'
+                }));
+                setShowCloseModal(false);
+                alert("Complaint closed successfully");
+            }
+        } catch (error) {
+            console.error("Error closing complaint:", error);
+            alert(error.response?.data?.message || "Failed to close complaint");
         }
     };
 
+    const handleAssignCaseLeader = async () => {
+        if (!selectedCaseLeader || !complaint.case) return;
+
+        try {
+            const response = await apiClient.post(`/cases/${complaint.case.case_id}/assignleader`, {
+                leaderId: selectedCaseLeader
+            });
+
+            if (response.data.success) {
+                // Update the case with the new leader
+                setComplaint(prev => ({
+                    ...prev,
+                    case: {
+                        ...prev.case,
+                        leader_id: selectedCaseLeader,
+                        leader_name: officers.find(o => o.user_id === selectedCaseLeader)?.name || 'Unknown',
+                        leader_role: officers.find(o => o.user_id === selectedCaseLeader)?.role || 'Unknown',
+                        status: 'in-progress' // Update status to in-progress
+                    }
+                }));
+
+                setShowAssignLeaderModal(false);
+                alert("Case leader assigned successfully");
+            }
+        } catch (error) {
+            console.error("Error assigning case leader:", error);
+            alert(error.response?.data?.message || "Failed to assign case leader");
+        }
+    };
+    
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -198,9 +267,8 @@ const SingleComplaintView = () => {
                 complaintId={complaintId}
                 onBack={() => navigate('/complaints')}
                 canStartCase={canStartCase()}
-                canAssignOfficer={canAssignOfficer()}
-                onStartCase={() => setShowStartCaseModal(true)}
                 onAssignOfficer={() => setShowAssignModal(true)}
+                caseData={complaint.case} // Pass the case data to check for leader
             />
 
             {/* Content section */}
@@ -208,25 +276,24 @@ const SingleComplaintView = () => {
                 {/* Complaint reference and status - similar to case reference in SingleCaseView */}
                 <div className="flex justify-between items-center mb-6">
                     <div className="flex items-center">
-                        <FileText className="text-amber-500 mr-2" />
+                        <Folder className="text-amber-500 mr-2" />
                         <div>
                             <p className="text-sm text-gray-700">Complaint Reference</p>
                             <p className="font-mono text-gray-500">{complaintId}</p>
                         </div>
                     </div>
 
-                    <div>
-                        {getStatusBadge(complaint.status)}
-                    </div>
+                    <StatusBadge status={complaint.status} />
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Left column - Complaint details */}
                     <div className="col-span-2 bg-white shadow-md rounded-lg p-6">
+                        {/* Complaint details */}
                         <div className="pb-4 mb-4">
                             <div className="flex justify-between items-start">
                                 <h2 className="text-lg font-semibold text-gray-800 flex items-center">
-                                    <FileText className="h-5 w-5 mr-2 text-blue-800" />
+                                    <FileText className="h-5 w-5 mr-2 text-blue-600" />
                                     Complaint Details
                                 </h2>
                             </div>
@@ -237,7 +304,6 @@ const SingleComplaintView = () => {
                                     <span className="text-sm text-gray-500">Filed on: {formatDate(complaint.complain_dt)}</span>
                                 </div>
 
-                                {/* Replace simple text with OfficerCard component */}
                                 <div className="mt-2">
                                     <p className="text-sm text-gray-500 mb-1">Handled by:</p>
                                     {complaint.officer_id ? (
@@ -268,10 +334,10 @@ const SingleComplaintView = () => {
                         </div>
 
                         {/* Linked case section */}
-                        {complaint.case ? (
+                        {complaint.case && complaint.case.status !== 'oicnotreviewed' ? (
                             <div className="mb-6 border-t border-gray-200 pt-4">
                                 <h3 className="text-md font-semibold mb-3 flex items-center">
-                                    <Briefcase className="h-5 w-5 mr-2 text-blue-800" />
+                                    <Briefcase className="h-5 w-5 mr-2 text-blue-600" />
                                     Linked Case
                                 </h3>
                                 <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
@@ -280,7 +346,7 @@ const SingleComplaintView = () => {
                                             <h4 className="font-medium">Case #{complaint.case.case_id}</h4>
                                             <p className="text-sm text-gray-600 mt-1">{complaint.case.topic || "No topic available"}</p>
                                         </div>
-                                        <Link to={`/cases/${complaint.case.case_id}`} className="text-blue-800 hover:text-blue-900">
+                                        <Link to={`/cases/${complaint.case.case_id}`} className="text-blue-600 hover:text-blue-900">
                                             <Eye className="h-5 w-5" />
                                         </Link>
                                     </div>
@@ -293,7 +359,6 @@ const SingleComplaintView = () => {
                                             </span>
                                         </div>
 
-                                        {/* Show case leader using OfficerCard */}
                                         <div className="mt-2">
                                             <p className="text-sm font-medium text-gray-700 mb-1">Case Leader:</p>
                                             {complaint.case.leader_id ? (
@@ -317,22 +382,27 @@ const SingleComplaintView = () => {
                                 </div>
                             </div>
                         ) : (
-                            user.role === "Crime OIC" && (
+                            (user.role === "Crime OIC" || user.role === "OIC") && (
                                 <div className="mb-6 border-t border-gray-200 pt-4">
                                     <div className="flex items-center justify-between">
                                         <h3 className="text-md font-semibold flex items-center">
-                                            <Briefcase className="h-5 w-5 mr-2 text-blue-800" />
+                                            <Briefcase className="h-5 w-5 mr-2 text-blue-600" />
                                             Linked Case
                                         </h3>
-                                        <button
-                                            onClick={() => setShowStartCaseModal(true)}
-                                            className="text-sm text-blue-800 hover:text-blue-900 flex items-center"
-                                        >
-                                            + Start New Case
-                                        </button>
+                                        {!complaint.case && (
+                                            <OutlinedButton
+                                                onClick={() => setShowStartCaseModal(true)}
+                                                icon="plus"
+                                                text="Start New Case"
+                                                size="small"
+                                            />
+                                        )}
                                     </div>
                                     <div className="bg-gray-50 p-4 rounded-md text-gray-500 text-sm italic mt-2">
-                                        No case has been created for this complaint yet.
+                                        {complaint.case && complaint.case.status === 'oicnotreviewed' ?
+                                            "No case has been created for this complaint yet." :
+                                            <></>
+                                        }
                                     </div>
                                 </div>
                             )
@@ -341,25 +411,22 @@ const SingleComplaintView = () => {
                         {/* Evidence section */}
                         <div className="mb-6 border-t border-gray-200 pt-4">
                             <h3 className="text-md font-semibold mb-3 flex items-center">
-                                <Tag className="h-5 w-5 mr-2 text-blue-800" />
+                                <Tag className="h-5 w-5 mr-2 text-blue-600" />
                                 Evidence Items
                             </h3>
-
-                            {complaint.evidence && complaint.evidence.length > 0 ? (
+                            {complaint.firstEvidence ? (
                                 <div className="space-y-3">
-                                    {complaint.evidence.map(item => (
-                                        <div key={item.evidence_id} className="border border-gray-200 rounded-lg p-3 hover:border-blue-300 transition-colors">
-                                            <div className="flex justify-between">
-                                                <div>
-                                                    <h4 className="font-medium text-gray-800">{item.type}</h4>
-                                                    <p className="text-sm text-gray-600 mt-1">{item.details}</p>
-                                                </div>
-                                                <div className="text-xs text-gray-500">
-                                                    Collected: {formatDate(item.collected_dt)}
-                                                </div>
+                                    <div key={complaint.firstEvidence.evidence_id} className="border border-gray-200 rounded-lg p-3 hover:border-blue-300 transition-colors">
+                                        <div className="flex justify-between">
+                                            <div>
+                                                <h4 className="font-medium text-gray-800">{complaint.firstEvidence.type}</h4>
+                                                <p className="text-sm text-gray-600 mt-1">{complaint.firstEvidence.details}</p>
+                                            </div>
+                                            <div className="text-xs text-gray-500">
+                                                Collected: {formatDate(complaint.firstEvidence.collected_dt)}
                                             </div>
                                         </div>
-                                    ))}
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="bg-gray-50 p-4 rounded-md text-gray-500 text-sm italic">
@@ -375,10 +442,9 @@ const SingleComplaintView = () => {
                         {complaint.complainer ? (
                             <div className="bg-white shadow-md rounded-lg p-5 mb-6">
                                 <h2 className="text-md font-semibold mb-4 flex items-center">
-                                    <User className="h-5 w-5 mr-2 text-blue-800" />
+                                    <User className="h-5 w-5 mr-2 text-blue-600" />
                                     Complainant Details
                                 </h2>
-
                                 <div className="space-y-3">
                                     <div>
                                         <label className="block text-xs font-medium text-gray-500 mb-1">Name</label>
@@ -424,57 +490,34 @@ const SingleComplaintView = () => {
                         ) : (
                             <div className="bg-white shadow-md rounded-lg p-5 mb-6">
                                 <h2 className="text-md font-semibold mb-4 flex items-center">
-                                    <User className="h-5 w-5 mr-2 text-blue-800" />
+                                    <User className="h-5 w-5 mr-2 text-blue-600" />
                                     Complainant Details
                                 </h2>
                                 <p className="text-gray-500 text-sm italic">No complainant details available</p>
                             </div>
                         )}
 
-                        {/* Actions panel */}
-                        <div className="bg-white shadow-md rounded-lg p-5">
-                            <h2 className="text-md font-semibold mb-4 flex items-center">
-                                <FileSearch className="h-5 w-5 mr-2 text-blue-800" />
-                                Actions
-                            </h2>
+                        {/* Quick Actions Sidebar Card */}
+                        {(user.role === 'Crime OIC' || user.role === 'OIC' || user.user_id == complaint.case?.leader_id) && (
+                            <SidebarCard
+                                title="Quick Actions"
+                                icon={<FileSearch />}
+                            >
+                                <div className="space-y-2">
+                                    {canStartCase() && (
+                                        <OutlinedButton action={actions.startCase} />
+                                    )}
 
-                            <div className="space-y-3">
-                                {canStartCase() && (
-                                    <button
-                                        onClick={() => setShowStartCaseModal(true)}
-                                        className="w-full bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-900 flex items-center justify-center"
-                                    >
-                                        <Briefcase className="h-4 w-4 mr-2" />
-                                        Start New Case
-                                    </button>
-                                )}
+                                    {canViewRelatedCase() && (
+                                        <OutlinedButton action={actions.viewrelatedcase} />
+                                    )}
 
-                                {canAssignOfficer() && (
-                                    <button
-                                        onClick={() => setShowAssignModal(true)}
-                                        className="w-full bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800 flex items-center justify-center"
-                                    >
-                                        <UserPlus className="h-4 w-4 mr-2" />
-                                        Assign Officer
-                                    </button>
-                                )}
-
-                                <Link
-                                    to={`/complaints/${complaintId}/edit`}
-                                    className="w-full bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 flex items-center justify-center"
-                                >
-                                    <Edit className="h-4 w-4 mr-2" />
-                                    Edit Complaint
-                                </Link>
-
-                                <Link
-                                    to="/complaints"
-                                    className="w-full border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-100 flex items-center justify-center"
-                                >
-                                    Back to List
-                                </Link>
-                            </div>
-                        </div>
+                                    {canCloseComplaint() && (
+                                        <OutlinedButton action={actions.closeComplaint} />
+                                    )}
+                                </div>
+                            </SidebarCard>
+                        )}
                     </div>
                 </div>
             </div>
@@ -487,7 +530,6 @@ const SingleComplaintView = () => {
                         <p className="text-sm text-gray-600 mb-4">
                             Select an officer to handle this complaint:
                         </p>
-
                         <select
                             value={selectedOfficer}
                             onChange={(e) => setSelectedOfficer(e.target.value)}
@@ -570,6 +612,82 @@ const SingleComplaintView = () => {
                                 className={`px-4 py-2 rounded text-white ${caseTopicInput && caseTypeInput ? 'bg-blue-800 hover:bg-blue-900' : 'bg-blue-300 cursor-not-allowed'}`}
                             >
                                 Create Case
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Close Complaint Modal */}
+            {showCloseModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+                        <h3 className="text-lg font-semibold mb-4">Close Complaint</h3>
+                        <p className="text-sm text-gray-600 mb-4">
+                            Please provide a reason for closing this complaint:
+                        </p>
+
+                        <textarea
+                            value={closeCommentInput}
+                            onChange={(e) => setCloseCommentInput(e.target.value)}
+                            placeholder="Enter closing comments..."
+                            className="w-full border border-gray-300 rounded px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            rows={4}
+                        ></textarea>
+
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                onClick={() => setShowCloseModal(false)}
+                                className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleCloseComplaint}
+                                disabled={!closeCommentInput}
+                                className={`px-4 py-2 rounded text-white ${closeCommentInput ? 'bg-red-600 hover:bg-red-700' : 'bg-red-300 cursor-not-allowed'}`}
+                            >
+                                Close Complaint
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Assign Case Leader Modal */}
+            {showAssignLeaderModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+                        <h3 className="text-lg font-semibold mb-4">Assign Case Leader</h3>
+                        <p className="text-sm text-gray-600 mb-4">
+                            Select an officer to lead this case:
+                        </p>
+                        <select
+                            value={selectedCaseLeader}
+                            onChange={(e) => setSelectedCaseLeader(e.target.value)}
+                            className="w-full border border-gray-300 rounded px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="">-- Select a Leader --</option>
+                            {officers.map(officer => (
+                                <option key={officer.user_id} value={officer.user_id}>
+                                    {officer.name} ({officer.role})
+                                </option>
+                            ))}
+                        </select>
+
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                onClick={() => setShowAssignLeaderModal(false)}
+                                className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleAssignCaseLeader}
+                                disabled={!selectedCaseLeader}
+                                className={`px-4 py-2 rounded text-white ${selectedCaseLeader ? 'bg-purple-800 hover:bg-purple-900' : 'bg-purple-300 cursor-not-allowed'}`}
+                            >
+                                Assign Leader
                             </button>
                         </div>
                     </div>
