@@ -15,7 +15,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { apiClient } from '../../config/apiConfig';
 import Spinner from '../../components/Spinner';
-import FilledButton from '../../components/buttons/FilledButton';
+import OutlinedButton from '../../components/buttons/OutlinedButton';
 
 const Dashboard = () => {
   const [recentComplaints, setRecentComplaints] = useState([]);
@@ -93,6 +93,29 @@ const Dashboard = () => {
     'Sergeant': [stats.officersCount],
   }
 
+  const handleCreateCase = () => {
+    // Handle create case action
+  }
+
+  const handleFileComplaint = () => {
+    // Handle file complaint action
+  }
+
+  const actions = {
+    createCase: {
+      icon: <Add fontSize='small' />,
+      label: 'Create New Case',
+      onClick: handleCreateCase,
+      styles: 'bg-blue-100 text-blue-800 border-blue-300'
+    },
+    fileComplaint: {
+      icon: <Add fontSize='small' />,
+      label: 'File New Complaint',
+      onClick: handleFileComplaint,
+      styles: 'bg-blue-100 text-blue-800 border-blue-300'
+    }
+  }
+
   return (
     <div className="flex-1 overflow-y-auto p-4">
       <div className="mb-4">
@@ -132,10 +155,7 @@ const Dashboard = () => {
           ))}
 
           <div className="mt-4 text-center">
-            <FilledButton
-              text='Create New Case'
-              icon={<Add className='mr-2' />}
-            />
+            <OutlinedButton action={actions.createCase} />
           </div>
         </div>
 
@@ -161,10 +181,7 @@ const Dashboard = () => {
             )))}
 
           <div className="mt-4 text-center">
-            <FilledButton
-              text='File New Complaint'
-              icon={<Add className='mr-2' />}
-            />
+            <OutlinedButton action={actions.fileComplaint} />
           </div>
         </div>
       </div>

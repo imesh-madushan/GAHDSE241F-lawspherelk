@@ -6,6 +6,8 @@ import ProtectedRoutes from './utils/ProtectedRoutes';
 import { apiClient } from './config/apiConfig';
 import SingleCaseView from './pages/cases/SingleCaseView';
 import SingleComplainView from './pages/complaints/SingleComplainView';
+import CasesPage from './pages/cases/CasesPage';
+import ComplaintsPage from './pages/complaints/ComplaintsPage';
 
 function App() {
   // temp login
@@ -40,10 +42,10 @@ function App() {
       <Route element={<ProtectedRoutes />}>
         <Route element={<Layout />}>
           <Route path="dashboard" element={<Dashboard />} />
-          <Route path="cases" element={<div>cases</div>} />
+          <Route path="cases" element={<CasesPage />} />
           <Route path="cases/:caseId" element={<SingleCaseView />} />
-          <Route path="complaints" element={<div>complaints</div>} />
-          <Route path="complaints/:complaintId" element={<SingleComplainView/>} />
+          <Route path="complaints" element={<ComplaintsPage />} />
+          <Route path="complaints/:complaintId" element={<SingleComplainView />} />
         </Route>
       </Route>
 

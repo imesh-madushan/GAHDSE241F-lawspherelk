@@ -69,7 +69,7 @@ const CaseCard = ({ caseData }) => {
   }
 
   return (
-    <div className={`bg-white my-4 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden border-l-16 border-1 ${statusColors[caseData.case_status].split(' ')[2]}`}>
+    <div className={`bg-white max-w-146 my-4 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden border-l-16 border-1 ${statusColors[caseData.case_status].split(' ')[2]}`}>
       <div className="p-5">
         {/* header section */}
         <div className="flex justify-between items-start mb-3">
