@@ -8,6 +8,7 @@ import SingleCaseView from './pages/cases/SingleCaseView';
 import SingleComplainView from './pages/complaints/SingleComplainView';
 import CasesPage from './pages/cases/CasesPage';
 import ComplaintsPage from './pages/complaints/ComplaintsPage';
+import CriminalRecord from './pages/criminalrecord/CriminalRecord';
 
 function App() {
   // temp login
@@ -46,6 +47,7 @@ function App() {
           <Route path="cases/:caseId" element={<SingleCaseView />} />
           <Route path="complaints" element={<ComplaintsPage />} />
           <Route path="complaints/:complaintId" element={<SingleComplainView />} />
+          <Route path="criminals/:criminalId" element={<CriminalRecord />} />
         </Route>
       </Route>
 

@@ -9,7 +9,7 @@ import {
 } from '@mui/icons-material';
 import { apiClient } from '../../config/apiConfig';
 import { format } from 'date-fns';
-import CaseHeader from '../../components/case/CaseHeader';
+import PageHeader from '../../components/common/PageHeader';
 import CaseBasicInfo from '../../components/case/CaseBasicInfo';
 import TabNavigation from '../../components/case/TabNavigation';
 import OverviewTab from '../../components/case/tabs/OverviewTab';
@@ -74,6 +74,22 @@ const SingleCaseView = () => {
     } catch (e) {
       return 'N/A';
     }
+  };
+
+  // Format time
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  const getRiskLevel = (score) => {
+    if (score >= 70) return { level: 'High', color: 'bg-red-500' };
+    if (score >= 40) return { level: 'Medium', color: 'bg-yellow-500' };
+    return { level: 'Low', color: 'bg-green-500' };
   };
 
   const handleEditToggle = () => {
@@ -281,11 +297,33 @@ const SingleCaseView = () => {
 
   return (
     <div className="min-h-screen pb-12 bg-gray-50">
-      <CaseHeader
-        caseData={caseData}
-        isEditing={isEditing}
-        actions={actions}
-        canEdit={canEdit}
+      <PageHeader
+        title={isEditing ? 'Edit Case' : 'Case Details'}
+        breadcrumbItems={[
+          { label: 'Dashboard', link: '/dashboard' },
+          { label: 'Cases', link: '/cases' },
+          { label: caseData.case_id.substring(0, 8) }
+        ]}
+        onBack={() => window.history.back()}
+        actions={canEdit ? [
+          isEditing ? {
+            icon: <Cancel fontSize='small' />,
+            label: 'Cancel',
+            onClick: handleCancelEdit,
+            styles: 'text-red-700'
+          } : {
+            icon: <Edit fontSize='small' />,
+            label: 'Edit Case',
+            onClick: handleEditToggle,
+            styles: 'text-blue-700'
+          },
+          isEditing ? {
+            icon: <Save fontSize='small' />,
+            label: 'Save',
+            onClick: handleSaveChanges,
+            styles: 'text-green-700'
+          } : null
+        ].filter(Boolean) : []}
       />
 
       <div className="container mx-auto px-4 py-6">
@@ -339,6 +377,8 @@ const SingleCaseView = () => {
                   caseData={caseData}
                   canEdit={canEdit}
                   formatDate={formatDate}
+                  formatTime={formatTime}
+                  getRiskLevel={getRiskLevel}
                 />
               )}
 

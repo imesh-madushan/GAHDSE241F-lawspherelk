@@ -2,16 +2,13 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarMonth, AccessTime } from '@mui/icons-material';
 
-const OffencesTab = ({ caseData, canEdit, formatDate, formatTime, getRiskLevel }) => {
-    // Filter offences for this case
-    const caseOffences = caseData?.offences || [];
-
+const OffencesTab = ({ offences, formatDate, formatTime, getRiskLevel }) => {
     return (
         <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Criminal Offences</h3>
-            {caseOffences.length > 0 ? (
+            {offences.length > 0 ? (
                 <div className="space-y-4">
-                    {caseOffences.map((offence) => (
+                    {offences.map((offence) => (
                         <div key={offence.offence_id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                             <div className="flex justify-between items-start mb-3">
                                 <div>
@@ -22,9 +19,7 @@ const OffencesTab = ({ caseData, canEdit, formatDate, formatTime, getRiskLevel }
                                     ? "bg-yellow-100 text-yellow-800"
                                     : offence.status === "Convicted"
                                         ? "bg-red-100 text-red-800"
-                                        : offence.status === "Alleged"
-                                            ? "bg-orange-100 text-orange-800"
-                                            : "bg-green-100 text-green-800"
+                                        : "bg-green-100 text-green-800"
                                     }`}>
                                     {offence.status}
                                 </div>
@@ -54,9 +49,9 @@ const OffencesTab = ({ caseData, canEdit, formatDate, formatTime, getRiskLevel }
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                                 <div>
-                                    <div className="text-xs text-gray-500">Criminal</div>
-                                    <Link to={`/criminals/${offence.criminal_id}`} className="text-sm text-blue-800 hover:underline">
-                                        {offence.criminal_name} ({offence.criminal_id})
+                                    <div className="text-xs text-gray-500">Related Case</div>
+                                    <Link to={`/cases/${offence.case_id}`} className="text-sm text-blue-800 hover:underline">
+                                        {offence.case_id}
                                     </Link>
                                 </div>
 
@@ -65,15 +60,23 @@ const OffencesTab = ({ caseData, canEdit, formatDate, formatTime, getRiskLevel }
                                     <div className="flex items-center">
                                         <div className="w-20 bg-gray-200 rounded-full h-1.5 mr-2">
                                             <div
-                                                className={`h-1.5 rounded-full ${getRiskLevel(parseFloat(offence.risk_score)).color}`}
-                                                style={{ width: `${Math.min(parseFloat(offence.risk_score), 100)}%` }}
+                                                className={`h-1.5 rounded-full ${getRiskLevel(offence.risk_score).color}`}
+                                                style={{ width: `${Math.min(offence.risk_score, 100)}%` }}
                                             ></div>
                                         </div>
-                                        <span className="text-sm">{offence.risk_score}</span>
+                                        <span className="text-sm">{offence.risk_score.toFixed(2)}</span>
                                     </div>
                                 </div>
                             </div>
 
+                            <div>
+                                <div className="text-xs text-gray-500 mb-1">Victims</div>
+                                {offence.victims.map((victim, index) => (
+                                    <div key={index} className="text-sm">
+                                        <span className="font-medium">{victim.name}</span> (NIC: {victim.nic})
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -84,4 +87,4 @@ const OffencesTab = ({ caseData, canEdit, formatDate, formatTime, getRiskLevel }
     );
 };
 
-export default OffencesTab;
+export default OffencesTab; 

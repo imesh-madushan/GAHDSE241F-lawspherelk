@@ -12,14 +12,15 @@ import {
   Settings,
   Science,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Copyright
 } from '@mui/icons-material';
 
 import { useAuth } from '../contexts/AuthContext';
 
 const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
   const { user } = useAuth();
-  
+
   // Define menu items with proper icon components
   const menuItems = {
     'OIC': [
@@ -82,7 +83,7 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
   const currentMenuItems = menuItems[user.role] || menuItems['Police Constable'];
 
   return (
-    <div className={`h-screen bg-gray-900 text-white transition-all duration-300 ${expanded ? 'w-58' : 'w-20'}`}>
+    <div className={`h-screen bg-gray-900 text-white transition-all duration-300 ${expanded ? 'w-58' : 'w-20'} flex flex-col`}>
       <div className="p-5 flex justify-between items-center border-b border-gray-700">
         {expanded && <span className="font-bold text-lg">LawSphere LK</span>}
         <button
@@ -94,13 +95,13 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
         </button>
       </div>
 
-      <nav className="mt-4">
+      <nav className="mt-4 flex-grow">
         {currentMenuItems.map((item) => (
           <button
             key={item.id}
             onClick={() => {
               setActiveItem(item.id);
-              window.location.href = `/${item.id}`; // Redirect to the corresponding page
+              window.location.href = `/${item.id}`;
             }}
             className={`flex relative items-center py-3.5 transition-colors hover:cursor-pointer 
               ${activeItem === item.id
@@ -124,6 +125,21 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
           </button>
         ))}
       </nav>
+
+      {/* Footer Section */}
+      <div className={`mt-auto border-t border-gray-700 p-3 ${!expanded && 'text-center'}`}>
+        {expanded ? (
+          <>
+            <div className="flex items-center text-gray-400 text-sm mb-2">
+              <Copyright className="mr-1" fontSize="small" />
+              <span>2025 LawSphere LK</span>
+            </div>
+            <p className="text-xs ml-2 text-gray-500">Sri Lanka Police Department</p>
+          </>
+        ) : (
+          <Copyright className="text-gray-400 mx-auto" />
+        )}
+      </div>
     </div>
   );
 };

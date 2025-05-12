@@ -18,7 +18,7 @@ import {
 import { apiClient } from '../../config/apiConfig';
 import { useAuth } from '../../contexts/AuthContext';
 import { format } from 'date-fns';
-import ComplaintHeader from '../../components/complaint/ComplaintHeader';
+import PageHeader from '../../components/common/PageHeader';
 import OfficerCard from '../../components/cards/OfficerCard';
 import StatusBadge from '../../components/badges/StatusBadge';
 import OutlinedButton from '../../components/buttons/OutlinedButton';
@@ -229,7 +229,7 @@ const SingleComplaintView = () => {
             alert(error.response?.data?.message || "Failed to assign case leader");
         }
     };
-    
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -263,12 +263,14 @@ const SingleComplaintView = () => {
     return (
         <div className="bg-gray-50 min-h-screen">
             {/* Header section with breadcrumb */}
-            <ComplaintHeader
-                complaintId={complaintId}
+            <PageHeader
+                title="Complaint Details"
+                breadcrumbItems={[
+                    { label: 'Dashboard', link: '/dashboard' },
+                    { label: 'Complaints', link: '/complaints' },
+                    { label: complaintId.substring(0, 8) }
+                ]}
                 onBack={() => navigate('/complaints')}
-                canStartCase={canStartCase()}
-                onAssignOfficer={() => setShowAssignModal(true)}
-                caseData={complaint.case} // Pass the case data to check for leader
             />
 
             {/* Content section */}
