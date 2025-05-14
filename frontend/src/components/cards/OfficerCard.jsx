@@ -4,7 +4,6 @@ import { Person, Visibility } from '@mui/icons-material';
 const OfficerCard = ({
     officer,
     size = "medium",
-    showViewButton = false,
     className = "",
     onClick = null
 }) => {
@@ -21,20 +20,20 @@ const OfficerCard = ({
 
     // Set sizes based on the size prop
     const sizeClasses = {
-        small: "h-8 w-8 text-xs",
-        medium: "h-10 w-10 text-sm",
-        large: "h-12 w-12 text-base"
+        small: "h-8 w-8",
+        medium: "h-10 w-10",
+        large: "h-12 w-12"
     };
 
     const containerClasses = {
-        small: "p-1.5",
-        medium: "p-2",
-        large: "p-3"
+        small: "p-1.5 text-xs",
+        medium: "p-2 text-sm",
+        large: "p-3 text-base"
     };
 
     return (
         <div
-            className={`flex items-center justify-between ${containerClasses[size]} border border-blue-100 rounded-lg bg-gray-50 ${className} ${onClick ? 'cursor-pointer hover:bg-blue-100 transition-colors' : ''}`}
+            className={`flex items-center justify-between hover:cursor-pointer hover:rounded-xl transition-colors hover:[box-shadow:2px_3px_8px_2px_rgba(0,0,0,0.2)] hover:border-white ${containerClasses[size]} border border-gray-200 rounded-lg bg-yellow-50/20 ${className} `}
             onClick={onClick}
         >
             <div className="flex items-center">
@@ -66,12 +65,6 @@ const OfficerCard = ({
                     </div>
                 </div>
             </div>
-
-            {showViewButton && (
-                <button className="text-blue-600 hover:text-blue-800 transition-colors">
-                    <Visibility fontSize="small" />
-                </button>
-            )}
         </div>
     );
 };

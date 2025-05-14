@@ -1,6 +1,7 @@
 import React from 'react';
 import { Add, Fingerprint, PhotoCamera, Description, LocationOn, AccessTime, CalendarMonth, Badge } from '@mui/icons-material';
 import OutlinedButton from '../../buttons/OutlinedButton';
+import OfficerCard from '../../cards/OfficerCard';
 
 const EvidenceTab = ({ evidence, formatDate, formatTime, isEditing }) => {
     const getEvidenceIcon = (type) => {
@@ -75,20 +76,15 @@ const EvidenceTab = ({ evidence, formatDate, formatTime, isEditing }) => {
                                     {/* Officer Card */}
                                     <div className="mt-4 pt-4 border-t border-gray-100">
                                         <div className="text-xs text-gray-500 mb-2">Collected By</div>
-                                        <div className="flex items-center bg-gray-50 rounded-lg p-3">
-                                            <img
-                                                src={item.officer_profile}
-                                                alt="Officer"
-                                                className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
-                                            />
-                                            <div className="ml-3">
-                                                <div className="flex items-center">
-                                                    <Badge className="text-gray-400 mr-1" style={{ fontSize: '0.9rem' }} />
-                                                    <span className="text-sm font-medium text-gray-700">{item.officer_role}</span>
-                                                </div>
-                                                <div className="text-xs text-gray-500">Evidence Collector</div>
-                                            </div>
-                                        </div>
+                                        <OfficerCard
+                                            officer={{
+                                                name: item.officer_name,
+                                                role: item.officer_role,
+                                                profilePic: item.officer_profile
+                                            }}
+                                            size="small"
+                                            className="bg-gray-50 p-3"
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -107,4 +103,4 @@ const EvidenceTab = ({ evidence, formatDate, formatTime, isEditing }) => {
     );
 };
 
-export default EvidenceTab; 
+export default EvidenceTab;

@@ -5,7 +5,6 @@ const db = require("../config/db");
 exports.findUserByUsername = async (username) => {
   const query = "SELECT * FROM Login WHERE username = ?";
   const [rows] = await db.query(query, [username]);
-  console.log(rows);
   return rows.length > 0 ? rows[0] : null;
 };
 

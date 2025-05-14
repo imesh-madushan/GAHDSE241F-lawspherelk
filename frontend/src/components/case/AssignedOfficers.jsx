@@ -17,7 +17,6 @@ const AssignedOfficers = ({
                         <OfficerCard
                             key={officer.id || index}
                             officer={officer}
-                            showViewButton={true}
                         />
                     ))
                 ) : (
