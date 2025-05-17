@@ -2,7 +2,13 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarMonth, AccessTime } from '@mui/icons-material';
 
-const OffencesTab = ({ offences, formatDate, formatTime, getRiskLevel }) => {
+const OffencesTab = ({ offences, formatDate, formatTime, getRiskLevel, isEditing }) => {
+    const formatRiskScore = (score) => {
+        // Convert to number and handle null/undefined cases
+        const numScore = parseFloat(score) || 0;
+        return numScore.toFixed(2);
+    };
+
     return (
         <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Criminal Offences</h3>
@@ -64,18 +70,32 @@ const OffencesTab = ({ offences, formatDate, formatTime, getRiskLevel }) => {
                                                 style={{ width: `${Math.min(offence.risk_score, 100)}%` }}
                                             ></div>
                                         </div>
-                                        <span className="text-sm">{offence.risk_score.toFixed(2)}</span>
+                                        <span className="text-sm">{formatRiskScore(offence.risk_score)}</span>
                                     </div>
                                 </div>
                             </div>
 
                             <div>
                                 <div className="text-xs text-gray-500 mb-1">Victims</div>
-                                {offence.victims.map((victim, index) => (
-                                    <div key={index} className="text-sm">
-                                        <span className="font-medium">{victim.name}</span> (NIC: {victim.nic})
-                                    </div>
-                                ))}
+                                {offence.victims && offence.victims.length > 0 ? (
+                                    offence.victims.map((victim, index) => (
+                                        <div key={index} className="text-sm mb-2">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <span className="font-medium">{victim.name}</span>
+                                                    <span className="text-gray-500 ml-2">(NIC: {victim.nic})</span>
+                                                </div>
+                                            </div>
+                                            {victim.phone && (
+                                                <div className="text-xs text-gray-500 mt-1">
+                                                    Phone: {victim.phone}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-sm text-gray-500">No victims recorded</div>
+                                )}
                             </div>
                         </div>
                     ))}

@@ -25,6 +25,11 @@ const CriminalProfile = ({ criminal, calculateAge, formatDate, isEditing, handle
         return { level: 'Low', color: 'bg-green-500' };
     };
 
+    const formatRiskScore = (score) => {
+        // Convert to number and handle null/undefined cases
+        const numScore = parseFloat(score) || 0;
+        return numScore.toFixed(2);
+    };
 
     return (
         <div className="bg-white rounded-lg shadow-md mb-6 overflow-hidden">
@@ -118,7 +123,7 @@ const CriminalProfile = ({ criminal, calculateAge, formatDate, isEditing, handle
                                 <input
                                     type="date"
                                     name="dob"
-                                    value={criminal.dob}
+                                    value={criminal.dob ? new Date(criminal.dob).toISOString().split('T')[0] : ''}
                                     onChange={handleInputChange}
                                     disabled={!isEditing}
                                     className="w-full px-3 py-1.5 bg-gray-700/50 rounded-lg border border-gray-600 focus:outline-none focus:border-gray-400 text-sm disabled:opacity-50"
@@ -144,7 +149,7 @@ const CriminalProfile = ({ criminal, calculateAge, formatDate, isEditing, handle
                                     style={{ width: `${Math.min(criminal.total_risk, 100)}%` }}
                                 ></div>
                             </div>
-                            <div className="text-xs text-right text-gray-500">Score: {criminal.total_risk.toFixed(2)}/100</div>
+                            <div className="text-xs text-right text-gray-500">Score: {formatRiskScore(criminal.total_risk)}</div>
                         </div>
 
                         <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
