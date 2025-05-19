@@ -6,19 +6,13 @@ const SearchBar = ({
     setSearchTerm,
     searchType,
     setSearchType,
+    searchOptions,
     showFilters,
     setShowFilters,
     handleSearch,
 }) => {
     const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
-
-    const searchOptions = [
-        { value: 'crime', label: 'Crime Type' },
-        { value: 'suspect', label: 'Suspect Name' },
-        { value: 'case', label: 'Case Number' },
-        { value: 'location', label: 'Location' },
-    ];
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -80,8 +74,8 @@ const SearchBar = ({
                                                 setIsTypeDropdownOpen(false);
                                             }}
                                             className={`block w-full text-left px-4 py-2 text-sm ${searchType === option.value
-                                                    ? 'bg-blue-50 text-blue-700 font-medium'
-                                                    : 'text-gray-700 hover:bg-gray-50'
+                                                ? 'bg-blue-50 text-blue-700 font-medium'
+                                                : 'text-gray-700 hover:bg-gray-50'
                                                 }`}
                                         >
                                             {option.label}
@@ -96,8 +90,8 @@ const SearchBar = ({
                         type="button"
                         onClick={() => setShowFilters(!showFilters)}
                         className={`inline-flex items-center px-4 py-2.5 text-sm font-medium rounded-lg transition-all ${showFilters
-                                ? 'bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100'
-                                : 'bg-gray-50 text-gray-700 border border-gray-300 hover:bg-gray-100'
+                            ? 'bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100'
+                            : 'bg-gray-50 text-gray-700 border border-gray-300 hover:bg-gray-100'
                             }`}
                         aria-expanded={showFilters ? 'true' : 'false'}
                         data-testid="filter-toggle"

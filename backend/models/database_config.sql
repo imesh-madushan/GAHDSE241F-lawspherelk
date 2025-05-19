@@ -151,7 +151,7 @@ CREATE TABLE CriminalRecord (
 
 CREATE TABLE CrimeOffence (
     offence_id VARCHAR(36) PRIMARY KEY,
-    status VARCHAR(50),
+    status ENUM ('Alleged', 'Acquitted'),
     crime_type ENUM ('Assault',
         'Homicide','Manslaughter','Domestic Violence','Threatening Behavior','Armed Robbery',
         'Kidnapping','Child Abduction','Burglary','Theft','Shoplifting','Vandalism','Arson',

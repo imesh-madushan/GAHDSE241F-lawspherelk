@@ -7,7 +7,7 @@ const FilterOption = ({
     testId,
     colorVariant = 'gray',
 }) => {
-    const baseClasses = "px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200";
+    const baseClasses = "px-3 m-0.5 py-1.5 text-xs font-medium rounded-full transition-all duration-200";
 
     const variantClasses = {
         gray: selected

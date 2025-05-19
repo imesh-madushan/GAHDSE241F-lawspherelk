@@ -1,42 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, FilterList, KeyboardArrowDown, CalendarMonth, AccessTime } from '@mui/icons-material';
+import { CalendarMonth, AccessTime } from '@mui/icons-material';
 import { apiClient } from '../../config/apiConfig';
 import PageHeader from '../../components/common/PageHeader';
-import OutlinedButton from '../../components/buttons/OutlinedButton';
+import SearchInterface from '../../components/searchsection/SearchInterface';
 
 const CrimeOffencesPage = () => {
     const [offences, setOffences] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [searchType, setSearchType] = useState('crime_type');
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [dateRange, setDateRange] = useState({ start: '', end: '' });
-    const [statusFilter, setStatusFilter] = useState('all');
-    const [riskLevelFilter, setRiskLevelFilter] = useState('all');
 
-    const searchOptions = [
-        { value: 'crime_type', label: 'Search by Crime Type' },
-        { value: 'criminal_name', label: 'Search by Criminal Name' },
-        { value: 'criminal_id', label: 'Search by Criminal ID' },
-        { value: 'fingerprint', label: 'Search by Fingerprint' },
-        { value: 'case_id', label: 'Search by Case ID' }
-    ];
-
-    const statusOptions = [
-        { value: 'all', label: 'All Statuses' },
-        { value: 'Under Investigation', label: 'Under Investigation' },
-        { value: 'Convicted', label: 'Convicted' },
-        { value: 'Alleged', label: 'Alleged' }
-    ];
-
-    const riskLevelOptions = [
-        { value: 'all', label: 'All Risk Levels' },
-        { value: 'high', label: 'High Risk' },
-        { value: 'medium', label: 'Medium Risk' },
-        { value: 'low', label: 'Low Risk' }
-    ];
+    const searchConfig = {
+        searchOptions: [
+            { value: 'crime_type', label: 'Crime Type' },
+            { value: 'criminal_name', label: 'Criminal Name' },
+            { value: 'criminal_id', label: 'Criminal ID' },
+            { value: 'fingerprint', label: 'Fingerprint' },
+            { value: 'case_id', label: 'Case ID' }
+        ],
+        statusOptions: [
+            { value: 'all', label: 'All' },
+            { value: 'Alleged', label: 'Alleged', colorVariant: 'yellow' },
+            { value: 'Convicted', label: 'Convicted', colorVariant: 'red' },
+            { value: 'Acquitted', label: 'Acquitted', colorVariant: 'green' }
+        ],
+        riskOptions: [
+            { value: 'all', label: 'All' },
+            { value: 'high', label: 'High Risk', colorVariant: 'red' },
+            { value: 'medium', label: 'Medium Risk', colorVariant: 'yellow' },
+            { value: 'low', label: 'Low Risk', colorVariant: 'green' }
+        ],
+        showRiskLevel: true,
+        showDateRange: true
+    };
 
     useEffect(() => {
         fetchOffences();
@@ -53,48 +49,46 @@ const CrimeOffencesPage = () => {
         }
     };
 
-    const handleSearch = async () => {
-        if (!searchTerm.trim() && statusFilter === 'all' && riskLevelFilter === 'all' && !dateRange.start && !dateRange.end) {
-            fetchOffences();
-            return;
-        }
-
+    const handleSearch = async (searchParams) => {
         try {
             setLoading(true);
             let endpoint = '/crimeoffences/search';
             let params = {};
 
-            // Add search parameters based on search type
-            switch (searchType) {
-                case 'crime_type':
-                    params.crime_type = searchTerm;
-                    break;
-                case 'criminal_name':
-                    params.criminal_name = searchTerm;
-                    break;
-                case 'criminal_id':
-                    params.criminal_id = searchTerm;
-                    break;
-                case 'fingerprint':
-                    params.fingerprint = searchTerm;
-                    break;
-                case 'case_id':
-                    params.case_id = searchTerm;
-                    break;
-                default:
-                    params.crime_type = searchTerm;
+            // Only add search parameters if there's actual search text
+            if (searchParams.searchTerm && searchParams.searchTerm.trim() !== '') {
+                switch (searchParams.searchType) {
+                    case 'crime_type':
+                        params.crime_type = searchParams.searchTerm.trim();
+                        break;
+                    case 'criminal_name':
+                        params.criminal_name = searchParams.searchTerm.trim();
+                        break;
+                    case 'criminal_id':
+                        params.criminal_id = searchParams.searchTerm.trim();
+                        break;
+                    case 'fingerprint':
+                        params.fingerprint = searchParams.searchTerm.trim();
+                        break;
+                    case 'case_id':
+                        params.case_id = searchParams.searchTerm.trim();
+                        break;
+                }
             }
 
-            // Add filters
-            if (statusFilter !== 'all') params.status = statusFilter;
-            if (riskLevelFilter !== 'all') params.risk_level = riskLevelFilter;
-            if (dateRange.start) params.start_date = dateRange.start;
-            if (dateRange.end) params.end_date = dateRange.end;
+            // Only add filters if they're not 'all'
+            if (searchParams.status && searchParams.status !== 'all') {
+                params.status = searchParams.status;
+            }
+            if (searchParams.risk && searchParams.risk !== 'all') {
+                params.risk_level = searchParams.risk;
+            }
 
             const response = await apiClient.get(endpoint, { params });
             setOffences(response.data.offences);
             setLoading(false);
         } catch (err) {
+            console.error('Search error:', err);
             setError('Search failed');
             setLoading(false);
         }
@@ -151,116 +145,24 @@ const CrimeOffencesPage = () => {
             />
 
             <div className="container mx-auto p-4">
-                {/* Search and Filter Section */}
-                <div className="bg-white rounded-xl shadow-md p-4 mb-6">
-                    <div className="flex flex-col gap-4">
-                        {/* Search Bar */}
-                        <div className="flex flex-col md:flex-row gap-4 items-center">
-                            <div className="flex-1 w-full">
-                                <div className="relative">
-                                    <input
-                                        type="text"
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        placeholder="Search offences..."
-                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                                    />
-                                    <Search className="absolute left-3 top-3 text-gray-400" />
-                                </div>
-                            </div>
-                            <div className="flex gap-3 items-center">
-                                <div className="relative">
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                        className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    >
-                                        <FilterList className="text-gray-500" />
-                                        {searchOptions.find(option => option.value === searchType)?.label || 'Search by Crime Type'}
-                                        <KeyboardArrowDown className={`transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
-                                    </button>
-                                    {isDropdownOpen && (
-                                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
-                                            {searchOptions.map((option) => (
-                                                <button
-                                                    key={option.value}
-                                                    onClick={() => {
-                                                        setSearchType(option.value);
-                                                        setIsDropdownOpen(false);
-                                                    }}
-                                                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${searchType === option.value ? 'bg-blue-50 text-blue-700' : 'text-gray-700'}`}
-                                                >
-                                                    {option.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                                <OutlinedButton
-                                    action={{
-                                        icon: <Search className="text-sm" />,
-                                        label: 'Search',
-                                        onClick: handleSearch,
-                                        styles: 'text-blue-700 bg-blue-800 text-white hover:bg-blue-700 hover:text-white h-10.5 w-32'
-                                    }}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Additional Filters */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {/* Status Filter */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                                <select
-                                    value={statusFilter}
-                                    onChange={(e) => setStatusFilter(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                >
-                                    {statusOptions.map(option => (
-                                        <option key={option.value} value={option.value}>
-                                            {option.label}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {/* Risk Level Filter */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Risk Level</label>
-                                <select
-                                    value={riskLevelFilter}
-                                    onChange={(e) => setRiskLevelFilter(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                >
-                                    {riskLevelOptions.map(option => (
-                                        <option key={option.value} value={option.value}>
-                                            {option.label}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {/* Date Range Filter */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
-                                <div className="flex gap-2">
-                                    <input
-                                        type="date"
-                                        value={dateRange.start}
-                                        onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    />
-                                    <input
-                                        type="date"
-                                        value={dateRange.end}
-                                        onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                {/* Modern Search Interface */}
+                <div className="mb-6">
+                    <SearchInterface
+                        searchOptions={searchConfig.searchOptions}
+                        filters={[
+                            {
+                                id: 'status',
+                                label: 'Status',
+                                options: searchConfig.statusOptions
+                            },
+                            {
+                                id: 'risk',
+                                label: 'Risk Level',
+                                options: searchConfig.riskOptions
+                            }
+                        ]}
+                        onSearch={handleSearch}
+                    />
                 </div>
 
                 {/* Data Table */}

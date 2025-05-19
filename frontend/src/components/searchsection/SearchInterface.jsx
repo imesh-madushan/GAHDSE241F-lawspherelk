@@ -1,47 +1,105 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SearchBar from './SearchBar';
 import FilterPanel from './FilterPanel';
 import FilterBadge from './FilterBadge';
 
-const SearchInterface = ({ config, onSearch }) => {
+const SearchInterface = ({
+  searchOptions = [], // Array of search options
+  filters = [], // Array of filter configurations
+  onSearch
+}) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchType, setSearchType] = useState(config.searchOptions[0].value);
+  const [searchType, setSearchType] = useState(searchOptions[0]?.value || '');
   const [showFilters, setShowFilters] = useState(false);
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [riskLevelFilter, setRiskLevelFilter] = useState('all');
-  const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const [filterValues, setFilterValues] = useState({});
   const [activeFilters, setActiveFilters] = useState([]);
 
-  const handleSearch = () => {
-    onSearch({
-      searchTerm,
-      searchType,
-      statusFilter,
-      riskLevelFilter: config.showRiskLevel ? riskLevelFilter : undefined,
-      dateRange,
+  // Initialize filter values
+  useEffect(() => {
+    const initialValues = {};
+    filters.forEach(filter => {
+      initialValues[filter.id] = 'all';
     });
+    setFilterValues(initialValues);
+  }, [filters]);
 
+  // Update active filters whenever search type or filter values change
+  useEffect(() => {
+    updateActiveFilters();
+  }, [searchType, filterValues]);
+
+  const handleSearch = () => {
+    const searchParams = {
+      searchTerm,
+      searchType
+    };
+
+    // Only add filters if they're not 'all'
+    if (filterValues.status && filterValues.status !== 'all') {
+      searchParams.status = filterValues.status;
+    }
+    if (filterValues.risk && filterValues.risk !== 'all') {
+      searchParams.risk = filterValues.risk;
+    }
+
+    onSearch(searchParams);
+  };
+
+  const updateActiveFilters = () => {
     const newActiveFilters = [];
-    if (statusFilter !== 'all') newActiveFilters.push(`Status: ${statusFilter}`);
-    if (config.showRiskLevel && riskLevelFilter !== 'all') newActiveFilters.push(`Risk: ${riskLevelFilter}`);
-    if (dateRange.start || dateRange.end) newActiveFilters.push('Date range');
+
+    // Add search type if not default
+    if (searchType && searchType !== searchOptions[0]?.value) {
+      const searchLabel = searchOptions.find(opt => opt.value === searchType)?.label;
+      if (searchLabel) {
+        newActiveFilters.push(`Search: ${searchLabel}`);
+      }
+    }
+
+    // Add active filters
+    filters.forEach(filter => {
+      const value = filterValues[filter.id];
+      if (value && value !== 'all') {
+        const option = filter.options.find(opt => opt.value === value);
+        if (option) {
+          newActiveFilters.push(`${filter.label}: ${option.label}`);
+        }
+      }
+    });
 
     setActiveFilters(newActiveFilters);
   };
 
   const clearFilter = (filter) => {
-    if (filter.startsWith('Status:')) setStatusFilter('all');
-    if (filter.startsWith('Risk:')) setRiskLevelFilter('all');
-    if (filter === 'Date range') setDateRange({ start: '', end: '' });
+    const [filterType, filterLabel] = filter.split(': ');
 
-    setActiveFilters(prev => prev.filter(f => f !== filter));
+    if (filterType === 'Search') {
+      setSearchType(searchOptions[0]?.value || '');
+    } else {
+      const filterConfig = filters.find(f => f.label === filterType);
+      if (filterConfig) {
+        setFilterValues(prev => ({
+          ...prev,
+          [filterConfig.id]: 'all'
+        }));
+      }
+    }
   };
 
   const clearAllFilters = () => {
-    setStatusFilter('all');
-    setRiskLevelFilter('all');
-    setDateRange({ start: '', end: '' });
-    setActiveFilters([]);
+    setSearchType(searchOptions[0]?.value || '');
+    const resetValues = {};
+    filters.forEach(filter => {
+      resetValues[filter.id] = 'all';
+    });
+    setFilterValues(resetValues);
+  };
+
+  const handleFilterChange = (filterId, value) => {
+    setFilterValues(prev => ({
+      ...prev,
+      [filterId]: value
+    }));
   };
 
   return (
@@ -51,7 +109,7 @@ const SearchInterface = ({ config, onSearch }) => {
         setSearchTerm={setSearchTerm}
         searchType={searchType}
         setSearchType={setSearchType}
-        searchOptions={config.searchOptions}
+        searchOptions={searchOptions}
         showFilters={showFilters}
         setShowFilters={setShowFilters}
         handleSearch={handleSearch}
@@ -74,14 +132,9 @@ const SearchInterface = ({ config, onSearch }) => {
 
       <FilterPanel
         show={showFilters}
-        config={config}
-        statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
-        riskLevelFilter={riskLevelFilter}
-        setRiskLevelFilter={setRiskLevelFilter}
-        dateRange={dateRange}
-        setDateRange={setDateRange}
-        handleSearch={handleSearch}
+        filters={filters}
+        filterValues={filterValues}
+        onFilterChange={handleFilterChange}
       />
     </div>
   );
