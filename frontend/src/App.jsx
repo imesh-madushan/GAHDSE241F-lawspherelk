@@ -10,6 +10,8 @@ import CasesPage from './pages/cases/CasesPage';
 import ComplaintsPage from './pages/complaints/ComplaintsPage';
 import CriminalRecord from './pages/criminals/CriminalRecord';
 import CriminalsPage from './pages/criminals/CriminalsPage';
+import CrimeOffencesPage from './pages/crimeoffences/CrimeOffencesPage';
+import Test from './pages/Test';
 
 function App() {
   // temp login
@@ -28,7 +30,7 @@ function App() {
     .then(res => console.log(res.data))
     .catch(err => console.log(err.response.data));
 
-  // login();
+  login();
 
   return (
     <Routes>
@@ -50,6 +52,8 @@ function App() {
           <Route path="complaints/:complaintId" element={<SingleComplainView />} />
           <Route path="criminals" element={<CriminalsPage />} />
           <Route path="criminals/:criminalId" element={<CriminalRecord />} />
+          <Route path="crimeoffences" element={<CrimeOffencesPage />} />
+          <Route path="test" element={<Test />} />
         </Route>
       </Route>
 

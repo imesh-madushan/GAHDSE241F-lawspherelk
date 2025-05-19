@@ -27,7 +27,6 @@ const CriminalsPage = () => {
     const fetchCriminals = async () => {
         try {
             const response = await apiClient.get('/criminals/getAllCriminals');
-            console.log(response.data.criminals);
             setCriminals(response.data.criminals);
             setLoading(false);
         } catch (err) {

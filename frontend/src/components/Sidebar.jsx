@@ -30,6 +30,7 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
       { id: 'investigations', label: 'Investigations', icon: <Search /> },
       { id: 'evidence', label: 'Evidence', icon: <Inventory2 /> },
       { id: 'criminals', label: 'Criminal Records', icon: <Fingerprint /> },
+      { id: 'crimeoffences', label: 'Crime Offences', icon: <Description /> },
       { id: 'reports', label: 'Reports', icon: <Summarize /> },
       { id: 'officers', label: 'Officer Management', icon: <People /> },
       { id: 'analytics', label: 'Analytics', icon: <BarChart /> },
@@ -40,6 +41,7 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
       { id: 'cases', label: 'Cases', icon: <Folder /> },
       { id: 'complaints', label: 'Complaints', icon: <Description /> },
       { id: 'criminals', label: 'Criminal Records', icon: <Fingerprint /> },
+      { id: 'crimeoffences', label: 'Crime Offences', icon: <Description /> },
       { id: 'officers', label: 'Officers', icon: <People /> },
       { id: 'reports', label: 'Reports', icon: <Summarize /> },
       { id: 'analytics', label: 'Analytics', icon: <BarChart /> },
@@ -49,6 +51,8 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
       { id: 'dashboard', label: 'Dashboard', icon: <Dashboard /> },
       { id: 'cases', label: 'Assigned Cases', icon: <Folder /> },
       { id: 'investigations', label: 'Investigations', icon: <Search /> },
+      { id: 'criminals', label: 'Criminal Records', icon: <Fingerprint /> },
+      { id: 'crimeoffences', label: 'Crime Offences', icon: <Description /> },
       { id: 'evidence', label: 'Evidence', icon: <Inventory2 /> },
       { id: 'reports', label: 'Reports', icon: <Summarize /> },
       { id: 'settings', label: 'Settings', icon: <Settings /> }
@@ -110,7 +114,7 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
               }
               ${expanded
                 ? 'mx-2 px-6 w-full rounded-sm rounded-br-xl rounded-tr-xl'
-                : 'w-16 mx-auto rounded-xl '
+                : 'w-16 mx-auto rounded-xl'
               }`}
           >
             <span className={`flex items-center justify-center ${expanded ? 'mr-3' : 'mx-auto'}`}>
