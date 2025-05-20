@@ -25,7 +25,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/complaints', complaintRoutes);
 app.use('/api/cases', caseRoutes);
 app.use('/api/common', commonRoutes);
-app.use('/api/officer', officerRoutes);
+app.use('/api/officers', officerRoutes);
 app.use('/api/criminals', criminalRoutes);
 app.use('/api/crimeoffences', crimeOffenceRoutes);
 

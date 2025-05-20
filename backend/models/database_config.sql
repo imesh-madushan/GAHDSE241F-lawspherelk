@@ -15,7 +15,7 @@ CREATE TABLE Login (
     username VARCHAR(50) UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     faild_attempts INT DEFAULT 0,
-    account_locked BOOLEAN DEFAULT FALSE
+    account_locked BOOLEAN DEFAULT TRUE
 );
 
 -- CREATE TABLE Roles (

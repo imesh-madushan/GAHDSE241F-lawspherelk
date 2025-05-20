@@ -50,12 +50,12 @@ const CrimeOffencesPage = () => {
     };
 
     const handleSearch = async (searchParams) => {
+        console.log("searchParams", searchParams);
         try {
             setLoading(true);
             let endpoint = '/crimeoffences/search';
             let params = {};
 
-            // Only add search parameters if there's actual search text
             if (searchParams.searchTerm && searchParams.searchTerm.trim() !== '') {
                 switch (searchParams.searchType) {
                     case 'crime_type':
@@ -76,7 +76,6 @@ const CrimeOffencesPage = () => {
                 }
             }
 
-            // Only add filters if they're not 'all'
             if (searchParams.status && searchParams.status !== 'all') {
                 params.status = searchParams.status;
             }

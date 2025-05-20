@@ -89,7 +89,7 @@ const SingleComplaintView = () => {
                 // Also fetch available officers for assignment (if user has appropriate role)
                 if (user.role === "Crime OIC" || user.role === "OIC") {
                     try {
-                        const officersResponse = await apiClient.post('/officer/getAll');
+                        const officersResponse = await apiClient.post('/officers/getAll');
                         if (officersResponse.data && officersResponse.data.officers) {
                             setOfficers(officersResponse.data.officers);
                         }

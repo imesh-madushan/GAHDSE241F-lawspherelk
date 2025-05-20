@@ -50,7 +50,7 @@ const SearchBar = ({
                         className="block w-full pl-8 ml-1 pr-3 py-1 text-gray-900 ring-0  outline-none transition-all duration-200"
                         data-testid="search-input"
                     />
-                    <div className="relative flex" ref={dropdownRef} style={{ zIndex: 20 }}>
+                    <div className="relative flex" ref={dropdownRef} style={{ zIndex: 1 }}>
                         <OutlinedButton
                             action={{
                                 onClick: () => setIsTypeDropdownOpen(!isTypeDropdownOpen),

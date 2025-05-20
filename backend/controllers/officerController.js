@@ -3,16 +3,51 @@ const { getUserFromCookies } = require('../middlewares/authMiddleware');
 const officerService = require('../services/officerService');
 
 exports.getAll = async (req, res) => {
+    const token = req.cookies.authtoken;
+    if (!token) {
+        return res.status(401).json({ message: "No token provided" });
+    }
+
+    const user = await getUserFromCookies(token);
+    if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+
     try {
-        // Get roles from request body (since we're using POST)
         const roles = req.body.roles || [];
-        
-        // Fetch officers (users) with the specified roles
-        const officers = await officerService.getAllOfficers({ roles });
-        
+        const officers = await officerService.getAllOfficers(roles, user.role, user.user_id);
+
         res.status(200).json(officers);
     } catch (error) {
         console.error("Error in getAll officers:", error);
         res.status(500).json({ message: "Failed to fetch officers", error: error.message });
     }
 }
+
+exports.searchOfficers = async (req, res) => {
+    const filters = {};
+
+    const token = req.cookies.authtoken;
+    if (!token) {
+        return res.status(401).json({ message: "No token provided" });
+    }
+
+    const user = await getUserFromCookies(token);
+    if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (req.body.name) {
+        filters.name = req.body.name;
+    }
+    if (req.body.role) {
+        filters.role = req.body.role;
+    }
+
+    try {
+        const officers = await officerService.searchOfficers(filters, user.role, user.user_id);
+        res.status(200).json(officers);
+    } catch (error) {
+        res.status(500).json({ message: "Failed to search officers", error: error.message });
+    }
+};

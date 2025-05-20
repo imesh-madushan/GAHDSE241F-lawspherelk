@@ -12,6 +12,8 @@ import CriminalRecord from './pages/criminalrecord/CriminalRecord';
 import CriminalsPage from './pages/criminalrecord/CriminalsPage';
 import CrimeOffencesPage from './pages/crimeoffences/CrimeOffencesPage';
 import Test from './pages/Test';
+import OfficersPage from './pages/officers/OfficersPage';
+import OfficerProfile from './pages/officers/OfficerProfile';
 
 function App() {
   // temp login
@@ -53,6 +55,8 @@ function App() {
           <Route path="criminals" element={<CriminalsPage />} />
           <Route path="criminals/:criminalId" element={<CriminalRecord />} />
           <Route path="crimeoffences" element={<CrimeOffencesPage />} />
+          <Route path="officers" element={<OfficersPage />} />
+          <Route path="officers/:officerId" element={<OfficerProfile />} />
           <Route path="test" element={<Test />} />
         </Route>
       </Route>

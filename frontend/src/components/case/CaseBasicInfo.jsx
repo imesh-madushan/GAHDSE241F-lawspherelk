@@ -21,7 +21,7 @@ const CaseBasicInfo = ({ caseData, isEditing, editedCase, handleInputChange, for
     useEffect(() => {
         async function fetchOfficers() {
             try {
-                const response = await apiClient.post('/officer/getAll', {
+                const response = await apiClient.post('/officers/getAll', {
                     roles: ["Sub Inspector", "Inspector", "Sergeant"]
                 });
 

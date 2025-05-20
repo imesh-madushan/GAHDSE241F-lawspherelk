@@ -31,7 +31,7 @@ const SearchInterface = ({
   const handleSearch = () => {
     const searchParams = {
       searchTerm,
-      searchType
+      searchType,
     };
 
     // Only add filters if they're not 'all'
@@ -40,6 +40,10 @@ const SearchInterface = ({
     }
     if (filterValues.risk && filterValues.risk !== 'all') {
       searchParams.risk = filterValues.risk;
+    }
+
+    if (filterValues.role && filterValues.role !== 'all') {
+      searchParams.role = filterValues.role;
     }
 
     onSearch(searchParams);
