@@ -4,6 +4,7 @@ import Layout from './pages/Layout';
 import { Route, Router, Routes } from 'react-router-dom';
 import ProtectedRoutes from './utils/ProtectedRoutes';
 import { apiClient } from './config/apiConfig';
+import Profile from './pages/Profile';
 
 function App() {
   // temp login
@@ -38,6 +39,7 @@ function App() {
       <Route element={<ProtectedRoutes />}>
         <Route element={<Layout />}>
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="profile" element={<Profile />} />
           <Route path="complaints" element={<div>complaints</div>} />
           <Route path="cases" element={<div>cases</div>} />
           <Route path="cases/:caseId" element={<div>single case page</div>} />

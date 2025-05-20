@@ -46,15 +46,15 @@ const Navbar = ({ expanded }) => {
               {/* profile menu dropdown */}
               {showProfileMenu && (
                 <div className="absolute right-0 mt-2 w-48 bg-white/60 backdrop-blur-md rounded-md shadow-lg py-1 z-50">
-                  <a href="#profile" className=" px-4 py-2 text-gray-800 hover:bg-gray-100 flex items-center">
+                  <a href="/profile" className="px-4 py-2 text-gray-800 hover:bg-gray-100 flex items-center" onClick={e => {e.preventDefault(); window.location.href='/profile'; setShowProfileMenu(false);}}>
                     <Person fontSize="small" className="mr-2" />
                     Profile
                   </a>
-                  <a href="#settings" className=" px-4 py-2 text-gray-800 hover:bg-gray-100 flex items-center">
+                  <a href="/profile" className="px-4 py-2 text-gray-800 hover:bg-gray-100 flex items-center" onClick={e => {e.preventDefault(); window.location.href='/profile'; setShowProfileMenu(false);}}>
                     <Settings fontSize="small" className="mr-2" />
                     Settings
                   </a>
-                  <a href="#logout" className=" px-4 py-2 text-gray-800 hover:bg-gray-100 flex items-center">
+                  <a href="#logout" className="px-4 py-2 text-gray-800 hover:bg-gray-100 flex items-center" onClick={e => {e.preventDefault(); localStorage.clear(); window.location.href='/';}}>
                     <Logout fontSize="small" className="mr-2" />
                     Logout
                   </a>
