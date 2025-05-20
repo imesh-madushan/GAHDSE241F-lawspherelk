@@ -27,7 +27,7 @@ const FilterBadge = ({ label, onRemove }) => {
             <button
                 type="button"
                 onClick={onRemove}
-                className="ml-1.5 inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-opacity-20 hover:bg-opacity-30 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500 transition-colors"
+                className="ml-1.5 inline-flex hover:cursor-pointer items-center justify-center w-3.5 h-3.5 rounded-full bg-opacity-20 hover:bg-opacity-30 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500 transition-colors"
             >
                 <X className="w-3 h-3" />
                 <span className="sr-only">Remove filter {label}</span>

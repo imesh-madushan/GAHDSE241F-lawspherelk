@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, Filter, ChevronDown } from 'lucide-react';
+import OutlinedButton from '../buttons/OutlinedButton';
 
 const SearchBar = ({
     searchTerm,
@@ -36,8 +37,8 @@ const SearchBar = ({
     return (
         <div className="p-4">
             <div className="flex flex-col sm:flex-row gap-3">
-                <div className="relative flex-grow">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="relative border-b-1 items-center flex flex-grow">
+                    <div className="absolute inset-y-0 left-0 pl-1.5 flex items-center pointer-events-none">
                         <Search className="h-5 w-5 text-gray-400" />
                     </div>
                     <input
@@ -46,25 +47,21 @@ const SearchBar = ({
                         onChange={(e) => setSearchTerm(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder="Search criminal records..."
-                        className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                        className="block w-full pl-8 ml-1 pr-3 py-1 text-gray-900 ring-0  outline-none transition-all duration-200"
                         data-testid="search-input"
                     />
-                </div>
-
-                <div className="flex gap-2 sm:flex-shrink-0">
-                    <div className="relative" ref={dropdownRef}>
-                        <button
-                            type="button"
-                            onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
-                            className="inline-flex items-center px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                            data-testid="search-type-dropdown"
-                        >
-                            <span>{searchOptions.find(option => option.value === searchType)?.label || 'Search by'}</span>
-                            <ChevronDown className={`ml-2 h-4 w-4 transition-transform duration-200 ${isTypeDropdownOpen ? 'rotate-180' : ''}`} />
-                        </button>
+                    <div className="relative flex" ref={dropdownRef} style={{ zIndex: 20 }}>
+                        <OutlinedButton
+                            action={{
+                                onClick: () => setIsTypeDropdownOpen(!isTypeDropdownOpen),
+                                icon: <ChevronDown className={`ml-2 w-4 h-4 transition-transform duration-200 ${isTypeDropdownOpen ? 'rotate-180' : ''}`} />,
+                                label: searchOptions.find(option => option.value === searchType)?.label || 'Search by',
+                                styles: 'flex items-center justify-center text-blue-700 hover:bg-blue-700 hover:text-white h-11 w-50 px-4 py-0.5 text-sm font-medium rounded-sm bg-gray-50 border-0 border-gray-300 outline-none ring-0 hover:cursor-pointer transition-all',
+                            }}
+                        />
 
                         {isTypeDropdownOpen && (
-                            <div className="absolute right-0 z-10 mt-1 w-56 origin-top-right rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                            <div className="absolute left-1/2 top-12 w-56 origin-top-right rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" style={{ transform: 'translateX(-50%)' }}>
                                 <div className="py-1">
                                     {searchOptions.map((option) => (
                                         <button
@@ -85,30 +82,26 @@ const SearchBar = ({
                             </div>
                         )}
                     </div>
+                </div>
 
-                    <button
-                        type="button"
-                        onClick={() => setShowFilters(!showFilters)}
-                        className={`inline-flex items-center px-4 py-2.5 text-sm font-medium rounded-lg transition-all ${showFilters
-                            ? 'bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100'
-                            : 'bg-gray-50 text-gray-700 border border-gray-300 hover:bg-gray-100'
-                            }`}
-                        aria-expanded={showFilters ? 'true' : 'false'}
-                        data-testid="filter-toggle"
-                    >
-                        <Filter className={`h-4 w-4 ${showFilters ? 'text-blue-700' : 'text-gray-500'} mr-2`} />
-                        Filters
-                    </button>
+                <div className="flex gap-2 sm:flex-shrink-0">
+                    <OutlinedButton
+                        action={{
+                            onClick: () => setShowFilters(!showFilters),
+                            icon: <Filter fontSize='small' className='mr-2 w-4.5 h-4.5' />,
+                            label: 'Filters',
+                            styles: 'flex items-center justify-center text-blue-700 hover:bg-blue-700 hover:text-white h-11 w-30',
+                        }}
+                    />
 
-                    <button
-                        type="button"
-                        onClick={handleSearch}
-                        className="inline-flex items-center px-4 py-2.5 text-sm font-medium text-white bg-blue-700 border border-blue-700 rounded-lg hover:bg-blue-800 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
-                        data-testid="search-button"
-                    >
-                        <Search className="h-4 w-4 mr-2" />
-                        Search
-                    </button>
+                    <OutlinedButton
+                        action={{
+                            onClick: handleSearch,
+                            icon: <Search fontSize='small' className='mr-2 w-5 h-5' />,
+                            label: 'Search',
+                            styles: 'flex items-center justify-center text-blue-700 bg-blue-800 text-white hover:bg-blue-700 hover:text-white h-11 w-30',
+                        }}
+                    />
                 </div>
             </div>
         </div>

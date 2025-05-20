@@ -8,8 +8,8 @@ import SingleCaseView from './pages/cases/SingleCaseView';
 import SingleComplainView from './pages/complaints/SingleComplainView';
 import CasesPage from './pages/cases/CasesPage';
 import ComplaintsPage from './pages/complaints/ComplaintsPage';
-import CriminalRecord from './pages/criminals/CriminalRecord';
-import CriminalsPage from './pages/criminals/CriminalsPage';
+import CriminalRecord from './pages/criminalrecord/CriminalRecord';
+import CriminalsPage from './pages/criminalrecord/CriminalsPage';
 import CrimeOffencesPage from './pages/crimeoffences/CrimeOffencesPage';
 import Test from './pages/Test';
 

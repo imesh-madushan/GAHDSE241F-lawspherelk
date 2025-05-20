@@ -48,14 +48,7 @@ const SearchInterface = ({
   const updateActiveFilters = () => {
     const newActiveFilters = [];
 
-    // Add search type if not default
-    if (searchType && searchType !== searchOptions[0]?.value) {
-      const searchLabel = searchOptions.find(opt => opt.value === searchType)?.label;
-      if (searchLabel) {
-        newActiveFilters.push(`Search: ${searchLabel}`);
-      }
-    }
-
+    // Do NOT add search type to active filters
     // Add active filters
     filters.forEach(filter => {
       const value = filterValues[filter.id];
@@ -73,16 +66,13 @@ const SearchInterface = ({
   const clearFilter = (filter) => {
     const [filterType, filterLabel] = filter.split(': ');
 
-    if (filterType === 'Search') {
-      setSearchType(searchOptions[0]?.value || '');
-    } else {
-      const filterConfig = filters.find(f => f.label === filterType);
-      if (filterConfig) {
-        setFilterValues(prev => ({
-          ...prev,
-          [filterConfig.id]: 'all'
-        }));
-      }
+    // Remove search type clearing logic since it's not in active filters
+    const filterConfig = filters.find(f => f.label === filterType);
+    if (filterConfig) {
+      setFilterValues(prev => ({
+        ...prev,
+        [filterConfig.id]: 'all'
+      }));
     }
   };
 
@@ -103,7 +93,7 @@ const SearchInterface = ({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-300">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 transition-all duration-300">
       <SearchBar
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
@@ -123,7 +113,7 @@ const SearchInterface = ({
           ))}
           <button
             onClick={clearAllFilters}
-            className="ml-auto text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"
+            className="ml-auto hover:cursor-pointer text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"
           >
             Clear all
           </button>
