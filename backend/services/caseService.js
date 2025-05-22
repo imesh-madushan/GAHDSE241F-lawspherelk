@@ -63,28 +63,13 @@ exports.getCaseById = async (caseId, userRole, userId) => {
                     c.complain_id,
                     u.name AS leader_name,
                     u.role AS leader_role,
-                    u.profile_pic AS leader_profile,
-                    comp.description AS complaint_description,
-                    comp.complain_dt,
-                    comp.status AS complaint_status,
-                    comp.officer_id AS complaint_officer_id,
-                    co.name AS complaint_officer_name,
-                    co.role AS complaint_officer_role,
-                    co.profile_pic AS complaint_officer_profile
+                    u.profile_pic AS leader_profile
                   FROM cases c
                   LEFT JOIN users u ON c.leader_id = u.user_id
-                  LEFT JOIN complaints comp ON c.complain_id = comp.complain_id
-                  LEFT JOIN users co ON comp.officer_id = co.user_id
                   WHERE c.case_id = ?`;
 
   const params = [caseId];
   
-  // For Sub Inspector role, they can only view cases they are leading
-//   if (userRole === "Sub Inspector") {
-//     caseQuery += " AND c.leader_id = ?";
-//     params.push(userId);
-//   }
-
   const [caseRows] = await db.query(caseQuery, params);
   
   if (caseRows.length === 0) {
@@ -104,15 +89,6 @@ exports.getCaseById = async (caseId, userRole, userId) => {
     officer_role: caseData.complaint_officer_role,
     officer_profile: caseData.complaint_officer_profile
   };
-  
-  // Remove complaint fields from case object
-  delete caseData.complaint_description;
-  delete caseData.complain_dt;
-  delete caseData.complaint_status;
-  delete caseData.complaint_officer_id;
-  delete caseData.complaint_officer_name;
-  delete caseData.complaint_officer_role;
-  delete caseData.complaint_officer_profile;
   
   // Get assigned officers - Enhanced query to include role and profile image
   const [assignedOfficers] = await db.query(`

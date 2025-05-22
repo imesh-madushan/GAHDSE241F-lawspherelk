@@ -15,13 +15,8 @@ CREATE TABLE Login (
     username VARCHAR(50) UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     faild_attempts INT DEFAULT 0,
-    account_locked BOOLEAN DEFAULT TRUE
+    account_locked BOOLEAN DEFAULT TR
 );
-
--- CREATE TABLE Roles (
---     role_id VARCHAR(36) PRIMARY KEY,
---     rolename VARCHAR(50) UNIQUE NOT NULL
--- );
 
 CREATE TABLE Users (
     user_id VARCHAR(36) PRIMARY KEY,
@@ -83,7 +78,14 @@ CREATE TABLE Investigation_Officer (
 
 CREATE TABLE Evidance (
     evidence_id VARCHAR(36) PRIMARY KEY,
-    type VARCHAR(255),
+    type ENUM ('Voice Statement','Written Statement','Fingerprint','Photograph','Video Footage','CCTV Recording',
+            'Phone Call Recording','DNA Sample','Blood Sample','Urine Sample','Saliva Sample','Hair Sample',
+            'Weapon','Firearm','Ammunition','Clothing','Footprint','Tool Mark','Document','Forged Document',
+            'Digital Document','Email Record','Chat Log','Bank Statement','ID Card','License Plate','Vehicle',
+            'Mobile Phone','Laptop','Hard Drive','USB Drive','Memory Card','Prescription','Medical Report',
+            'Threat Letter','Explosive Material','Drug Sample','Forensic Report','GPS Location Data',
+            'SIM Card','Network Log','Surveillance Photo','Witness Testimony','Confession Recording'
+            ),
     location TEXT,
     details TEXT,
     collected_dt DATETIME NOT NULL,
