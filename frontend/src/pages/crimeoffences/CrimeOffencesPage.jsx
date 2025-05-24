@@ -10,29 +10,36 @@ const CrimeOffencesPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const searchConfig = {
-        searchOptions: [
-            { value: 'crime_type', label: 'Crime Type' },
-            { value: 'criminal_name', label: 'Criminal Name' },
-            { value: 'criminal_id', label: 'Criminal ID' },
-            { value: 'fingerprint', label: 'Fingerprint' },
-            { value: 'case_id', label: 'Case ID' }
-        ],
-        statusOptions: [
-            { value: 'all', label: 'All' },
-            { value: 'Alleged', label: 'Alleged', colorVariant: 'yellow' },
-            { value: 'Convicted', label: 'Convicted', colorVariant: 'red' },
-            { value: 'Acquitted', label: 'Acquitted', colorVariant: 'green' }
-        ],
-        riskOptions: [
-            { value: 'all', label: 'All' },
-            { value: 'high', label: 'High Risk', colorVariant: 'red' },
-            { value: 'medium', label: 'Medium Risk', colorVariant: 'yellow' },
-            { value: 'low', label: 'Low Risk', colorVariant: 'green' }
-        ],
-        showRiskLevel: true,
-        showDateRange: true
-    };
+    const searchOptions = [
+        { value: 'crime_type', label: 'Crime Type' },
+        { value: 'criminal_name', label: 'Criminal Name' },
+        { value: 'criminal_id', label: 'Criminal ID' },
+        { value: 'fingerprint', label: 'Fingerprint' },
+        { value: 'case_id', label: 'Case ID' }
+    ];
+
+    const filterConfig = [
+        {
+            id: 'status',
+            label: 'Status',
+            options: [
+                { value: 'all', label: 'All' },
+                { value: 'Alleged', label: 'Alleged', colorVariant: 'yellow' },
+                { value: 'Convicted', label: 'Convicted', colorVariant: 'red' },
+                { value: 'Acquitted', label: 'Acquitted', colorVariant: 'green' }
+            ]
+        },
+        {
+            id: 'risk',
+            label: 'Risk Level',
+            options: [
+                { value: 'all', label: 'All' },
+                { value: 'high', label: 'High Risk', colorVariant: 'red' },
+                { value: 'medium', label: 'Medium Risk', colorVariant: 'yellow' },
+                { value: 'low', label: 'Low Risk', colorVariant: 'green' }
+            ]
+        }
+    ]
 
     useEffect(() => {
         fetchOffences();
@@ -50,7 +57,6 @@ const CrimeOffencesPage = () => {
     };
 
     const handleSearch = async (searchParams) => {
-        console.log("searchParams", searchParams);
         try {
             setLoading(true);
             let endpoint = '/crimeoffences/search';
@@ -147,19 +153,8 @@ const CrimeOffencesPage = () => {
                 {/* Modern Search Interface */}
                 <div className="mb-6">
                     <SearchInterface
-                        searchOptions={searchConfig.searchOptions}
-                        filters={[
-                            {
-                                id: 'status',
-                                label: 'Status',
-                                options: searchConfig.statusOptions
-                            },
-                            {
-                                id: 'risk',
-                                label: 'Risk Level',
-                                options: searchConfig.riskOptions
-                            }
-                        ]}
+                        searchOptions={searchOptions}
+                        filters={filterConfig}
                         onSearch={handleSearch}
                     />
                 </div>
@@ -216,12 +211,6 @@ const CrimeOffencesPage = () => {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
-                                                <div className="w-20 bg-gray-200 rounded-full h-1.5 mr-2">
-                                                    <div
-                                                        className={`h-1.5 rounded-full ${getRiskLevel(offence.risk_score).color}`}
-                                                        style={{ width: `${Math.min(offence.risk_score, 100)}%` }}
-                                                    ></div>
-                                                </div>
                                                 <span className="text-sm">{offence.risk_score}</span>
                                             </div>
                                         </td>

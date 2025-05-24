@@ -22,6 +22,7 @@ CREATE TABLE Users (
     user_id VARCHAR(36) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
+    nic VARCHAR(36) UNIQUE NOT NULL,
     phone VARCHAR(20) NOT NULL,
     address TEXT NOT NULL,
     created_dt DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -146,9 +147,7 @@ CREATE TABLE CriminalRecord (
     address TEXT,
     dob DATE NOT NULL,
     fingerprint_hash TEXT NOT NULL,
-    photo TEXT,
-    total_crimes INT DEFAULT 0,
-    total_risk DECIMAL(5,2) DEFAULT 0.00   -- upto 1000.00
+    photo TEXT
 );
 
 CREATE TABLE CrimeOffence (
@@ -164,7 +163,7 @@ CREATE TABLE CrimeOffence (
         'Possession of Child Pornography','Disorderly Conduct','Public Intoxication','Loitering',
         'Illegal Protests','Riot Participation','Human Trafficking','Smuggling','Illegal Possession of Firearms',
         'Corruption','Extortion','Blackmail'),
-    risk_score DECIMAL(5,2),
+    risk_score INT DEFAULT 0,
     reported_dt DATETIME,
     happened_dt DATETIME,
     criminal_id VARCHAR(36),

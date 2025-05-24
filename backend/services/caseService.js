@@ -14,6 +14,7 @@ exports.getAllCases = async (filters, userRole, userId) => {
               
               users.name AS leader_name,
               users.role AS leader_role,
+              users.profile_pic AS leader_profile,
               
               COUNT(case_evidance.evidence_id) AS evidence_count
 
@@ -77,18 +78,29 @@ exports.getCaseById = async (caseId, userRole, userId) => {
   }
   
   const caseData = caseRows[0];
-  
-  // Create separate complaint object
-  const complaintData = {
-    complain_id: caseData.complain_id,
-    complain_dt: caseData.complain_dt,
-    description: caseData.complaint_description,
-    status: caseData.complaint_status,
-    officer_id: caseData.complaint_officer_id,
-    officer_name: caseData.complaint_officer_name,
-    officer_role: caseData.complaint_officer_role,
-    officer_profile: caseData.complaint_officer_profile
-  };
+
+  // Get complaint data separately
+  let complaintData = null;
+  if (caseData.complain_id) {
+    const [complaintRows] = await db.query(
+      `SELECT 
+        complaints.complain_id,
+        complaints.description,
+        complaints.complain_dt,
+        complaints.status AS complaint_status,
+        complaints.officer_id,
+        users.name AS officer_name,
+        users.role AS officer_role,
+        users.profile_pic AS officer_profile
+      FROM complaints
+      LEFT JOIN users ON complaints.officer_id = users.user_id
+      WHERE complaints.complain_id = ?`,
+      [caseData.complain_id]
+    );
+    if (complaintRows.length > 0) {
+      complaintData = complaintRows[0];
+    }
+  }
   
   // Get assigned officers - Enhanced query to include role and profile image
   const [assignedOfficers] = await db.query(`
@@ -134,7 +146,7 @@ exports.getCaseById = async (caseId, userRole, userId) => {
     WHERE i.case_id = ?
   `, [caseId]);
 
-  // Get crime offences
+  // Get crime offences and calculate total_crimes and total_risk for each criminal (Convicted only)
   const [offences] = await db.query(`
     SELECT 
       co.offence_id,
@@ -145,8 +157,18 @@ exports.getCaseById = async (caseId, userRole, userId) => {
       co.happened_dt,
       cr.criminal_id,
       cr.name AS criminal_name,
-      cr.total_crimes,
-      cr.total_risk
+      cr.nic AS criminal_nic,
+      cr.phone AS criminal_phone,
+      cr.address AS criminal_address,
+      cr.dob AS criminal_dob,
+      (
+        SELECT COUNT(*) FROM crimeoffence co2
+        WHERE co2.criminal_id = cr.criminal_id AND co2.status = 'Convicted'
+      ) AS total_crimes,
+      (
+        SELECT COALESCE(SUM(co2.risk_score), 0) FROM crimeoffence co2
+        WHERE co2.criminal_id = cr.criminal_id AND co2.status = 'Convicted'
+      ) AS total_risk
     FROM crimeoffence co
     LEFT JOIN criminalrecord cr ON co.criminal_id = cr.criminal_id
     WHERE co.case_id = ?
@@ -181,6 +203,82 @@ exports.getCaseById = async (caseId, userRole, userId) => {
     reports,
     complaint: complaintData // Add the complaint object separately
   };
+};
+
+exports.searchCases = async (filters, userRole, userId) => {
+  let query = `SELECT 
+              cases.case_id,
+              cases.topic,
+              cases.case_type,
+              cases.status AS case_status,
+              cases.started_dt,
+              cases.end_dt,
+              cases.leader_id,
+              cases.complain_id,
+              users.name AS leader_name,
+              users.role AS leader_role,
+              users.profile_pic AS leader_profile,
+              COUNT(case_evidance.evidence_id) AS evidence_count
+          FROM cases
+          LEFT JOIN users ON cases.leader_id = users.user_id
+          LEFT JOIN case_evidance ON cases.case_id = case_evidance.case_id
+          WHERE cases.status != 'oicnotreviewed'`;
+
+  const params = [];
+
+  // Topic filter (search by topic)
+  if (filters.topic) {
+    query += ` AND cases.topic LIKE ?`;
+    params.push(`%${filters.topic}%`);
+  }
+
+  // Case ID filter
+  if (filters.case_id) {
+    query += ` AND cases.case_id = ?`;
+    params.push(filters.case_id);
+  }
+
+  // Case Type filter
+  if (filters.case_type) {
+    query += ` AND cases.case_type LIKE ?`;
+    params.push(`%${filters.case_type}%`);
+  }
+
+  // Officer name filter
+  if (filters.officer) {
+    query += ` AND users.name LIKE ?`;
+    params.push(`%${filters.officer}%`);
+  }
+
+  // Status filter
+  if (filters.status && filters.status !== 'all') {
+    query += ` AND cases.status = ?`;
+    params.push(filters.status);
+  }
+
+  // Time period filter
+  if (filters.timePeriod && filters.timePeriod !== 'all') {
+    let dateCondition = '';
+    if (filters.timePeriod === 'last_7_days') {
+      dateCondition = ' AND cases.started_dt >= DATE_SUB(NOW(), INTERVAL 7 DAY)';
+    } else if (filters.timePeriod === 'last_30_days') {
+      dateCondition = ' AND cases.started_dt >= DATE_SUB(NOW(), INTERVAL 30 DAY)';
+    } else if (filters.timePeriod === 'last_90_days') {
+      dateCondition = ' AND cases.started_dt >= DATE_SUB(NOW(), INTERVAL 90 DAY)';
+    }
+    query += dateCondition;
+  }
+
+  // Sub Inspector: only their cases
+  if (userRole === "Sub Inspector") {
+    query += ` AND cases.leader_id = ?`;
+    params.push(userId);
+  }
+
+  query += ` GROUP BY cases.case_id ORDER BY cases.started_dt DESC`;
+
+  const [rows] = await db.query(query, params);
+  return rows;
 };
 
 // You can add more case-related service methods here

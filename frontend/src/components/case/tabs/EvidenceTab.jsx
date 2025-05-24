@@ -75,7 +75,8 @@ const EvidenceTab = ({ caseData, canAddEvidence }) => {
                                             officer={{
                                                 name: item.collected_by,
                                                 role: item.officer_role,
-                                                profilePic: item.officer_profile
+                                                profilePic: item.officer_profile,
+                                                type: "Evidence Collector"
                                             }}
                                             size="small"
                                             className="bg-gray-50 p-3"

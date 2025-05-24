@@ -64,12 +64,6 @@ const OffencesTab = ({ offences, formatDate, formatTime, getRiskLevel, isEditing
                                 <div>
                                     <div className="text-xs text-gray-500">Risk Score</div>
                                     <div className="flex items-center">
-                                        <div className="w-20 bg-gray-200 rounded-full h-1.5 mr-2">
-                                            <div
-                                                className={`h-1.5 rounded-full ${getRiskLevel(offence.risk_score).color}`}
-                                                style={{ width: `${Math.min(offence.risk_score, 100)}%` }}
-                                            ></div>
-                                        </div>
                                         <span className="text-sm">{formatRiskScore(offence.risk_score)}</span>
                                     </div>
                                 </div>

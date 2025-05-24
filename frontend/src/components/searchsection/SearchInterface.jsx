@@ -3,27 +3,21 @@ import SearchBar from './SearchBar';
 import FilterPanel from './FilterPanel';
 import FilterBadge from './FilterBadge';
 
-const SearchInterface = ({
-  searchOptions = [], // Array of search options
-  filters = [], // Array of filter configurations
-  onSearch
-}) => {
+const SearchInterface = ({ searchOptions = [], filters = [], onSearch }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchType, setSearchType] = useState(searchOptions[0]?.value || '');
   const [showFilters, setShowFilters] = useState(false);
   const [filterValues, setFilterValues] = useState({});
   const [activeFilters, setActiveFilters] = useState([]);
 
-  // Initialize filter values
   useEffect(() => {
     const initialValues = {};
-    filters.forEach(filter => {
+    (filters || []).forEach(filter => {
       initialValues[filter.id] = 'all';
     });
     setFilterValues(initialValues);
   }, [filters]);
 
-  // Update active filters whenever search type or filter values change
   useEffect(() => {
     updateActiveFilters();
   }, [searchType, filterValues]);
@@ -34,27 +28,19 @@ const SearchInterface = ({
       searchType,
     };
 
-    // Only add filters if they're not 'all'
-    if (filterValues.status && filterValues.status !== 'all') {
-      searchParams.status = filterValues.status;
-    }
-    if (filterValues.risk && filterValues.risk !== 'all') {
-      searchParams.risk = filterValues.risk;
-    }
-
-    if (filterValues.role && filterValues.role !== 'all') {
-      searchParams.role = filterValues.role;
-    }
+    //structuring searchParams with filter values
+    (filters || []).forEach(filter => {
+      if (filterValues[filter.id] && filterValues[filter.id] !== 'all') {
+        searchParams[filter.id] = filterValues[filter.id];
+      }
+    });
 
     onSearch(searchParams);
   };
 
   const updateActiveFilters = () => {
     const newActiveFilters = [];
-
-    // Do NOT add search type to active filters
-    // Add active filters
-    filters.forEach(filter => {
+    (filters || []).forEach(filter => {
       const value = filterValues[filter.id];
       if (value && value !== 'all') {
         const option = filter.options.find(opt => opt.value === value);
@@ -63,15 +49,12 @@ const SearchInterface = ({
         }
       }
     });
-
     setActiveFilters(newActiveFilters);
   };
 
   const clearFilter = (filter) => {
     const [filterType, filterLabel] = filter.split(': ');
-
-    // Remove search type clearing logic since it's not in active filters
-    const filterConfig = filters.find(f => f.label === filterType);
+    const filterConfig = (filters || []).find(f => f.label === filterType);
     if (filterConfig) {
       setFilterValues(prev => ({
         ...prev,
@@ -83,7 +66,7 @@ const SearchInterface = ({
   const clearAllFilters = () => {
     setSearchType(searchOptions[0]?.value || '');
     const resetValues = {};
-    filters.forEach(filter => {
+    (filters || []).forEach(filter => {
       resetValues[filter.id] = 'all';
     });
     setFilterValues(resetValues);
@@ -104,12 +87,13 @@ const SearchInterface = ({
         searchType={searchType}
         setSearchType={setSearchType}
         searchOptions={searchOptions}
-        showFilters={showFilters}
-        setShowFilters={setShowFilters}
+        showFilters={filters && filters.length > 0 ? showFilters : false}
+        setShowFilters={filters && filters.length > 0 ? setShowFilters : () => { }}
         handleSearch={handleSearch}
+        showFilterButton={filters && filters.length > 0}
       />
 
-      {activeFilters.length > 0 && (
+      {filters && filters.length > 0 && activeFilters.length > 0 && (
         <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 flex flex-wrap items-center gap-2">
           <span className="text-xs font-medium text-gray-500">Active filters:</span>
           {activeFilters.map((filter) => (
@@ -124,12 +108,14 @@ const SearchInterface = ({
         </div>
       )}
 
-      <FilterPanel
-        show={showFilters}
-        filters={filters}
-        filterValues={filterValues}
-        onFilterChange={handleFilterChange}
-      />
+      {filters && filters.length > 0 && (
+        <FilterPanel
+          show={showFilters}
+          filters={filters}
+          filterValues={filterValues}
+          onFilterChange={handleFilterChange}
+        />
+      )}
     </div>
   );
 };

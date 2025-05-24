@@ -6,6 +6,7 @@ import { Add, FilterList, NewReleases, Visibility } from '@mui/icons-material';
 import OutlinedButton from '../../components/buttons/OutlinedButton';
 import Spinner from '../../components/Spinner';
 import PageHeader from '../../components/common/PageHeader';
+import SearchInterface from '../../components/searchsection/SearchInterface';
 
 const ComplaintsPage = () => {
     const [complaints, setComplaints] = useState([]);
@@ -14,15 +15,38 @@ const ComplaintsPage = () => {
     const [selectedStatus, setSelectedStatus] = useState('all');
     const navigate = useNavigate();
 
-    const statusFilters = [
-        { value: 'all', label: 'All Complaints', icon: <FilterList />, styles: 'bg-gray-100 text-gray-800 border-gray-300' },
-        { value: 'new', label: 'New Complaints', icon: <NewReleases />, styles: 'bg-blue-100 text-blue-800 border-blue-300' },
-        { value: 'viewed', label: 'Viewed Complaints', icon: <Visibility />, styles: 'bg-green-100 text-green-800 border-green-300' }
-    ];
-
     const breadcrumbItems = [
         { label: 'Dashboard', link: '/dashboard' },
         { label: 'Complaints' }
+    ];
+
+    const searchOptions = [
+        { value: 'description', label: 'Description' },
+        { value: 'complain_id', label: 'Complaint ID' },
+        { value: 'officer', label: 'Officer Name' },
+        { value: 'complainer', label: 'Complainer Name' }
+    ]
+
+    const filterConfig = [
+        {
+            id: 'status',
+            label: 'Status',
+            options: [
+                { value: 'all', label: 'All' },
+                { value: 'new', label: 'New', colorVariant: 'blue' },
+                { value: 'viewed', label: 'Viewed', colorVariant: 'green' }
+            ]
+        },
+        {
+            id: 'timePeriod',
+            label: 'Time Period',
+            options: [
+                { value: 'all', label: 'All Time' },
+                { value: 'last_7_days', label: 'Last 7 Days' },
+                { value: 'last_30_days', label: 'Last 30 Days' },
+                { value: 'last_90_days', label: 'Last 90 Days' }
+            ]
+        }
     ];
 
     useEffect(() => {
@@ -50,6 +74,56 @@ const ComplaintsPage = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    // Add search handler for complaints
+    const handleSearch = async (searchParams) => {
+        setLoading(true);
+        try {
+            let endpoint = '/complaints/search';
+            let params = {};
+
+            // Handle search term and type
+            if (searchParams.searchTerm && searchParams.searchTerm.trim() !== '') {
+                switch (searchParams.searchType) {
+                    case 'description':
+                        params.description = searchParams.searchTerm.trim();
+                        break;
+                    case 'complain_id':
+                        params.complain_id = searchParams.searchTerm.trim();
+                        break;
+                    case 'officer':
+                        params.officer = searchParams.searchTerm.trim();
+                        break;
+                    case 'complainer':
+                        params.complainer = searchParams.searchTerm.trim();
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            // Handle filters
+            if (searchParams.status && searchParams.status !== 'all') {
+                params.status = searchParams.status;
+                setSelectedStatus(searchParams.status); // sync filter buttons
+            }
+            if (searchParams.timePeriod && searchParams.timePeriod !== 'all') {
+                params.timePeriod = searchParams.timePeriod;
+            }
+
+            const response = await apiClient.get(endpoint, { params });
+            if (response.data.complaints) {
+                setComplaints(response.data.complaints);
+            } else {
+                setComplaints([]);
+            }
+            setError(null);
+        } catch (error) {
+            setComplaints([]);
+            setError('Failed to fetch complaints. Please try again.');
+        }
+        setLoading(false);
     };
 
     if (loading) {
@@ -83,38 +157,26 @@ const ComplaintsPage = () => {
                 onBack={() => navigate(-1)}
                 actions={[
                     {
-                        icon: <Add fontSize='small' />,
+                        icon: <Add fontSize='small' className='bg-white text-blue-800 rounded-full' />,
                         label: 'Create New Complaint',
                         onClick: () => navigate('/complaints/new'),
-                        styles: 'h-10 bg-blue-600 text-white border-blue-600'
+                        styles: 'h-10 bg-blue-800 text-white border-blue-800'
                     }
                 ]}
             />
-            <div className="container mx-auto px-4 py-6">
-                {/* Filters */}
-                <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-                    <div className="flex items-center space-x-4">
-                        <FilterList className="text-gray-600" />
-                        <div className="flex space-x-2">
-                            {statusFilters.map((filter) => (
-                                <OutlinedButton
-                                    key={filter.value}
-                                    action={{
-                                        icon: filter.icon,
-                                        label: filter.label,
-                                        onClick: () => setSelectedStatus(filter.value),
-                                        styles: selectedStatus === filter.value
-                                            ? filter.styles
-                                            : 'bg-gray-100 text-gray-700 border-gray-300'
-                                    }}
-                                />
-                            ))}
-                        </div>
-                    </div>
+            <div className="container mx-auto px-4 py-4">
+                {/* Search Section */}
+                <div className="mb-0">
+                    <SearchInterface
+                        searchOptions={searchOptions}
+                        filters={filterConfig}
+                        onSearch={handleSearch}
+                    />
                 </div>
 
+
                 {/* Complaints List */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     {complaints.length === 0 ? (
                         <div className="col-span-2 text-center py-8">
                             <p className="text-gray-500">No complaints found</p>

@@ -1,22 +1,27 @@
 const db = require('../config/db');
 
+// Helper: Only count Convicted offences for total_crimes and total_risk
+const CRIME_JOIN = `
+    LEFT JOIN CrimeOffence o 
+        ON c.criminal_id = o.criminal_id 
+        AND o.status = 'Convicted'
+`;
+
 exports.getAllCriminals = async (filters, userRole, userId) => {
     try {
         let query = `
             SELECT 
                 c.*,
                 COUNT(o.offence_id) as total_crimes,
-                COALESCE(AVG(o.risk_score), 0) as total_risk
+                COALESCE(SUM(o.risk_score), 0) as total_risk
             FROM CriminalRecord c
-            LEFT JOIN CrimeOffence o ON c.criminal_id = o.criminal_id
+            ${CRIME_JOIN}
             WHERE 1=1
         `;
         const params = [];
 
         // Add role-based filtering if needed
         if (userRole === "Sub Inspector") {
-            // Add any specific filtering for Sub Inspector role
-            // For example, only show criminals related to their cases
             query += ` AND EXISTS (
                 SELECT 1 FROM CrimeOffence co
                 JOIN Cases ca ON co.case_id = ca.case_id
@@ -43,45 +48,62 @@ exports.getAllCriminals = async (filters, userRole, userId) => {
 
 exports.searchCriminals = async (filters, userRole, userId) => {
     try {
-        let query = `
-            SELECT 
-                c.*,
-                COUNT(o.offence_id) as total_crimes,
-                COALESCE(AVG(o.risk_score), 0) as total_risk
-            FROM CriminalRecord c
-            LEFT JOIN CrimeOffence o ON c.criminal_id = o.criminal_id
-            WHERE 1=1
-        `;
+        // Build WHERE conditions and params for pre-aggregation filters
+        let whereClauses = ['1=1'];
         const params = [];
-        let paramCount = 1;
 
+        // Name filter (partial match)
         if (filters.name) {
-            query += ` AND c.name LIKE ?`;
+            whereClauses.push(`c.name LIKE ?`);
             params.push(`%${filters.name}%`);
         }
 
+        // NIC filter (partial match)
         if (filters.nic) {
-            query += ` AND c.nic LIKE ?`;
+            whereClauses.push(`c.nic LIKE ?`);
             params.push(`%${filters.nic}%`);
         }
 
+        // Fingerprint filter (partial match)
         if (filters.fingerprint) {
-            query += ` AND c.fingerprint_hash LIKE ?`;
+            whereClauses.push(`c.fingerprint_hash LIKE ?`);
             params.push(`%${filters.fingerprint}%`);
         }
 
-        // Add role-based filtering
+        // Role-based filtering for Sub Inspector
         if (userRole === "Sub Inspector") {
-            query += ` AND EXISTS (
+            whereClauses.push(`EXISTS (
                 SELECT 1 FROM CrimeOffence co
                 JOIN Cases ca ON co.case_id = ca.case_id
                 WHERE co.criminal_id = c.criminal_id
                 AND ca.leader_id = ?
-            )`;
+            )`);
             params.push(userId);
         }
 
-        query += ` GROUP BY c.criminal_id ORDER BY c.name ASC`;
+        let query = `
+            SELECT 
+                c.*,
+                COUNT(o.offence_id) as total_crimes,
+                COALESCE(SUM(o.risk_score), 0) as total_risk
+            FROM CriminalRecord c
+            ${CRIME_JOIN}
+            WHERE ${whereClauses.join(' AND ')}
+            GROUP BY c.criminal_id
+        `;
+
+        // Post-aggregation risk filter (must be in HAVING)
+        if (filters.risk && filters.risk !== 'all') {
+            if (filters.risk === 'high') {
+                query += ` HAVING total_risk >= 70`;
+            } else if (filters.risk === 'medium') {
+                query += ` HAVING total_risk >= 40 AND total_risk < 70`;
+            } else if (filters.risk === 'low') {
+                query += ` HAVING total_risk < 40`;
+            }
+        }
+
+        query += ` ORDER BY c.name ASC`;
 
         const [rows] = await db.query(query, params);
         return rows;
@@ -291,4 +313,4 @@ exports.deleteCriminal = async (id, userRole, userId) => {
         console.error('Error in deleteCriminal service:', error);
         throw error;
     }
-}; 
+};

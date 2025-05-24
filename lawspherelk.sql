@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: May 21, 2025 at 06:41 AM
+-- Generation Time: May 24, 2025 at 07:30 PM
 -- Server version: 5.7.36
 -- PHP Version: 8.1.0
 
@@ -118,9 +118,9 @@ INSERT INTO `complaints` (`complain_id`, `description`, `complain_dt`, `status`,
 DROP TABLE IF EXISTS `crimeoffence`;
 CREATE TABLE IF NOT EXISTS `crimeoffence` (
   `offence_id` varchar(36) NOT NULL,
-  `status` enum('Alleged','Acquitted') DEFAULT NULL,
+  `status` enum('Alleged','Acquitted','Convicted') DEFAULT NULL,
   `crime_type` enum('Assault','Homicide','Manslaughter','Domestic Violence','Threatening Behavior','Armed Robbery','Kidnapping','Child Abduction','Burglary','Theft','Shoplifting','Vandalism','Arson','Vehicle Theft','Motorcycle Theft','Trespassing','Cyber Fraud','Phishing','Identity Theft','Online Harassment','Hacking','Cyberbullying','Data Breach','Embezzlement','Money Laundering','Bribery','Insider Trading','Tax Evasion','Forgery','Drug Possession','Drug Trafficking','Illegal Drug Manufacturing','Drug Smuggling','Sexual Assault','Rape','Indecent Exposure','Possession of Child Pornography','Disorderly Conduct','Public Intoxication','Loitering','Illegal Protests','Riot Participation','Human Trafficking','Smuggling','Illegal Possession of Firearms','Corruption','Extortion','Blackmail') DEFAULT NULL,
-  `risk_score` decimal(5,2) DEFAULT NULL,
+  `risk_score` int(11) DEFAULT NULL,
   `reported_dt` datetime DEFAULT NULL,
   `happened_dt` datetime DEFAULT NULL,
   `criminal_id` varchar(36) DEFAULT NULL,
@@ -135,10 +135,10 @@ CREATE TABLE IF NOT EXISTS `crimeoffence` (
 --
 
 INSERT INTO `crimeoffence` (`offence_id`, `status`, `crime_type`, `risk_score`, `reported_dt`, `happened_dt`, `criminal_id`, `case_id`) VALUES
-('OFF002', 'Alleged', 'Child Abduction', 85.00, '2025-04-02 09:50:00', '2025-04-02 09:45:00', 'CRIM002', 'C002'),
-('OFF003', 'Alleged', 'Cyber Fraud', 60.00, '2025-03-28 13:45:00', '2025-03-27 20:00:00', 'CRIM003', 'C005'),
-('OFF004', 'Alleged', 'Motorcycle Theft', 65.00, '2025-04-03 18:00:00', '2025-04-03 17:45:00', 'CRIM004', 'C004'),
-('OFF005', 'Alleged', 'Threatening Behavior', 75.00, '2025-04-05 08:00:00', '2025-04-04 21:00:00', 'CRIM005', 'C003');
+('OFF002', 'Alleged', 'Child Abduction', 85, '2025-04-02 09:50:00', '2025-04-02 09:45:00', 'CRIM002', 'C002'),
+('OFF003', 'Convicted', 'Cyber Fraud', 60, '2025-03-28 13:45:00', '2025-03-27 20:00:00', 'CRIM003', 'C005'),
+('OFF004', 'Convicted', 'Motorcycle Theft', 65, '2025-04-03 18:00:00', '2025-04-03 17:45:00', 'CRIM004', 'C004'),
+('OFF005', 'Convicted', 'Threatening Behavior', 75, '2025-04-05 08:00:00', '2025-04-04 21:00:00', 'CRIM005', 'C003');
 
 -- --------------------------------------------------------
 
@@ -203,8 +203,6 @@ CREATE TABLE IF NOT EXISTS `criminalrecord` (
   `criminal_id` varchar(36) NOT NULL,
   `fingerprint_hash` text NOT NULL,
   `photo` text,
-  `total_crimes` int(11) DEFAULT '0',
-  `total_risk` decimal(5,2) DEFAULT '0.00',
   `nic` varchar(36) DEFAULT NULL,
   `name` varchar(255) DEFAULT NULL,
   `phone` varchar(20) DEFAULT NULL,
@@ -218,12 +216,12 @@ CREATE TABLE IF NOT EXISTS `criminalrecord` (
 -- Dumping data for table `criminalrecord`
 --
 
-INSERT INTO `criminalrecord` (`criminal_id`, `fingerprint_hash`, `photo`, `total_crimes`, `total_risk`, `nic`, `name`, `phone`, `address`, `dob`) VALUES
-('CRIM001', 'abcdef1234567890', 'https://randomuser.me/api/portraits/men/12.jpg', 3, 15.75, '198877665544', 'Devinda Silva', '0779988776', '45, Park Road, Colombo', '1996-06-25'),
-('CRIM002', 'fedcba0987654321', 'https://randomuser.me/api/portraits/men/13.jpg', 1, 5.20, '199511223344', 'Saman Perera', '0711233455', '10/A, Hill Street, Kandy', '1995-09-12'),
-('CRIM003', '9876543210abcdef', 'https://randomuser.me/api/portraits/men/14.jpg', 5, 22.50, '200055443322', 'Nayana Kumari', '0705566778', '7, Lake View, Galle', '2000-02-01'),
-('CRIM004', '0123456789fedcba', 'https://randomuser.me/api/portraits/men/15.jpg', 2, 10.90, '199233445566', 'Asanka Wijeratne', '0766544321', '12B, Sea Road, Negombo', '1992-11-05'),
-('CRIM005', 'bacdef0123456789', 'https://randomuser.me/api/portraits/men/16.jpg', 0, 0.00, '200499887766', 'Dilani Fernando', '0722344566', '3rd Lane, Kurunegala', '2004-04-28');
+INSERT INTO `criminalrecord` (`criminal_id`, `fingerprint_hash`, `photo`, `nic`, `name`, `phone`, `address`, `dob`) VALUES
+('CRIM001', 'abcdef1234567890', 'https://randomuser.me/api/portraits/men/12.jpg', '198877665544', 'Devinda Silva', '0779988776', '45, Park Road, Colombo', '1996-06-25'),
+('CRIM002', 'fedcba0987654321', 'https://randomuser.me/api/portraits/men/13.jpg', '199511223344', 'Saman Perera', '0711233455', '10/A, Hill Street, Kandy', '1995-09-12'),
+('CRIM003', '9876543210abcdef', 'https://randomuser.me/api/portraits/men/14.jpg', '200055443322', 'Nayana Kumari', '0705566778', '7, Lake View, Galle', '2000-02-01'),
+('CRIM004', '0123456789fedcba', 'https://randomuser.me/api/portraits/men/15.jpg', '199233445566', 'Asanka Wijeratne', '0766544321', '12B, Sea Road, Negombo', '1992-11-05'),
+('CRIM005', 'bacdef0123456789', 'https://randomuser.me/api/portraits/men/16.jpg', '200499887766', 'Dilani Fernando', '0722344566', '3rd Lane, Kurunegala', '2004-04-28');
 
 -- --------------------------------------------------------
 
@@ -394,7 +392,11 @@ CREATE TABLE IF NOT EXISTS `login` (
 --
 
 INSERT INTO `login` (`user_id`, `username`, `password_hash`, `lastlogin_dt`, `faild_attempts`, `account_locked`) VALUES
-('U001', 'user1', '$2b$10$.xeyDmg6SzYkxVF4joycreg4ANiSfiNFhiqt39i0lPKGUIkfyI4/a', NULL, 0, 0);
+('U001', 'user1', '$2b$10$.xeyDmg6SzYkxVF4joycreg4ANiSfiNFhiqt39i0lPKGUIkfyI4/a', NULL, 0, 0),
+('U002', 'user2', '$2b$10$.xeyDmg6SzYkxVF4joycreg4ANiSfiNFhiqt39i0lPKGUIkfyI4/a', NULL, 0, 0),
+('U003', 'user3', '$2b$10$.xeyDmg6SzYkxVF4joycreg4ANiSfiNFhiqt39i0lPKGUIkfyI4/a', NULL, 0, 1),
+('U004', 'user4', '$2b$10$.xeyDmg6SzYkxVF4joycreg4ANiSfiNFhiqt39i0lPKGUIkfyI4/a', NULL, 0, 1),
+('U005', 'user5', '$2b$10$.xeyDmg6SzYkxVF4joycreg4ANiSfiNFhiqt39i0lPKGUIkfyI4/a', NULL, 0, 1);
 
 -- --------------------------------------------------------
 
@@ -440,25 +442,27 @@ CREATE TABLE IF NOT EXISTS `users` (
   `user_id` varchar(36) NOT NULL,
   `name` varchar(255) NOT NULL,
   `email` varchar(100) NOT NULL,
+  `nic` varchar(15) NOT NULL,
   `phone` varchar(20) NOT NULL,
   `address` text NOT NULL,
   `created_dt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `role` enum('OIC','Crime OIC','Sub Inspector','Sergeant','Police Constable','Forensic Officer','Inspector') NOT NULL,
   `profile_pic` text,
   PRIMARY KEY (`user_id`),
-  UNIQUE KEY `email` (`email`)
+  UNIQUE KEY `email` (`email`),
+  UNIQUE KEY `NIC` (`nic`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`user_id`, `name`, `email`, `phone`, `address`, `created_dt`, `role`, `profile_pic`) VALUES
-('U001', 'John Dave', 'john@gmail.com', '0771234567', 'ww', '2025-04-01 10:28:19', 'Crime OIC', 'https://randomuser.me/api/portraits/men/32.jpg'),
-('U002', 'Kumara Perera', 'kumara@gmail.com', '0712345678', 'Maradana, Colombo 10', '2025-04-05 09:15:22', 'Sergeant', 'https://randomuser.me/api/portraits/men/33.jpg'),
-('U003', 'Malini Fernando', 'malini@gmail.com', '0763456789', 'Kandy Road, Kurunegala', '2025-04-10 14:30:45', 'Sub Inspector', 'https://randomuser.me/api/portraits/women/32.jpg'),
-('U004', 'Nimal Gunawardena', 'nimal@gmail.com', '0754567890', 'Temple Road, Matara', '2025-04-15 11:20:33', 'Sub Inspector', 'https://randomuser.me/api/portraits/men/39.jpg'),
-('U005', 'Chamari Jayasuriya', 'chamari@gmail.com', '0775678901', 'Beach Road, Negombo', '2025-04-20 16:45:10', 'Sergeant', 'https://randomuser.me/api/portraits/women/36.jpg');
+INSERT INTO `users` (`user_id`, `name`, `email`, `nic`, `phone`, `address`, `created_dt`, `role`, `profile_pic`) VALUES
+('U001', 'John Dave', 'john@gmail.com', '200220202220', '0771234567', 'ww', '2025-04-01 10:28:19', 'Crime OIC', 'https://randomuser.me/api/portraits/men/32.jpg'),
+('U002', 'Kumara Perera', 'kumara@gmail.com', '200230303330', '0712345678', 'Maradana, Colombo 10', '2025-04-05 09:15:22', 'Sergeant', 'https://randomuser.me/api/portraits/men/33.jpg'),
+('U003', 'Malini Fernando', 'malini@gmail.com', '200240404440', '0763456789', 'Kandy Road, Kurunegala', '2025-04-10 14:30:45', 'Sub Inspector', 'https://randomuser.me/api/portraits/women/32.jpg'),
+('U004', 'Nimal Gunawardena', 'nimal@gmail.com', '200250505550', '0754567890', 'Temple Road, Matara', '2025-04-15 11:20:33', 'Sub Inspector', 'https://randomuser.me/api/portraits/men/39.jpg'),
+('U005', 'Chamari Jayasuriya', 'chamari@gmail.com', '200260606660', '0775678901', 'Beach Road, Negombo', '2025-04-20 16:45:10', 'Sergeant', 'https://randomuser.me/api/portraits/women/36.jpg');
 
 -- --------------------------------------------------------
 

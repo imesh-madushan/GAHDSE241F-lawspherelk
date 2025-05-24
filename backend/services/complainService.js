@@ -12,6 +12,7 @@ exports.getAllComplaints = async (filters) => {
                 users.user_id AS officer_id,
                 users.name AS officer_name,
                 users.role AS officer_role,
+                users.profile_pic AS officer_profile,
 
                 cases.case_id,
                 cases.case_type,
@@ -210,4 +211,82 @@ exports.getComplaintById = async (complaintId) => {
         evidence: evidenceRows,
         reports: reports
     };
+};
+
+exports.searchComplaints = async (filters) => {
+    let query = `SELECT 
+                complaints.complain_id,
+                complaints.description,
+                complaints.complain_dt,
+                complaints.status AS complaint_status,
+                complaints.officer_id,
+                complaints.first_evidance_id,
+
+                users.user_id AS officer_id,
+                users.name AS officer_name,
+                users.role AS officer_role,
+                users.profile_pic AS officer_profile,
+
+                cases.case_id,
+                cases.case_type,
+                cases.status AS case_status,
+
+                evidance.type AS evidence_type,
+                evidance.details AS evidence_details,
+
+                evidance_witnesses.nic AS witness_nic,
+                evidance_witnesses.name AS witness_name,
+                evidance_witnesses.phone AS witness_phone,
+                evidance_witnesses.address AS witness_address,
+                evidance_witnesses.dob AS witness_dob
+
+                FROM complaints
+                INNER JOIN users ON complaints.officer_id = users.user_id
+                INNER JOIN cases ON complaints.complain_id = cases.complain_id
+                INNER JOIN evidance ON evidance.evidence_id = complaints.first_evidance_id
+                INNER JOIN evidance_witnesses ON evidance.evidence_id = evidance_witnesses.evidence_id
+                WHERE 1=1`;
+
+    const params = [];
+
+    // Description filter
+    if (filters.description) {
+        query += ` AND complaints.description LIKE ?`;
+        params.push(`%${filters.description}%`);
+    }
+    // Complaint ID filter
+    if (filters.complain_id) {
+        query += ` AND complaints.complain_id = ?`;
+        params.push(filters.complain_id);
+    }
+    // Officer name filter
+    if (filters.officer) {
+        query += ` AND users.name LIKE ?`;
+        params.push(`%${filters.officer}%`);
+    }
+    // Complainer name filter (witness)
+    if (filters.complainer) {
+        query += ` AND evidance_witnesses.name LIKE ?`;
+        params.push(`%${filters.complainer}%`);
+    }
+    // Status filter
+    if (filters.status && filters.status !== 'all') {
+        query += ` AND complaints.status = ?`;
+        params.push(filters.status);
+    }
+    // Time period filter
+    if (filters.timePeriod && filters.timePeriod !== 'all') {
+        if (filters.timePeriod === 'last_7_days') {
+            query += ` AND complaints.complain_dt >= DATE_SUB(NOW(), INTERVAL 7 DAY)`;
+        } else if (filters.timePeriod === 'last_30_days') {
+            query += ` AND complaints.complain_dt >= DATE_SUB(NOW(), INTERVAL 30 DAY)`;
+        } else if (filters.timePeriod === 'last_90_days') {
+            query += ` AND complaints.complain_dt >= DATE_SUB(NOW(), INTERVAL 90 DAY)`;
+        }
+    }
+
+    query += ` ORDER BY complaints.complain_dt DESC`;
+
+    const [rows] = await db.query(query, params);
+    return rows;
 };

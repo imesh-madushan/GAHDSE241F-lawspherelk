@@ -12,31 +12,30 @@ const OfficersPage = () => {
     const [totalPages, setTotalPages] = useState(1);
     const navigate = useNavigate();
 
-    // Use a searchConfig object like in CrimeOffencesPage
-    const searchConfig = {
-        searchOptions: [
-            { value: 'name', label: 'Name' },
-        ],
-        roleOptions: [
-            { value: 'all', label: 'All' },
-            { value: 'OIC', label: 'OIC' },
-            { value: 'Crime OIC', label: 'Crime OIC' },
-            { value: 'Sub Inspector', label: 'Sub Inspector' },
-            { value: 'Inspector', label: 'Inspector' },
-            { value: 'Sergeant', label: 'Sergeant' },
-            { value: 'Police Constable', label: 'Police Constable' },
-            { value: 'Forensic Leader', label: 'Forensic Leader' },
-        ]
-    };
+    const searchOptions = [
+        { value: 'name', label: 'Name' },
+        { value: 'id', label: 'Officer ID' },
+        { value: 'nic', label: 'NIC' },
+        { value: 'phone', label: 'Phone Number' },
+        { value: 'email', label: 'Email' }
+    ]
 
-    // Prepare filters array for SearchInterface
-    const filters = [
+    const filterConfig = [
         {
             id: 'role',
             label: 'Role',
-            options: searchConfig.roleOptions
+            options: [
+                { value: 'all', label: 'All' },
+                { value: 'OIC', label: 'OIC' },
+                { value: 'Crime OIC', label: 'Crime OIC' },
+                { value: 'Sub Inspector', label: 'Sub Inspector' },
+                { value: 'Inspector', label: 'Inspector' },
+                { value: 'Sergeant', label: 'Sergeant' },
+                { value: 'Police Constable', label: 'Police Constable' },
+                { value: 'Forensic Leader', label: 'Forensic Leader' },
+            ]
         }
-    ];
+    ]
 
     useEffect(() => {
         fetchOfficers();
@@ -59,6 +58,18 @@ const OfficersPage = () => {
         if (searchParams.searchTerm && searchParams.searchTerm.trim() !== '') {
             if (searchParams.searchType === 'name') {
                 params.name = searchParams.searchTerm.trim();
+            }
+            if (searchParams.searchType === 'id') {
+                params.id = searchParams.searchTerm.trim();
+            }
+            if (searchParams.searchType === 'nic') {
+                params.nic = searchParams.searchTerm.trim();
+            }
+            if (searchParams.searchType === 'phone') {
+                params.phone = searchParams.searchTerm.trim();
+            }
+            if (searchParams.searchType === 'email') {
+                params.email = searchParams.searchTerm.trim();
             }
         }
         if (searchParams.role && searchParams.role !== 'all') {
@@ -91,8 +102,8 @@ const OfficersPage = () => {
             <div className="container mx-auto p-4">
                 <div className="mb-6">
                     <SearchInterface
-                        searchOptions={searchConfig.searchOptions}
-                        filters={filters}
+                        searchOptions={searchOptions}
+                        filters={filterConfig}
                         onSearch={handleSearch}
                     />
                 </div>

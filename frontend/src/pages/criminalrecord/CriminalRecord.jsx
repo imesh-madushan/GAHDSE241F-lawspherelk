@@ -1,35 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { Print, Edit, Save, Cancel } from '@mui/icons-material';
 import PageHeader from '../../components/common/PageHeader';
-import OutlinedButton from '../../components/buttons/OutlinedButton';
 import CriminalProfile from '../../components/criminal/CriminalProfile';
 import CriminalTabs from '../../components/criminal/CriminalTabs';
 import OffencesTab from '../../components/criminal/tabs/OffencesTab';
 import EvidenceTab from '../../components/criminal/tabs/EvidenceTab';
 import ForensicTab from '../../components/criminal/tabs/ForensicTab';
-import { Print, Edit, Save, Cancel } from '@mui/icons-material';
-
-// Icons
-import {
-    Person,
-    Fingerprint,
-    LocationOn,
-    Phone,
-    Event,
-    Warning,
-    Description,
-    Gavel,
-    ArrowBack,
-    CalendarMonth,
-    AccessTime,
-    EmojiEvents,
-    LocalPolice,
-    KeyboardArrowRight,
-    Add,
-    Archive,
-    Attachment
-} from '@mui/icons-material';
 import { apiClient } from '../../config/apiConfig';
 
 const CriminalRecord = () => {
@@ -50,7 +27,6 @@ const CriminalRecord = () => {
         try {
             const response = await apiClient.get(`/criminals/${criminalId}`);
             setCriminalData(response.data.criminalData);
-            console.log(response.data.criminalData);
             setLoading(false);
         } catch (err) {
             setError('Failed to fetch criminal data');
@@ -92,28 +68,31 @@ const CriminalRecord = () => {
         });
     };
 
-    // Risk level calculation
-    const getRiskLevel = (score) => {
-        if (score >= 70) return { level: 'High', color: 'bg-red-500' };
-        if (score >= 40) return { level: 'Medium', color: 'bg-yellow-500' };
-        return { level: 'Low', color: 'bg-green-500' };
-    };
-
     const handleEditToggle = () => {
         if (isEditing) {
             setCriminalData(editedCriminal);
             setIsEditing(false);
         } else {
-            setEditedCriminal(criminalData);
+            setEditedCriminal({ ...criminalData });
             setIsEditing(true);
         }
     };
 
-    const handleSaveChanges = () => {
-        // Here you would typically make an API call to save the changes
-        // For now, we'll just update the local state
-        setCriminalData(editedCriminal);
-        setIsEditing(false);
+    const handleSaveChanges = async () => {
+        try {
+            setLoading(true);
+            // You would typically make an API call here
+            const response = await apiClient.put(`/criminals/${criminalId}`, editedCriminal);
+            setCriminalData(response.data.criminal || editedCriminal);
+            setIsEditing(false);
+            setLoading(false);
+        } catch (err) {
+            console.error("Error saving criminal data:", err);
+            // Keep the edited data for now so user doesn't lose changes
+            setCriminalData(editedCriminal);
+            setIsEditing(false);
+            setLoading(false);
+        }
     };
 
     const handleCancelEdit = () => {
@@ -153,10 +132,8 @@ const CriminalRecord = () => {
         );
     }
 
-    const riskInfo = getRiskLevel(criminalData.total_risk);
-
     return (
-        <div className="bg-gray-100 min-h-screen">
+        <div className="bg-gray-50 min-h-screen">
             <PageHeader
                 title="Criminal Record"
                 breadcrumbItems={[
@@ -169,25 +146,25 @@ const CriminalRecord = () => {
                     {
                         icon: <Print fontSize='small' />,
                         label: 'Print Record',
-                        styles: 'text-blue-700',
+                        styles: 'text-blue-700 border border-blue-700',
                         onClick: () => window.print()
                     },
                     isEditing ? {
                         icon: <Cancel fontSize='small' />,
                         label: 'Cancel',
                         onClick: handleCancelEdit,
-                        styles: 'text-red-700'
+                        styles: 'text-red-700 border border-red-700'
                     } : {
                         icon: <Edit fontSize='small' />,
                         label: 'Edit Record',
                         onClick: handleEditToggle,
-                        styles: 'text-blue-700'
+                        styles: 'text-blue-700 border border-blue-700'
                     },
                     isEditing ? {
                         icon: <Save fontSize='small' />,
                         label: 'Save',
                         onClick: handleSaveChanges,
-                        styles: 'text-green-700'
+                        styles: 'bg-green-700 text-white'
                     } : null
                 ].filter(Boolean)}
             />
@@ -201,39 +178,40 @@ const CriminalRecord = () => {
                     handleInputChange={handleInputChange}
                 />
 
-                <CriminalTabs
-                    activeTab={activeTab}
-                    setActiveTab={setActiveTab}
-                />
+                <div className="bg-white rounded-xl shadow-md overflow-hidden">
+                    <CriminalTabs
+                        activeTab={activeTab}
+                        setActiveTab={setActiveTab}
+                    />
 
-                <div className="p-4">
-                    {activeTab === 'offences' && (
-                        <OffencesTab
-                            offences={isEditing ? editedCriminal.offences : criminalData.offences}
-                            formatDate={formatDate}
-                            formatTime={formatTime}
-                            getRiskLevel={getRiskLevel}
-                            isEditing={isEditing}
-                        />
-                    )}
+                    <div className="p-6">
+                        {activeTab === 'offences' && (
+                            <OffencesTab
+                                offences={isEditing ? editedCriminal.offences : criminalData.offences}
+                                formatDate={formatDate}
+                                formatTime={formatTime}
+                                isEditing={isEditing}
+                            />
+                        )}
 
-                    {activeTab === 'evidence' && (
-                        <EvidenceTab
-                            evidence={isEditing ? editedCriminal.evidence : criminalData.evidence}
-                            formatDate={formatDate}
-                            formatTime={formatTime}
-                            isEditing={isEditing}
-                        />
-                    )}
+                        {activeTab === 'evidence' && (
+                            <EvidenceTab
+                                evidence={isEditing ? editedCriminal.evidence : criminalData.evidence}
+                                formatDate={formatDate}
+                                formatTime={formatTime}
+                                isEditing={isEditing}
+                            />
+                        )}
 
-                    {activeTab === 'forensic' && (
-                        <ForensicTab />
-                    )}
+                        {activeTab === 'forensic' && (
+                            <ForensicTab />
+                        )}
+                    </div>
                 </div>
             </div>
 
             {/* Footer */}
-            <footer className="bg-gray-200 text-gray-600 py-4 mt-auto">
+            <footer className="bg-gray-200 text-gray-600 py-4 mt-8">
                 <div className="container mx-auto px-4 text-center text-sm">
                     <p>&copy; 2025 LawSphere LK - Sri Lanka Police Department</p>
                     <p className="text-xs mt-1">Accessed by: Officer ID - OFF123 | Station: Colombo Central</p>

@@ -67,3 +67,44 @@ exports.getCaseById = async (req, res) => {
     }
 };
 
+exports.searchCases = async (req, res) => {
+    try {
+        const filters = {
+            topic: req.query.topic,
+            case_id: req.query.case_id,
+            case_type: req.query.case_type,
+            officer: req.query.officer,
+            status: req.query.status,
+            timePeriod: req.query.timePeriod
+        };
+
+        console.log('Search filters:', filters);
+        const token = req.cookies.authtoken;
+        if (!token) {
+            return res.status(401).json({ message: "No token provided" });
+        }
+
+        const user = await getUserFromCookies(token);
+        if (!user) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const cases = await caseService.searchCases(filters, user.role, user.user_id);
+
+        if (!cases || cases.length === 0) {
+            return res.status(200).json({
+                message: "No cases found matching the criteria",
+                cases: []
+            });
+        }
+
+        res.status(200).json({
+            message: "Search completed successfully",
+            cases
+        });
+    } catch (error) {
+        console.error('Error in searchCases controller:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+

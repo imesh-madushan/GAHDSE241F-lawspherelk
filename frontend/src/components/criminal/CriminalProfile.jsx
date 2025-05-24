@@ -1,5 +1,18 @@
 import React, { useRef } from 'react';
-import { Person, Fingerprint, LocationOn, Phone, Event, LocalPolice, CloudUpload } from '@mui/icons-material';
+import {
+    Person,
+    Fingerprint,
+    LocationOn,
+    Phone,
+    Event,
+    Description,
+    CloudUpload,
+    Warning,
+    CreditScore,
+    Balance,
+    Gavel,
+    Attachment
+} from '@mui/icons-material';
 
 const CriminalProfile = ({ criminal, calculateAge, formatDate, isEditing, handleInputChange }) => {
     const fileInputRef = useRef(null);
@@ -7,8 +20,6 @@ const CriminalProfile = ({ criminal, calculateAge, formatDate, isEditing, handle
     const handleImageUpload = (event) => {
         const file = event.target.files[0];
         if (file) {
-            // Here you would typically handle the file upload
-            // For now, we'll just create a local URL
             const imageUrl = URL.createObjectURL(file);
             handleInputChange({
                 target: {
@@ -19,174 +30,226 @@ const CriminalProfile = ({ criminal, calculateAge, formatDate, isEditing, handle
         }
     };
 
-    const getRiskLevel = (score) => {
-        if (score >= 70) return { level: 'High', color: 'bg-red-500' };
-        if (score >= 40) return { level: 'Medium', color: 'bg-yellow-500' };
-        return { level: 'Low', color: 'bg-green-500' };
-    };
-
     const formatRiskScore = (score) => {
-        // Convert to number and handle null/undefined cases
         const numScore = parseFloat(score) || 0;
-        return numScore.toFixed(2);
+        return numScore.toFixed(0);
     };
 
     return (
-        <div className="bg-white rounded-lg shadow-md mb-6 overflow-hidden">
-            <div className="md:flex">
-                <div className="md:w-1/3 bg-gray-800 text-white p-6">
-                    <div className="flex justify-center">
-                        {criminal.photo ? (
-                            <img
-                                src={criminal.photo}
-                                alt={criminal.name}
-                                className="w-51 h-51 object-cover rounded-full border-2 border-gray-300/60 shadow-xl shadow-gray-600/40"
-                            />
-                        ) : (
-                            <div className="w-48 h-48 rounded-full bg-gray-200 flex items-center justify-center border-4 border-white shadow-lg">
-                                <Person style={{ fontSize: 80 }} className="text-gray-400" />
-                            </div>
-                        )}
+        <div className="mb-6 overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Left Column - Personal Info */}
+                <div className="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div className="bg-gradient-to-r from-gray-700 to-gray-900 p-6 flex flex-col items-center">
+                        <div className="relative">
+                            {criminal.photo ? (
+                                <img
+                                    src={criminal.photo}
+                                    alt={criminal.name}
+                                    className="w-32 h-32 object-cover rounded-full border-4 border-white shadow-xl"
+                                />
+                            ) : (
+                                <div className="w-32 h-32 rounded-full bg-gray-400 flex items-center justify-center border-4 border-white shadow-xl">
+                                    <Person style={{ fontSize: 50 }} className="text-gray-600" />
+                                </div>
+                            )}
+
+                            {isEditing && (
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="absolute bottom-0 right-0 bg-gray-600 hover:bg-gray-700 text-white rounded-full p-2 shadow-lg transition-colors"
+                                >
+                                    <CloudUpload fontSize="small" />
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        onChange={handleImageUpload}
+                                        accept="image/*"
+                                        className="hidden"
+                                    />
+                                </button>
+                            )}
+                        </div>
+                        <div className="mt-4 text-center">
+                            <h2 className="text-xl font-bold text-white">{criminal.name}</h2>
+                            <span className="inline-block px-3 py-1 mt-2 bg-gray-800 bg-opacity-50 rounded-full text-xs font-medium text-gray-100">
+                                ID: {criminal.criminal_id?.substring(0, 8)}
+                            </span>
+                        </div>
                     </div>
-                    {isEditing && (
-                        <div className="mt-4 flex justify-center">
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                onChange={handleImageUpload}
-                                accept="image/*"
-                                className="hidden"
-                            />
-                            <button
-                                onClick={() => fileInputRef.current?.click()}
-                                className="flex items-center px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-                            >
-                                <CloudUpload className="mr-2" />
-                                Upload Photo
-                            </button>
-                        </div>
-                    )}
-                    <div className="mt-6 space-y-4">
-                        <div className="flex items-center">
-                            <Fingerprint className="mr-2 text-gray-400" />
-                            <span className="text-sm text-gray-300">ID: {criminal.criminal_id}</span>
-                        </div>
-                        <div className="flex items-center">
-                            <LocalPolice className="mr-2 text-gray-400" />
-                            <div className="flex-1">
-                                <label className="block text-sm text-gray-300 mb-1">NIC Number</label>
-                                <input
-                                    type="text"
-                                    name="nic"
-                                    value={criminal.nic}
-                                    onChange={handleInputChange}
-                                    disabled={!isEditing}
-                                    className="w-full px-3 py-1.5 bg-gray-700/50 rounded-lg border border-gray-600 focus:outline-none focus:border-gray-400 text-sm disabled:opacity-50"
-                                    placeholder="Enter NIC number"
-                                />
+
+                    <div className="p-6 space-y-6">
+                        <div className="space-y-4">
+                            <div className="flex items-center">
+                                <div className="flex-shrink-0 p-2 bg-gray-50 rounded-lg">
+                                    <Person className="text-gray-600" />
+                                </div>
+                                <div className="ml-4">
+                                    <p className="text-xs text-gray-500">Full Name</p>
+                                    {isEditing ? (
+                                        <input
+                                            type="text"
+                                            name="name"
+                                            value={criminal.name || ''}
+                                            onChange={handleInputChange}
+                                            className="w-full mt-1 px-3 py-2 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm"
+                                        />
+                                    ) : (
+                                        <p className="text-sm font-medium">{criminal.name}</p>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                        <div className="flex items-center">
-                            <Phone className="mr-2 text-gray-400" />
-                            <div className="flex-1">
-                                <label className="block text-sm text-gray-300 mb-1">Phone Number</label>
-                                <input
-                                    type="text"
-                                    name="phone"
-                                    value={criminal.phone}
-                                    onChange={handleInputChange}
-                                    disabled={!isEditing}
-                                    className="w-full px-3 py-1.5 bg-gray-700/50 rounded-lg border border-gray-600 focus:outline-none focus:border-gray-400 text-sm disabled:opacity-50"
-                                    placeholder="Enter phone number"
-                                />
+
+                            <div className="flex items-center">
+                                <div className="flex-shrink-0 p-2 bg-gray-50 rounded-lg">
+                                    <Fingerprint className="text-gray-600" />
+                                </div>
+                                <div className="ml-4">
+                                    <p className="text-xs text-gray-500">NIC Number</p>
+                                    {isEditing ? (
+                                        <input
+                                            type="text"
+                                            name="nic"
+                                            value={criminal.nic || ''}
+                                            onChange={handleInputChange}
+                                            className="w-full mt-1 px-3 py-2 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm"
+                                        />
+                                    ) : (
+                                        <p className="text-sm font-medium">{criminal.nic || 'Not available'}</p>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                        <div className="flex">
-                            <LocationOn className="mr-2 mt-1 text-gray-400 flex-shrink-0" />
-                            <div className="flex-1">
-                                <label className="block text-sm text-gray-300 mb-1">Address</label>
-                                <textarea
-                                    name="address"
-                                    value={criminal.address}
-                                    onChange={handleInputChange}
-                                    disabled={!isEditing}
-                                    className="w-full px-3 py-1.5 bg-gray-700/50 rounded-lg border border-gray-600 focus:outline-none focus:border-gray-400 text-sm resize-none disabled:opacity-50"
-                                    rows="2"
-                                    placeholder="Enter full address"
-                                />
+
+                            <div className="flex items-center">
+                                <div className="flex-shrink-0 p-2 bg-gray-50 rounded-lg">
+                                    <Phone className="text-gray-600" />
+                                </div>
+                                <div className="ml-4">
+                                    <p className="text-xs text-gray-500">Phone Number</p>
+                                    {isEditing ? (
+                                        <input
+                                            type="text"
+                                            name="phone"
+                                            value={criminal.phone || ''}
+                                            onChange={handleInputChange}
+                                            className="w-full mt-1 px-3 py-2 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm"
+                                        />
+                                    ) : (
+                                        <p className="text-sm font-medium">{criminal.phone || 'Not available'}</p>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                        <div className="flex items-center">
-                            <Event className="mr-2 text-gray-400" />
-                            <div className="flex-1">
-                                <label className="block text-sm text-gray-300 mb-1">Date of Birth</label>
-                                <input
-                                    type="date"
-                                    name="dob"
-                                    value={criminal.dob ? new Date(criminal.dob).toISOString().split('T')[0] : ''}
-                                    onChange={handleInputChange}
-                                    disabled={!isEditing}
-                                    className="w-full px-3 py-1.5 bg-gray-700/50 rounded-lg border border-gray-600 focus:outline-none focus:border-gray-400 text-sm disabled:opacity-50"
-                                />
+
+                            <div className="flex items-center">
+                                <div className="flex-shrink-0 p-2 bg-gray-50 rounded-lg">
+                                    <Event className="text-gray-600" />
+                                </div>
+                                <div className="ml-4">
+                                    <p className="text-xs text-gray-500">Date of Birth</p>
+                                    {isEditing ? (
+                                        <input
+                                            type="date"
+                                            name="dob"
+                                            value={criminal.dob ? new Date(criminal.dob).toISOString().split('T')[0] : ''}
+                                            onChange={handleInputChange}
+                                            className="w-full mt-1 px-3 py-2 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm"
+                                        />
+                                    ) : (
+                                        <p className="text-sm font-medium">
+                                            {criminal.dob ? formatDate(criminal.dob) : 'Not available'}
+                                            {criminal.dob && ` (${calculateAge(criminal.dob)} years)`}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="flex items-start">
+                                <div className="flex-shrink-0 p-2 bg-gray-50 rounded-lg mt-1">
+                                    <LocationOn className="text-gray-600" />
+                                </div>
+                                <div className="ml-4 flex-1">
+                                    <p className="text-xs text-gray-500">Address</p>
+                                    {isEditing ? (
+                                        <textarea
+                                            name="address"
+                                            value={criminal.address || ''}
+                                            onChange={handleInputChange}
+                                            rows={3}
+                                            className="w-full mt-1 px-3 py-2 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm"
+                                        />
+                                    ) : (
+                                        <p className="text-sm font-medium">{criminal.address || 'Not available'}</p>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="md:w-2/3 p-6">
-                    <h2 className="text-xl font-semibold text-gray-800 mb-4">Criminal Summary</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                            <div className="flex items-center justify-between mb-2">
-                                <h3 className="font-semibold text-gray-700">Risk Assessment</h3>
-                                <div className={`${getRiskLevel(criminal.total_risk).color} text-white text-sm px-3 py-1 rounded-full`}>
-                                    {getRiskLevel(criminal.total_risk).level} Risk
-                                </div>
-                            </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
-                                <div
-                                    className={`h-2.5 rounded-full ${getRiskLevel(criminal.total_risk).color}`}
-                                    style={{ width: `${Math.min(criminal.total_risk, 100)}%` }}
-                                ></div>
-                            </div>
-                            <div className="text-xs text-right text-gray-500">Score: {formatRiskScore(criminal.total_risk)}</div>
+                {/* Middle & Right Column Combined - Criminal Stats & Biometric */}
+                <div className="lg:col-span-2 space-y-6">
+                    {/* Criminal Stats */}
+                    <div className="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div className="p-5 border-b border-gray-100 flex items-center">
+                            <Balance className="text-gray-600 mr-2" />
+                            <h3 className="font-semibold text-gray-800">Criminal Summary</h3>
                         </div>
 
-                        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                            <h3 className="font-semibold text-gray-700 mb-2">Criminal Activity</h3>
-                            <div className="flex items-center justify-between">
-                                <span className="text-gray-600">Total Crimes:</span>
-                                <span className="text-lg font-bold text-gray-800">{criminal.total_crimes}</span>
-                            </div>
-                            <div className="flex items-center justify-between mt-2">
-                                <span className="text-gray-600">Status:</span>
-                                <span className={`text-sm px-3 py-1 rounded-full ${criminal.offences[0]?.status === "Under Investigation"
-                                    ? "bg-yellow-100 text-yellow-800"
-                                    : "bg-red-100 text-red-800"
-                                    }`}>
-                                    {criminal.offences[0]?.status || "N/A"}
-                                </span>
+                        <div className="p-5">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="bg-red-50 rounded-lg p-4 border border-red-100 flex flex-col items-center">
+                                    <div className="text-3xl font-bold text-red-700">
+                                        {criminal.total_crimes || 0}
+                                    </div>
+                                    <div className="text-xs text-red-600 font-medium uppercase tracking-wide mt-2 text-center">
+                                        Convicted Crimes
+                                    </div>
+                                </div>
+
+                                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 flex flex-col items-center">
+                                    <div className="text-3xl font-bold text-gray-700">
+                                        {formatRiskScore(criminal.total_risk)}
+                                    </div>
+                                    <div className="text-xs text-gray-600 font-medium uppercase tracking-wide mt-2 text-center">
+                                        Risk Score
+                                    </div>
+                                </div>
+
+                                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 flex flex-col items-center">
+                                    <div className="text-3xl font-bold text-gray-700">
+                                        {criminal.evidence?.length || 0}
+                                    </div>
+                                    <div className="text-xs text-gray-600 font-medium uppercase tracking-wide mt-2 text-center">
+                                        Evidence Items
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="mt-6">
-                        <h3 className="font-semibold text-gray-700 mb-3">Biometric Information</h3>
-                        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                            <div className="flex items-center">
-                                <Fingerprint className="text-gray-600 mr-2" />
-                                <div className="flex-1">
-                                    <div className="text-sm font-medium text-gray-700">Fingerprint Hash</div>
+                    {/* Biometric Information */}
+                    <div className="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div className="p-5 border-b border-gray-100 flex items-center">
+                            <Fingerprint className="text-gray-600 mr-2" />
+                            <h3 className="font-semibold text-gray-800">Biometric Data</h3>
+                        </div>
+
+                        <div className="p-5">
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-600">Fingerprint Hash</label>
+                                {isEditing ? (
                                     <input
                                         type="text"
                                         name="fingerprint_hash"
-                                        value={criminal.fingerprint_hash}
+                                        value={criminal.fingerprint_hash || ''}
                                         onChange={handleInputChange}
-                                        disabled={!isEditing}
-                                        className="w-full mt-1 px-3 py-1.5 bg-white rounded-lg border border-gray-300 focus:outline-none focus:border-gray-400 text-xs font-mono disabled:opacity-50"
-                                        placeholder="Enter fingerprint hash"
+                                        className="w-full mt-2 px-3 py-2 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm font-mono"
                                     />
-                                </div>
+                                ) : (
+                                    <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200 text-sm font-mono break-all">
+                                        {criminal.fingerprint_hash || 'Not available'}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -196,4 +259,4 @@ const CriminalProfile = ({ criminal, calculateAge, formatDate, isEditing, handle
     );
 };
 
-export default CriminalProfile; 
+export default CriminalProfile;

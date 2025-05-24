@@ -25,7 +25,16 @@ exports.getAll = async (req, res) => {
 }
 
 exports.searchOfficers = async (req, res) => {
-    const filters = {};
+    const filters = {
+        role: req.body.role || null,
+        name: req.body.name || null,
+        id: req.body.id || null,
+        nic: req.body.nic || null,
+        phone: req.body.phone || null,
+        email: req.body.email || null,
+        page: req.body.page || 1,
+        pageSize: req.body.pageSize || 12
+    };
 
     const token = req.cookies.authtoken;
     if (!token) {
@@ -37,12 +46,6 @@ exports.searchOfficers = async (req, res) => {
         return res.status(401).json({ message: "Unauthorized" });
     }
 
-    if (req.body.name) {
-        filters.name = req.body.name;
-    }
-    if (req.body.role) {
-        filters.role = req.body.role;
-    }
 
     try {
         const officers = await officerService.searchOfficers(filters, user.role, user.user_id);

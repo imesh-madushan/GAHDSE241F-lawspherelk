@@ -13,6 +13,7 @@ const OfficerCard = ({ officer = {} }) => {
         role = 'Role Not Specified',
         email,
         phone,
+        nic,
         matchDetail,
         account_locked,
         leading_ongoing_cases
@@ -52,7 +53,7 @@ const OfficerCard = ({ officer = {} }) => {
             {/* Profile Image Section */}
             <div className="flex flex-col items-center -mt-10 mb-3">
                 <div
-                    className="rounded-full p-0.5 z-1 bg-white shadow cursor-pointer hover:ring-2 hover:ring-blue-400 transition"
+                    className="rounded-full p-0.5 z-0 bg-white shadow cursor-pointer hover:ring-2 hover:ring-blue-400 transition"
                     onClick={goToProfile}
                     title="View Officer Profile"
                     style={{ cursor: 'pointer' }}
@@ -84,6 +85,11 @@ const OfficerCard = ({ officer = {} }) => {
                         <BadgeCheck className="w-3.5 h-3.5" />
                         {role}
                     </div>
+                    {nic && (
+                        <div className="mt-1 text-xs text-gray-500">
+                            NIC: {nic}
+                        </div>
+                    )}
                 </div>
 
                 {/* Divider */}

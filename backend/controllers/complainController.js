@@ -1,4 +1,5 @@
 const complainService = require("../services/complainService");
+const { getUserFromCookies } = require('../middlewares/authMiddleware');
 
 // get all complaints
 exports.getAllComplaints = async (req, res) => {
@@ -41,5 +42,42 @@ exports.getComplaintById = async (req, res) => {
     catch (error) {
         console.error("Error fetching complaint:", error);
         res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+//
+// search complaints
+exports.searchComplaints = async (req, res) => {
+    try {
+        // Auth check (like in case controller)
+        const token = req.cookies.authtoken;
+        if (!token) {
+            return res.status(401).json({ message: "No token provided" });
+        }
+        const user = await getUserFromCookies(token);
+        if (!user) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const filters = {
+            description: req.query.description,
+            complain_id: req.query.complain_id,
+            officer: req.query.officer,
+            complainer: req.query.complainer,
+            status: req.query.status,
+            timePeriod: req.query.timePeriod // <-- add timePeriod
+        };
+
+        // Add more filters as needed (date, etc.)
+
+        const complaints = await complainService.searchComplaints(filters);
+
+        res.status(200).json({
+            message: "Search completed successfully",
+            complaints: complaints || []
+        });
+    } catch (error) {
+        console.error('Error in searchComplaints controller:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };

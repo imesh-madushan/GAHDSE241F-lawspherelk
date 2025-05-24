@@ -8,6 +8,7 @@ exports.getAllOfficers = async (roles, userRole, userId) => {
                     u.role,
                     u.email,
                     u.phone,
+                    u.nic,
                     u.profile_pic AS image,
                     (SELECT COUNT(*) FROM Cases c WHERE c.leader_id = u.user_id AND c.status = 'inprogress') AS leading_ongoing_cases,
                     l.account_locked
@@ -36,9 +37,18 @@ exports.getAllOfficers = async (roles, userRole, userId) => {
     }
 }
 
-// New searchOfficers function for filtered and paginated search
+// Enhanced searchOfficers function for all search/filter options
 exports.searchOfficers = async (filters, userRole, userId) => {
-    const { role, name, page = 1, pageSize = 12 } = filters;
+    const {
+        role,
+        name,
+        id,
+        nic,
+        phone,
+        email,
+        page = 1,
+        pageSize = 12
+    } = filters;
 
     let query = `SELECT
                 u.user_id AS id,
@@ -46,6 +56,7 @@ exports.searchOfficers = async (filters, userRole, userId) => {
                 u.role,
                 u.email,
                 u.phone,
+                u.nic,
                 u.profile_pic AS image,
                 (SELECT COUNT(*) FROM Cases c WHERE c.leader_id = u.user_id AND c.status = 'inprogress') AS leading_ongoing_cases,
                 l.account_locked
@@ -56,14 +67,29 @@ exports.searchOfficers = async (filters, userRole, userId) => {
     const params = [];
     params.push(userId);
 
-    if (role) {
-        query += " AND role = ?";
+    if (role && role !== 'all') {
+        query += " AND u.role = ?";
         params.push(role);
     }
-
     if (name) {
-        query += " AND name LIKE ?";
+        query += " AND u.name LIKE ?";
         params.push(`%${name}%`);
+    }
+    if (id) {
+        query += " AND u.user_id = ?";
+        params.push(id);
+    }
+    if (nic) {
+        query += " AND u.nic LIKE ?";
+        params.push(`%${nic}%`);
+    }
+    if (phone) {
+        query += " AND u.phone LIKE ?";
+        params.push(`%${phone}%`);
+    }
+    if (email) {
+        query += " AND u.email LIKE ?";
+        params.push(`%${email}%`);
     }
 
     const offset = (page - 1) * pageSize;

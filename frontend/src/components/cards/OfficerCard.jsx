@@ -1,12 +1,12 @@
 import React from 'react';
 import { Person, Visibility } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
-const OfficerCard = ({
-    officer,
-    size = "medium",
-    className = "",
-    onClick = null
-}) => {
+const OfficerCard = ({ officer, size = "medium", className = "" }) => {
+    const navigate = useNavigate();
+    const { user } = useAuth();
+
     // Get initials from name for avatar fallback
     const getInitials = (name) => {
         if (!name) return "??";
@@ -33,8 +33,12 @@ const OfficerCard = ({
 
     return (
         <div
-            className={`flex items-center justify-between hover:cursor-pointer hover:rounded-xl transition-colors hover:[box-shadow:2px_3px_8px_2px_rgba(0,0,0,0.2)] hover:border-white ${containerClasses[size]} border border-gray-200 rounded-lg bg-yellow-50/20 ${className} `}
-            onClick={onClick}
+            className={`flex items-center justify-between hover:cursor-pointer hover:rounded-xl transition-colors hover:[box-shadow:2px_2px_8px_1px_rgba(0,0,0,0.1)] hover:border-white ${containerClasses[size]} border border-gray-200 rounded-lg bg-yellow-50/20 ${className} `}
+            onClick={() => {
+                if (officer && officer.id) {
+                    navigate(`/officers/${officer.id}`);
+                }
+            }}
         >
             <div className="flex items-center">
                 {/* Officer Avatar */}
@@ -54,7 +58,14 @@ const OfficerCard = ({
 
                 {/* Officer Info */}
                 <div className="ml-3">
-                    <div className="font-medium text-gray-900">{officer.name}</div>
+                    <div className="font-medium text-gray-900 flex items-center gap-1">
+                        {officer.name}
+                        {user && officer.id === user.user_id && (
+                            <span className="ml-0 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
+                                (you)
+                            </span>
+                        )}
+                    </div>
                     <div className="flex items-center">
                         <div className="text-xs text-gray-500">{officer.role || "Officer"}</div>
                         {officer.type && (

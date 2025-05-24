@@ -37,20 +37,23 @@ exports.getAllCriminals = async (req, res) => {
 
 // Search criminals
 exports.searchCriminals = async (req, res) => {
-    const { name, nic, fingerprint } = req.query;
-    const filters = { name, nic, fingerprint };
+    try{
+        const filters = { 
+           name: req.query.name || "", 
+           nic: req.query.nic || "", 
+           fingerprint: req.query.fingerprint || "" 
+        };
 
-    const token = req.cookies.authtoken;
-    if (!token) {
-        return res.status(401).json({ message: "No token provided" });
-    }
+        const token = req.cookies.authtoken;
+        if (!token) {
+            return res.status(401).json({ message: "No token provided" });
+        }
 
-    const user = await getUserFromCookies(token);
-    if (!user) {
-        return res.status(401).json({ message: "Unauthorized" });
-    }
+        const user = await getUserFromCookies(token);
+        if (!user) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
 
-    try {
         const criminals = await criminalService.searchCriminals(filters, user.role, user.id);
 
         if (criminals.length === 0) {
@@ -60,9 +63,10 @@ exports.searchCriminals = async (req, res) => {
         res.status(200).json({ message: "Criminals fetched successfully", criminals });
     }
     catch (error) {
-        console.error("Error searching criminals:", error);
-        res.status(500).json({ message: "Internal server error" });
+        console.error('Error in searchCriminals controller:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
+    
 };
 
 // Get single criminal by ID

@@ -7,6 +7,7 @@ import FilledButton from '../../components/buttons/FilledButton';
 import OutlinedButton from '../../components/buttons/OutlinedButton';
 import Spinner from '../../components/Spinner';
 import PageHeader from '../../components/common/PageHeader'; // <-- Add this import
+import SearchInterface from '../../components/searchsection/SearchInterface';
 
 const CasesPage = () => {
     const [cases, setCases] = useState([]);
@@ -15,17 +16,42 @@ const CasesPage = () => {
     const [selectedStatus, setSelectedStatus] = useState('all');
     const navigate = useNavigate();
 
-    const statusFilters = [
-        { value: 'all', label: 'All Cases', icon: <List />, styles: 'bg-gray-100 text-gray-800 border-gray-300' },
-        { value: 'inprogress', label: 'In Progress', icon: <Pending />, styles: 'bg-blue-100 text-blue-800 border-blue-300' },
-        { value: 'closed', label: 'Closed', icon: <CheckCircle />, styles: 'bg-red-100 text-red-800 border-red-300' }
-    ];
-
     // Add breadcrumb items for PageHeader
     const breadcrumbItems = [
         { label: 'Dashboard', link: '/dashboard' },
         { label: 'Cases' }
     ];
+
+    // Search/filter config
+    const searchOptions = [
+        { value: 'topic', label: 'Case Topic' },
+        { value: 'case_id', label: 'Case ID' },
+        { value: 'case_type', label: 'Case Type' },
+        { value: 'officer', label: 'Officer Name' }
+    ];
+
+    const filterConfig = [
+        {
+            id: 'status',
+            label: 'Status',
+            options: [
+                { value: 'all', label: 'All' },
+                { value: 'inprogress', label: 'In Progress', colorVariant: 'blue' },
+                { value: 'closed', label: 'Closed', colorVariant: 'red' }
+            ]
+        },
+        {
+            id: 'timePeriod',
+            label: 'Time Period',
+            options: [
+                { value: 'all', label: 'All Time' },
+                { value: 'last_7_days', label: 'Last 7 Days' },
+                { value: 'last_30_days', label: 'Last 30 Days' },
+                { value: 'last_90_days', label: 'Last 90 Days' }
+            ]
+        }
+
+    ]
 
     useEffect(() => {
         fetchCases();
@@ -52,6 +78,57 @@ const CasesPage = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    // Add search handler
+    const handleSearch = async (searchParams) => {
+        setLoading(true);
+        try {
+            let endpoint = '/cases/search';
+            let params = {};
+
+            // Handle search term and type
+            if (searchParams.searchTerm && searchParams.searchTerm.trim() !== '') {
+                switch (searchParams.searchType) {
+                    case 'topic':
+                        params.topic = searchParams.searchTerm.trim();
+                        break;
+                    case 'case_id':
+                        params.case_id = searchParams.searchTerm.trim();
+                        break;
+                    case 'case_type':
+                        params.case_type = searchParams.searchTerm.trim();
+                        break;
+                    case 'officer':
+                        params.officer = searchParams.searchTerm.trim();
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            // Handle filters
+            if (searchParams.status && searchParams.status !== 'all') {
+                params.status = searchParams.status;
+                setSelectedStatus(searchParams.status); // sync filter buttons
+            }
+            if (searchParams.timePeriod && searchParams.timePeriod !== 'all') {
+                params.timePeriod = searchParams.timePeriod;
+            }
+            console.log(params);
+
+            const response = await apiClient.get(endpoint, { params });
+            if (response.data.cases) {
+                setCases(response.data.cases);
+            } else {
+                setCases([]);
+            }
+            setError(null);
+        } catch (error) {
+            setCases([]);
+            setError('Failed to fetch cases. Please try again.');
+        }
+        setLoading(false);
     };
 
     if (loading) {
@@ -85,38 +162,26 @@ const CasesPage = () => {
                 onBack={() => navigate(-1)}
                 actions={[
                     {
-                        icon: <Add fontSize='small' />,
+                        icon: <Add fontSize='small' className='bg-white rounded-full text-blue-800' />,
                         label: 'Create New Case',
                         onClick: () => navigate('/cases/new'),
-                        styles: 'h-10 bg-blue-600 text-white border-blue-600'
+                        styles: 'h-10 bg-blue-800 text-white border-blue-800'
                     }
                 ]}
             />
-            <div className="container mx-auto px-4 py-6">
-                {/* Filters */}
-                <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-                    <div className="flex items-center space-x-4">
-                        <FilterList className="text-gray-600" />
-                        <div className="flex space-x-2">
-                            {statusFilters.map((filter) => (
-                                <OutlinedButton
-                                    key={filter.value}
-                                    action={{
-                                        icon: filter.icon,
-                                        label: filter.label,
-                                        onClick: () => setSelectedStatus(filter.value),
-                                        styles: selectedStatus === filter.value
-                                            ? filter.styles
-                                            : 'bg-gray-100 text-gray-700 border-gray-300'
-                                    }}
-                                />
-                            ))}
-                        </div>
-                    </div>
+            <div className="container mx-auto px-4 py-4">
+                {/* Search Section */}
+                <div className="mb-2">
+                    <SearchInterface
+                        searchOptions={searchOptions}
+                        filters={filterConfig}
+                        onSearch={handleSearch}
+                    />
                 </div>
 
+
                 {/* Cases List */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     {cases.length === 0 ? (
                         <div className="col-span-2 text-center py-8">
                             <p className="text-gray-500">No cases found</p>

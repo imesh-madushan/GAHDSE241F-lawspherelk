@@ -2,44 +2,44 @@ import React from 'react';
 import { Gavel, Attachment, EmojiEvents } from '@mui/icons-material';
 
 const CriminalTabs = ({ activeTab, setActiveTab }) => {
+    const tabs = [
+        {
+            id: 'offences',
+            label: 'Offences',
+            icon: <Gavel fontSize="small" />,
+        },
+        {
+            id: 'evidence',
+            label: 'Evidence',
+            icon: <Attachment fontSize="small" />,
+        },
+        {
+            id: 'forensic',
+            label: 'Forensic Reports',
+            icon: <EmojiEvents fontSize="small" />,
+        }
+    ];
+
     return (
-        <div className="bg-white rounded-t-lg shadow-md mb-6">
-            <div className="border-b border-gray-200">
-                <nav className="flex">
-                    <button
-                        className={`px-6 py-4 text-sm font-medium ${activeTab === 'offences'
-                            ? 'border-b-2 border-blue-800 text-blue-800'
-                            : 'text-gray-500 hover:text-gray-700'
-                            }`}
-                        onClick={() => setActiveTab('offences')}
-                    >
-                        <Gavel className="mr-1 text-lg" style={{ fontSize: '1.1rem', verticalAlign: 'text-top' }} />
-                        Offences
-                    </button>
-                    <button
-                        className={`px-6 py-4 text-sm font-medium ${activeTab === 'evidence'
-                            ? 'border-b-2 border-blue-800 text-blue-800'
-                            : 'text-gray-500 hover:text-gray-700'
-                            }`}
-                        onClick={() => setActiveTab('evidence')}
-                    >
-                        <Attachment className="mr-1 text-lg" style={{ fontSize: '1.1rem', verticalAlign: 'text-top' }} />
-                        Evidence
-                    </button>
-                    <button
-                        className={`px-6 py-4 text-sm font-medium ${activeTab === 'forensic'
-                            ? 'border-b-2 border-blue-800 text-blue-800'
-                            : 'text-gray-500 hover:text-gray-700'
-                            }`}
-                        onClick={() => setActiveTab('forensic')}
-                    >
-                        <EmojiEvents className="mr-1 text-lg" style={{ fontSize: '1.1rem', verticalAlign: 'text-top' }} />
-                        Forensic Reports
-                    </button>
-                </nav>
-            </div>
+        <div className="mb-6 flex overflow-x-auto bg-white rounded-t-lg shadow-sm">
+            {tabs.map((tab) => (
+                <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`
+                        px-4 py-3 flex items-center mr-4 border-b-2 whitespace-nowrap transition-colors hover:cursor-pointer
+                        ${activeTab === tab.id
+                            ? 'border-blue-600 text-blue-600 font-medium'
+                            : 'border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300'
+                        }
+                    `}
+                >
+                    <span className="mr-2">{tab.icon}</span>
+                    {tab.label}
+                </button>
+            ))}
         </div>
     );
 };
 
-export default CriminalTabs; 
+export default CriminalTabs;

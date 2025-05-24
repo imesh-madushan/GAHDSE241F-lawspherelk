@@ -281,7 +281,7 @@ const SingleComplaintView = () => {
                         <Folder className="text-amber-500 mr-2" />
                         <div>
                             <p className="text-sm text-gray-700">Complaint Reference</p>
-                            <p className="font-mono text-gray-500">{complaintId}</p>
+                            <p className="font-mono text-gray-500">{`#${complaintId}`}</p>
                         </div>
                     </div>
 

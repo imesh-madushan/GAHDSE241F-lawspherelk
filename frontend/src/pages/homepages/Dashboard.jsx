@@ -93,29 +93,6 @@ const Dashboard = () => {
     'Sergeant': [stats.officersCount],
   }
 
-  const handleCreateCase = () => {
-    // Handle create case action
-  }
-
-  const handleFileComplaint = () => {
-    // Handle file complaint action
-  }
-
-  const actions = {
-    createCase: {
-      icon: <Add fontSize='small' />,
-      label: 'Create New Case',
-      onClick: handleCreateCase,
-      styles: 'bg-blue-100 text-blue-800 border-blue-300'
-    },
-    fileComplaint: {
-      icon: <Add fontSize='small' />,
-      label: 'File New Complaint',
-      onClick: handleFileComplaint,
-      styles: 'bg-blue-100 text-blue-800 border-blue-300'
-    }
-  }
-
   return (
     <div className="flex-1 overflow-y-auto p-4">
       <div className="mb-4">
@@ -147,15 +124,16 @@ const Dashboard = () => {
             </a>
           </div>
 
-          {recentCases.map((caseData, index) => (
-            <CaseCard
-              key={index}
-              caseData={caseData}
-            />
-          ))}
-
-          <div className="mt-4 text-center">
-            <OutlinedButton action={actions.createCase} />
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mt-4">
+            {recentCases.length === 0 ? (
+              <Spinner />
+            ) : (
+              recentCases.map((caseData, index) => (
+                <CaseCard
+                  key={index}
+                  caseData={caseData}
+                />
+              )))}
           </div>
         </div>
 
@@ -170,18 +148,16 @@ const Dashboard = () => {
             </a>
           </div>
 
-          {recentComplaints.length === 0 ? (
-            <Spinner />
-          ) : (
-            recentComplaints.map((complaint, index) => (
-              <ComplaintCard
-                key={index}
-                complaint={complaint}
-              />
-            )))}
-
-          <div className="mt-4 text-center">
-            <OutlinedButton action={actions.fileComplaint} />
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mt-4">
+            {recentComplaints.length === 0 ? (
+              <Spinner />
+            ) : (
+              recentComplaints.map((complaint, index) => (
+                <ComplaintCard
+                  key={index}
+                  complaint={complaint}
+                />
+              )))}
           </div>
         </div>
       </div>

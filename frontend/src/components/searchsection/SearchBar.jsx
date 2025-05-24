@@ -11,6 +11,7 @@ const SearchBar = ({
     showFilters,
     setShowFilters,
     handleSearch,
+    showFilterButton = true
 }) => {
     const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
@@ -85,14 +86,16 @@ const SearchBar = ({
                 </div>
 
                 <div className="flex gap-2 sm:flex-shrink-0">
-                    <OutlinedButton
-                        action={{
-                            onClick: () => setShowFilters(!showFilters),
-                            icon: <Filter fontSize='small' className='mr-2 w-4.5 h-4.5' />,
-                            label: 'Filters',
-                            styles: 'flex items-center justify-center text-blue-700 hover:bg-blue-700 hover:text-white h-11 w-30',
-                        }}
-                    />
+                    {showFilterButton && (
+                        <OutlinedButton
+                            action={{
+                                onClick: () => setShowFilters(!showFilters),
+                                icon: <Filter fontSize='small' className='mr-2 w-4.5 h-4.5' />,
+                                label: 'Filters',
+                                styles: 'flex items-center justify-center text-blue-700 hover:bg-blue-700 hover:text-white h-11 w-30',
+                            }}
+                        />
+                    )}
 
                     <OutlinedButton
                         action={{
@@ -108,4 +111,4 @@ const SearchBar = ({
     );
 };
 
-export default SearchBar; 
+export default SearchBar;

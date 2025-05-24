@@ -78,9 +78,10 @@ const EvidenceTab = ({ evidence, formatDate, formatTime, isEditing }) => {
                                         <div className="text-xs text-gray-500 mb-2">Collected By</div>
                                         <OfficerCard
                                             officer={{
-                                                name: item.officer_name,
+                                                name: item.collected_by,
                                                 role: item.officer_role,
-                                                profilePic: item.officer_profile
+                                                profilePic: item.officer_profile,
+                                                type: "Evidence Collector"
                                             }}
                                             size="small"
                                             className="bg-gray-50 p-3"

@@ -30,11 +30,11 @@ const CaseComplaintCard = ({ complaint, formatDate, onViewFullComplaint }) => {
         <div>
           <p className="text-xs text-blue-600">Status</p>
           <p className="text-gray-800">
-            <span className={`px-2 py-1 rounded-md text-xs font-medium ${complaint.status === 'closed' ? 'bg-green-100 text-green-800' :
-              complaint.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+            <span className={`px-2 py-1 rounded-md text-xs font-medium ${complaint.complaint_status === 'closed' ? 'bg-green-100 text-green-800' :
+              complaint.complaint_status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                 'bg-blue-100 text-blue-800'
               }`}>
-              {complaint.status}
+              {complaint.complaint_status}
             </span>
           </p>
         </div>

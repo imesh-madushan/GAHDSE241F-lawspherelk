@@ -45,8 +45,14 @@ exports.getAllOffences = async (userRole, userId, options = {}) => {
                 cr.phone as criminal_phone,
                 cr.address as criminal_address,
                 cr.dob as criminal_dob,
-                cr.total_crimes as criminal_total_crimes,
-                cr.total_risk as criminal_total_risk,
+                (
+                    SELECT COUNT(*) FROM CrimeOffence co2
+                    WHERE co2.criminal_id = cr.criminal_id AND co2.status = 'Convicted'
+                ) as criminal_total_crimes,
+                (
+                    SELECT COALESCE(SUM(co2.risk_score), 0) FROM CrimeOffence co2
+                    WHERE co2.criminal_id = cr.criminal_id AND co2.status = 'Convicted'
+                ) as criminal_total_risk,
                 c.case_id,
                 c.topic as case_topic
             FROM CrimeOffence co
@@ -88,7 +94,7 @@ exports.getAllOffences = async (userRole, userId, options = {}) => {
         // Execute both queries
         const [offences] = await db.query(query, params);
         const [countResult] = await db.query(countQuery, params);
-        const totalCount = countResult[0].total_count;
+        const totalCount = countResult[0]?.total_count || 0;
 
         // Add total count to each offence
         return offences.map(offence => ({
@@ -130,8 +136,14 @@ exports.searchOffences = async (filters, userRole, userId, options = {}) => {
                 cr.phone as criminal_phone,
                 cr.address as criminal_address,
                 cr.dob as criminal_dob,
-                cr.total_crimes as criminal_total_crimes,
-                cr.total_risk as criminal_total_risk,
+                (
+                    SELECT COUNT(*) FROM CrimeOffence co2
+                    WHERE co2.criminal_id = cr.criminal_id AND co2.status = 'Convicted'
+                ) as criminal_total_crimes,
+                (
+                    SELECT COALESCE(SUM(co2.risk_score), 0) FROM CrimeOffence co2
+                    WHERE co2.criminal_id = cr.criminal_id AND co2.status = 'Convicted'
+                ) as criminal_total_risk,
                 c.case_id,
                 c.topic as case_topic
             FROM CrimeOffence co
@@ -225,7 +237,7 @@ exports.searchOffences = async (filters, userRole, userId, options = {}) => {
         // Execute both queries
         const [offences] = await db.query(query, params);
         const [countResult] = await db.query(countQuery, params);
-        const totalCount = countResult[0].total_count;
+        const totalCount = countResult[0]?.total_count || 0;
 
         // Add total count to each offence
         return offences.map(offence => ({

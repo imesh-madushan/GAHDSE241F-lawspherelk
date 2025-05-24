@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import PageHeader from '../../components/common/PageHeader';
-import OfficerBasicInfo from '../../components/officers/OfficerBasicInfo';
 import TabNavigation from '../../components/officers/TabNavigation';
 import CasesTab from '../../components/officers/tabs/CasesTab';
 import ComplaintsTab from '../../components/officers/tabs/ComplaintsTab';
@@ -12,14 +11,9 @@ import ReportsTab from '../../components/officers/tabs/ReportsTab';
 import { apiClient } from '../../config/apiConfig';
 import { useAuth } from '../../contexts/AuthContext';
 import {
-  Assignment,
-  Gavel,
-  Attachment,
-  FormatListBulleted,
-  Description,
-  NotificationImportant,
-  Lock,
-  LockOpen
+  Assignment, Gavel, Attachment, FormatListBulleted, Description, 
+  NotificationImportant, Lock, LockOpen, Phone, Mail, LocationOn, 
+  CalendarToday, AccessTime, Badge, LocalPolice, VerifiedUser
 } from '@mui/icons-material';
 
 const OfficerProfile = () => {
@@ -31,16 +25,7 @@ const OfficerProfile = () => {
   const [activeTab, setActiveTab] = useState('cases');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const canToggleAccount = user.role === "OIC"
-
-  const tabs = [
-    { id: 'cases', icon: <Gavel fontSize="small" />, label: 'Cases', count: officerData?.cases?.length },
-    { id: 'complaints', icon: <NotificationImportant fontSize="small" />, label: 'Complaints', count: officerData?.complaints?.length },
-    { id: 'investigations', icon: <FormatListBulleted fontSize="small" />, label: 'Investigations', count: officerData?.investigations?.length },
-    { id: 'evidence', icon: <Attachment fontSize="small" />, label: 'Evidence', count: officerData?.evidence?.length },
-    { id: 'forensic', icon: <Description fontSize="small" />, label: 'Forensic Reports', count: officerData?.forensicReports?.length },
-    { id: 'reports', icon: <Assignment fontSize="small" />, label: 'Reports', count: officerData?.reports?.length }
-  ];
+  const canToggleAccount = user?.role === "OIC";
 
   // navigate to profile page if officerId is equal to current user id
   if (officerId === user.user_id) {
@@ -88,8 +73,6 @@ const OfficerProfile = () => {
     return `${years} years ${months < 0 ? 12 + months : months} months`;
   };
 
-  const currentUserRole = user.role;
-
   // Handler for toggling account status
   const handleToggleAccount = async () => {
     try {
@@ -104,6 +87,34 @@ const OfficerProfile = () => {
       let msg = err?.response?.data?.message || err.message || 'Failed to toggle account status';
       setError(msg);
       console.error("Error toggling account status:", err);
+    }
+  };
+
+  const tabs = [
+    { id: 'cases', icon: <Gavel fontSize="small" />, label: 'Cases', count: officerData?.cases?.length },
+    { id: 'complaints', icon: <NotificationImportant fontSize="small" />, label: 'Complaints', count: officerData?.complaints?.length },
+    { id: 'investigations', icon: <FormatListBulleted fontSize="small" />, label: 'Investigations', count: officerData?.investigations?.length },
+    { id: 'evidence', icon: <Attachment fontSize="small" />, label: 'Evidence', count: officerData?.evidence?.length },
+    { id: 'forensic', icon: <Description fontSize="small" />, label: 'Forensic Reports', count: officerData?.forensicReports?.length },
+    { id: 'reports', icon: <Assignment fontSize="small" />, label: 'Reports', count: officerData?.reports?.length }
+  ];
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'cases':
+        return <CasesTab data={officerData.cases} />;
+      case 'complaints':
+        return <ComplaintsTab data={officerData.complaints} />;
+      case 'investigations':
+        return <InvestigationsTab data={officerData.investigations} />;
+      case 'evidence':
+        return <EvidenceTab data={officerData.evidence} />;
+      case 'forensic':
+        return <ForensicReportsTab data={officerData.forensicReports} />;
+      case 'reports':
+        return <ReportsTab data={officerData.reports} />;
+      default:
+        return null;
     }
   };
 
@@ -145,25 +156,6 @@ const OfficerProfile = () => {
     );
   }
 
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'cases':
-        return <CasesTab data={officerData.cases} />;
-      case 'complaints':
-        return <ComplaintsTab data={officerData.complaints} />;
-      case 'investigations':
-        return <InvestigationsTab data={officerData.investigations} />;
-      case 'evidence':
-        return <EvidenceTab data={officerData.evidence} />;
-      case 'forensic':
-        return <ForensicReportsTab data={officerData.forensicReports} />;
-      case 'reports':
-        return <ReportsTab data={officerData.reports} />;
-      default:
-        return null;
-    }
-  };
-
   return (
     <div className="min-h-screen pb-12 bg-gray-50">
       <PageHeader
@@ -173,42 +165,204 @@ const OfficerProfile = () => {
           { label: 'Officers', link: '/officers' },
           { label: officerData.name }
         ]}
-        onBack={() => window.history.back()}
+        onBack={() => navigate('/officers')}
         actions={canToggleAccount ? [{
           label: officerData.account_locked ? 'Activate Account' : 'Disable Account',
           icon: officerData.account_locked ? <LockOpen fontSize='small' /> : <Lock fontSize='small' />,
           onClick: handleToggleAccount,
           styles: officerData.account_locked
-            ? 'border-green-500 text-green-700 hover:bg-green-500'
-            : 'border-red-500 text-red-700 hover:bg-red-500'
+            ? 'border-green-500 text-green-700 hover:bg-green-50 hover:text-green-700'
+            : 'border-red-500 text-red-700 hover:bg-red-50 hover:text-red-700'
         }] : []}
       />
 
       <div className="container mx-auto px-4 py-6">
-        <div className="bg-white rounded-xl shadow-md">
-          {/* Profile section */}
-          <div className="p-6">
-            <OfficerBasicInfo
-              officer={officerData}
-              formatDate={formatDate}
-              calculateServiceDuration={calculateServiceDuration}
-              currentUserRole={currentUserRole}
-              handleToggleAccount={handleToggleAccount}
-            />
-
-            {/* Tabs for different sections */}
-            <div className="mt-8">
-              <TabNavigation
-                tabs={tabs}
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-              />
-
-              {/* Tab content */}
-              <div className="py-4">
-                {renderTabContent()}
+        {/* Profile Header with Hero Banner */}
+        <div className="bg-gradient-to-r from-blue-700 to-blue-900 rounded-t-xl shadow-md relative overflow-hidden">
+          <div className="absolute inset-0 bg-blue-900 opacity-20 z-0"></div>
+          <div className="relative px-8 py-6 flex flex-col md:flex-row items-center md:items-start text-white">
+            {/* Profile Photo */}
+            <div className="flex-shrink-0 mb-4 md:mb-0 md:mr-8">
+              <div className="relative">
+                <div className="w-36 h-36 rounded-full border-4 border-white shadow-xl overflow-hidden bg-white">
+                  <img 
+                    src={officerData.profile_pic || "/default-profile.png"} 
+                    alt={officerData.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => { e.target.src = "/default-profile.png" }}
+                  />
+                </div>
+                <div className="absolute flex bottom-0.5 right-0.5 bg-white text-blue-700 rounded-full p-2 shadow-lg">
+                  <VerifiedUser fontSize="small" />
+                </div>
               </div>
             </div>
+            
+            {/* Officer Info */}
+            <div className="flex-1 text-center md:text-left">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold">{officerData.name}</h1>
+                  <div className="mt-1 flex items-center justify-center md:justify-start">
+                    <Badge className="mr-1.5 h-5 w-5" />
+                    <span className="font-medium">{officerData.role}</span>
+                    
+                    {/* Account Status Badge */}
+                    <span className={`ml-3 px-2 py-0.5 text-xs font-medium rounded-full ${
+                      officerData.account_locked 
+                        ? "bg-red-100 text-red-800 border border-red-300" 
+                        : "bg-green-100 text-green-800 border border-green-300"
+                    }`}>
+                      {officerData.account_locked ? "Inactive" : "Active"}
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Last Login */}
+                <div className="mt-3 md:mt-0 text-sm opacity-90">
+                  <div className="flex items-center justify-center md:justify-end">
+                    <AccessTime className="mr-1.5 h-4 w-4" />
+                    <span>
+                      Last login: {officerData.lastlogin_dt ? formatDate(officerData.lastlogin_dt) : "Never"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Quick Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                <div className="bg-white bg-opacity-30 backdrop-blur-sm rounded-lg px-4 py-3 text-center shadow-md">
+                  <div className="text-2xl font-bold text-gray-600 drop-shadow-sm">{officerData.cases?.length || 0}</div>
+                  <div className="text-xs uppercase text-gray-600 font-medium tracking-wider drop-shadow-sm">Cases</div>
+                </div>
+                <div className="bg-white bg-opacity-30 backdrop-blur-sm rounded-lg px-4 py-3 text-center shadow-md">
+                  <div className="text-2xl font-bold text-gray-600 drop-shadow-sm">{officerData.complaints?.length || 0}</div>
+                  <div className="text-xs uppercase text-gray-600 font-medium tracking-wider drop-shadow-sm">Complaints</div>
+                </div>
+                <div className="bg-white bg-opacity-30 backdrop-blur-sm rounded-lg px-4 py-3 text-center shadow-md">
+                  <div className="text-2xl font-bold text-gray-600 drop-shadow-sm">{officerData.investigations?.length || 0}</div>
+                  <div className="text-xs uppercase text-gray-600 font-medium tracking-wider drop-shadow-sm">Investigations</div>
+                </div>
+                <div className="bg-white bg-opacity-30 backdrop-blur-sm rounded-lg px-4 py-3 text-center shadow-md">
+                  <div className="text-2xl font-bold text-gray-600 drop-shadow-sm">{officerData.evidence?.length || 0}</div>
+                  <div className="text-xs uppercase text-gray-600 font-medium tracking-wider drop-shadow-sm">Evidence</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Contact & Service Info Cards */}
+        <div className="bg-white shadow-md p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+          {/* Contact Info */}
+          <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <Phone className="h-5 w-5 mr-2 text-blue-600" />
+              Contact Information
+            </h3>
+            <ul className="space-y-3">
+              <li className="flex items-start">
+                <Mail className="h-5 w-5 mr-3 text-gray-500 mt-0.5" />
+                <div>
+                  <p className="text-sm text-gray-500">Email</p>
+                  <p className="font-medium">{officerData.email}</p>
+                </div>
+              </li>
+              <li className="flex items-start">
+                <Phone className="h-5 w-5 mr-3 text-gray-500 mt-0.5" />
+                <div>
+                  <p className="text-sm text-gray-500">Phone</p>
+                  <p className="font-medium">{officerData.phone}</p>
+                </div>
+              </li>
+              <li className="flex items-start">
+                <LocationOn className="h-5 w-5 mr-3 text-gray-500 mt-0.5" />
+                <div>
+                  <p className="text-sm text-gray-500">Address</p>
+                  <p className="font-medium">{officerData.address}</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+          
+          {/* Service Info */}
+          <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <LocalPolice className="h-5 w-5 mr-2 text-blue-600" />
+              Service Information
+            </h3>
+            <ul className="space-y-3">
+              <li className="flex items-start">
+                <CalendarToday className="h-5 w-5 mr-3 text-gray-500 mt-0.5" />
+                <div>
+                  <p className="text-sm text-gray-500">Joined</p>
+                  <p className="font-medium">{formatDate(officerData.created_dt)}</p>
+                </div>
+              </li>
+              <li className="flex items-start">
+                <AccessTime className="h-5 w-5 mr-3 text-gray-500 mt-0.5" />
+                <div>
+                  <p className="text-sm text-gray-500">Service Duration</p>
+                  <p className="font-medium">{calculateServiceDuration(officerData.created_dt)}</p>
+                </div>
+              </li>
+              <li className="flex items-start">
+                <Badge className="h-5 w-5 mr-3 text-gray-500 mt-0.5" />
+                <div>
+                  <p className="text-sm text-gray-500">Department</p>
+                  <p className="font-medium">
+                    {officerData.role === 'Crime OIC' ? 'Crime Division' :
+                      officerData.role === 'OIC' ? 'Administration' :
+                        officerData.role === 'Forensic Officer' ? 'Forensic Department' : 'Field Operations'}
+                  </p>
+                </div>
+              </li>
+            </ul>
+          </div>
+          
+          {/* Cases Summary */}
+          <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <Gavel className="h-5 w-5 mr-2 text-blue-600" />
+              Case Summary
+            </h3>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Active Cases:</span>
+                <span className="font-semibold text-blue-600">
+                  {officerData.cases?.filter(c => c.status === 'inprogress').length || 0}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Closed Cases:</span>
+                <span className="font-semibold text-green-600">
+                  {officerData.cases?.filter(c => c.status === 'closed').length || 0}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Recent Activity:</span>
+                <span className="font-semibold">
+                  {officerData.cases?.length > 0 
+                    ? formatDate(officerData.cases[0].started_dt) 
+                    : "No recent activity"}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Tabs and content */}
+        <div className="bg-white rounded-xl shadow-md">
+          {/* Tabs Navigation */}
+          <TabNavigation
+            tabs={tabs}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+          />
+          
+          {/* Tab Content */}
+          <div className="p-6">
+            {renderTabContent()}
           </div>
         </div>
       </div>
