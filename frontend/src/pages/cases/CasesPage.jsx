@@ -6,6 +6,7 @@ import { Add, FilterList, List, Pending, CheckCircle } from '@mui/icons-material
 import FilledButton from '../../components/buttons/FilledButton';
 import OutlinedButton from '../../components/buttons/OutlinedButton';
 import Spinner from '../../components/Spinner';
+import PageHeader from '../../components/common/PageHeader'; // <-- Add this import
 
 const CasesPage = () => {
     const [cases, setCases] = useState([]);
@@ -20,14 +21,11 @@ const CasesPage = () => {
         { value: 'closed', label: 'Closed', icon: <CheckCircle />, styles: 'bg-red-100 text-red-800 border-red-300' }
     ];
 
-    const actions = {
-        createCase: {
-            icon: <Add fontSize='small' />,
-            label: 'Create New Case',
-            onClick: () => navigate('/cases/new'),
-            styles: 'h-10 bg-blue-600 text-white border-blue-600'
-        }
-    };
+    // Add breadcrumb items for PageHeader
+    const breadcrumbItems = [
+        { label: 'Dashboard', link: '/dashboard' },
+        { label: 'Cases' }
+    ];
 
     useEffect(() => {
         fetchCases();
@@ -79,51 +77,62 @@ const CasesPage = () => {
     }
 
     return (
-        <div className="container mx-auto px-4 py-6">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">Cases</h1>
-                <OutlinedButton action={actions.createCase} />
-            </div>
-
-            {/* Filters */}
-            <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-                <div className="flex items-center space-x-4">
-                    <FilterList className="text-gray-600" />
-                    <div className="flex space-x-2">
-                        {statusFilters.map((filter) => (
-                            <OutlinedButton
-                                key={filter.value}
-                                action={{
-                                    icon: filter.icon,
-                                    label: filter.label,
-                                    onClick: () => setSelectedStatus(filter.value),
-                                    styles: selectedStatus === filter.value
-                                        ? filter.styles
-                                        : 'bg-gray-100 text-gray-700 border-gray-300'
-                                }}
-                            />
-                        ))}
+        <div className="bg-gray-100 min-h-screen">
+            <PageHeader
+                title="Cases"
+                breadcrumbItems={breadcrumbItems}
+                showBackButton={true}
+                onBack={() => navigate(-1)}
+                actions={[
+                    {
+                        icon: <Add fontSize='small' />,
+                        label: 'Create New Case',
+                        onClick: () => navigate('/cases/new'),
+                        styles: 'h-10 bg-blue-600 text-white border-blue-600'
+                    }
+                ]}
+            />
+            <div className="container mx-auto px-4 py-6">
+                {/* Filters */}
+                <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+                    <div className="flex items-center space-x-4">
+                        <FilterList className="text-gray-600" />
+                        <div className="flex space-x-2">
+                            {statusFilters.map((filter) => (
+                                <OutlinedButton
+                                    key={filter.value}
+                                    action={{
+                                        icon: filter.icon,
+                                        label: filter.label,
+                                        onClick: () => setSelectedStatus(filter.value),
+                                        styles: selectedStatus === filter.value
+                                            ? filter.styles
+                                            : 'bg-gray-100 text-gray-700 border-gray-300'
+                                    }}
+                                />
+                            ))}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Cases List */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {cases.length === 0 ? (
-                    <div className="col-span-2 text-center py-8">
-                        <p className="text-gray-500">No cases found</p>
-                    </div>
-                ) : (
-                    cases.map((caseData) => (
-                        <CaseCard
-                            key={caseData.case_id}
-                            caseData={caseData}
-                        />
-                    ))
-                )}
+                {/* Cases List */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {cases.length === 0 ? (
+                        <div className="col-span-2 text-center py-8">
+                            <p className="text-gray-500">No cases found</p>
+                        </div>
+                    ) : (
+                        cases.map((caseData) => (
+                            <CaseCard
+                                key={caseData.case_id}
+                                caseData={caseData}
+                            />
+                        ))
+                    )}
+                </div>
             </div>
         </div>
     );
 };
 
-export default CasesPage; 
+export default CasesPage;
