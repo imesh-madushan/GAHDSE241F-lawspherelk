@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { getAllCases, getCaseById, searchCases} = require("../controllers/caseController");
+const { getAllCases, getCaseById, searchCases } = require("../controllers/caseController");
 
 
 router.get("/getAllCases", getAllCases);

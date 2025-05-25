@@ -7,12 +7,14 @@ import OutlinedButton from '../../components/buttons/OutlinedButton';
 import Spinner from '../../components/Spinner';
 import PageHeader from '../../components/common/PageHeader';
 import SearchInterface from '../../components/searchsection/SearchInterface';
+import CreateComplaintModal from '../../components/complaints/CreateComplaintModal';
 
 const ComplaintsPage = () => {
     const [complaints, setComplaints] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [selectedStatus, setSelectedStatus] = useState('all');
+    const [openCreateModal, setOpenCreateModal] = useState(false);
     const navigate = useNavigate();
 
     const breadcrumbItems = [
@@ -126,6 +128,10 @@ const ComplaintsPage = () => {
         setLoading(false);
     };
 
+    const handleCreateComplaint = () => {
+        setOpenCreateModal(true);
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -159,7 +165,7 @@ const ComplaintsPage = () => {
                     {
                         icon: <Add fontSize='small' className='bg-white text-blue-800 rounded-full' />,
                         label: 'Create New Complaint',
-                        onClick: () => navigate('/complaints/new'),
+                        onClick: handleCreateComplaint,
                         styles: 'h-10 bg-blue-800 text-white border-blue-800'
                     }
                 ]}
@@ -191,6 +197,12 @@ const ComplaintsPage = () => {
                     )}
                 </div>
             </div>
+
+            {/* Create Complaint Modal Component */}
+            <CreateComplaintModal
+                open={openCreateModal}
+                onClose={() => setOpenCreateModal(false)}
+            />
         </div>
     );
 };

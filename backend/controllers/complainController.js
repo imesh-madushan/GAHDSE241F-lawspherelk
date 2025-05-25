@@ -81,3 +81,108 @@ exports.searchComplaints = async (req, res) => {
         res.status(500).json({ message: 'Internal server error' });
     }
 };
+
+// create new complaint
+exports.createComplaint = async (req, res) => {
+    try {
+        // Auth check
+        const token = req.cookies.authtoken;
+        if (!token) {
+            return res.status(401).json({ message: "No token provided" });
+        }
+        
+        const user = await getUserFromCookies(token);
+        if (!user) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        // Validate required fields
+        const { description, complainer, complain_type, evidence_details } = req.body;
+        
+        if (!description || !description.trim()) {
+            return res.status(400).json({ message: "Complaint description is required" });
+        }
+        
+        if (!complainer || !complainer.nic || !complainer.name || !complainer.phone || !complainer.email || !complainer.address || !complainer.dob) {
+            return res.status(400).json({ message: "Complainer NIC, name, phone, email, address, and date of birth are required" });
+        }
+
+        // Validate NIC format
+        const nicPattern = /^(\d{9}[vVxX]|\d{12})$/;
+        if (!nicPattern.test(complainer.nic.trim())) {
+            return res.status(400).json({ message: "Invalid NIC format" });
+        }
+
+        // Validate phone format
+        const phonePattern = /^0\d{9}$/;
+        if (!phonePattern.test(complainer.phone.trim())) {
+            return res.status(400).json({ message: "Invalid phone number format" });
+        }
+
+        // Validate email format
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailPattern.test(complainer.email.trim())) {
+            return res.status(400).json({ message: "Invalid email format" });
+        }
+
+        // Validate Date of Birth - now required
+        if (!complainer.dob || !complainer.dob.trim()) {
+            return res.status(400).json({ message: "Date of birth is required" });
+        }
+        
+        const dobDate = new Date(complainer.dob);
+        const today = new Date();
+        const minDate = new Date(today.getFullYear() - 120, today.getMonth(), today.getDate());
+        const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+        
+        if (isNaN(dobDate.getTime())) {
+            return res.status(400).json({ message: "Invalid date of birth format" });
+        }
+        
+        if (dobDate > today) {
+            return res.status(400).json({ message: "Date of birth cannot be in the future" });
+        }
+        
+        if (dobDate < minDate) {
+            return res.status(400).json({ message: "Date of birth cannot be more than 120 years ago" });
+        }
+        
+        if (dobDate > oneYearAgo) {
+            return res.status(400).json({ message: "Complainer must be at least 1 year old" });
+        }
+
+        // Validate evidence details (voice statement)
+        if (!evidence_details || !evidence_details.trim()) {
+            return res.status(400).json({ message: "Voice statement details are required" });
+        }
+        
+        if (!complain_type || !complain_type.trim()) {
+            return res.status(400).json({ message: "Complaint type is required" });
+        }
+
+        if (evidence_details.trim().length < 10) {
+            return res.status(400).json({ message: "Voice statement details must be at least 10 characters long" });
+        }
+        
+        if (evidence_details.trim().length > 1000) {
+            return res.status(400).json({ message: "Voice statement details cannot exceed 1000 characters" });
+        }
+
+        const newComplaint = await complainService.createComplaint(description, complainer, evidence_details, complain_type, user);
+
+        res.status(201).json({
+            success: true,
+            message: "Complaint created successfully",
+            complaint: newComplaint
+        });
+        
+    } catch (error) {
+        console.error("Error creating complaint:", error);
+        
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(400).json({ message: "Duplicate entry detected" });
+        }
+        
+        res.status(500).json({ message: "Internal server error" });
+    }
+};

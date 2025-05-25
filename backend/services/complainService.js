@@ -1,4 +1,5 @@
 const db = require("../config/db");
+const { generateUniqueId } = require("../utils/genarateIDs");
 
 exports.getAllComplaints = async (filters) => {
     let query = `SELECT 
@@ -48,7 +49,6 @@ exports.getAllComplaints = async (filters) => {
         query += ` LIMIT ?`;
         params.push(filters.limit);
     }
-    
     const [rows] = await db.query(query, params);
     return rows;
 };
@@ -289,4 +289,91 @@ exports.searchComplaints = async (filters) => {
 
     const [rows] = await db.query(query, params);
     return rows;
+};
+
+exports.createComplaint = async (description, complainer, evidence_details, complain_type, currentUser) => {
+    const connection = await db.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        const complainId = await generateUniqueId("complaints");
+        const evidenceId = await generateUniqueId("evidance");
+        const caseId = await generateUniqueId("cases");
+
+        // Insert evidence (voice statement)
+        await connection.query(
+            `INSERT INTO evidance (evidence_id, type, details, collected_dt, officer_id)
+             VALUES (?, ?, ?, NOW(), ?)`,
+            [
+                evidenceId,
+                "Voice Statement",
+                evidence_details || "",
+                currentUser.user_id
+            ]
+        );
+
+        // Insert complaint
+        await connection.query(
+            `INSERT INTO complaints (complain_id, description, complain_dt, status, officer_id, first_evidance_id)
+             VALUES (?, ?, NOW(), 'new', ?, ?)`,
+            [
+                complainId,
+                description,
+                currentUser.user_id,
+                evidenceId
+            ]
+        );
+
+        // Insert complainer as evidence witness
+        if (complainer) {
+            const { nic, name, phone, email, address, dob } = complainer;
+            await connection.query(
+                `INSERT INTO evidance_witnesses (evidence_id, nic, name, phone, email, address, dob)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    evidenceId,
+                    nic,
+                    name,
+                    phone || null,
+                    email || null,
+                    address || null,
+                    dob || null
+                ]
+            );
+        }
+
+        // Insert case if it doesn't exist
+        await connection.query(
+            `INSERT INTO cases (case_id, case_type, status, complain_id)
+             VALUES (?, ?, 'oicnotreviewed', ?)`,
+            [
+                caseId,
+                complain_type,
+                complainId
+            ]
+        );
+
+        // Insert to case_evidance
+        await connection.query(
+            `INSERT INTO case_evidance (case_id, evidence_id)
+             VALUES (?, ?)`,
+            [
+                caseId,
+                evidenceId
+            ]
+        );
+
+        await connection.commit();
+
+        return {
+            complain_id: complainId,
+        };
+
+    } catch (err) {
+        await connection.rollback();
+        throw err;
+    } finally {
+        connection.release();
+    }
 };

@@ -23,8 +23,6 @@ function App() {
       password: 'abcd1234'
     }
   )
-    .then(res => console.log(res.data))
-    .catch(err => console.log(err.response.data));
 
   login();
 

@@ -1,0 +1,27 @@
+export const caseTypes = [
+    'Criminal',
+    'Civil Dispute',
+    'Child Abuse',
+    'Missing Person',
+    'Domestic Violence',
+    'Drug Offense',
+    'Motorcycle Theft',
+    'Land Dispute',
+    'Assault and Battery',
+    'Murder/Homicide',
+    'Illegal Firearms Possession',
+    'Sexual Abuse',
+    'Human Trafficking',
+    'Public Disturbance',
+    'Fraud or Financial Crime',
+    'Cyber Crime',
+    'Robbery',
+    'Rape',
+    'Bribery or Corruption',
+    'Terrorism or Extremism',
+    'Traffic Accident',
+    'Illegal Construction or Land Grabbing',
+    'Suicide or Sudden Death Investigation',
+    'Political Protest'
+];
+
