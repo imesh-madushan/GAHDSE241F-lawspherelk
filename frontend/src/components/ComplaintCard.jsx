@@ -12,7 +12,6 @@ import OfficerCard from './cards/OfficerCard';
 import { Link } from 'react-router-dom';
 
 const ComplaintCard = ({ complaint }) => {
-  console.log(complaint);
   const { user } = useAuth();
 
   const statusColors = {

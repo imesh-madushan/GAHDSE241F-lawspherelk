@@ -1,7 +1,5 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
-const db = require('./config/db');
 const corsMiddleware = require('./middlewares/corsMiddleware');
 const cookieParser = require('cookie-parser');
 
@@ -13,6 +11,7 @@ const commonRoutes = require('./routes/commonRoutes');
 const officerRoutes = require('./routes/officerRoutes');
 const criminalRoutes = require('./routes/criminalRoutes');
 const crimeOffenceRoutes = require('./routes/crimeOffenceRoutes');
+const { decryptRequest, encryptResponse } = require('./middlewares/encryptionMiddleware');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -20,6 +19,10 @@ const PORT = process.env.PORT || 5000;
 app.use(express.json());
 app.use(corsMiddleware);
 app.use(cookieParser());
+
+// encryption and decryption between frontend and backend calls
+app.use(decryptRequest);
+app.use(encryptResponse);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/complaints', complaintRoutes);

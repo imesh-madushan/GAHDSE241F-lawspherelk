@@ -21,12 +21,6 @@ function App() {
     {
       username: 'user1',
       password: 'abcd1234'
-    },
-    {
-      withCredentials: true,
-      headers: {
-        'Content-Type': 'application/json',
-      }
     }
   )
     .then(res => console.log(res.data))
