@@ -25,6 +25,7 @@ exports.getAllComplaints = async (filters) => {
                 evidance_witnesses.nic AS witness_nic,
                 evidance_witnesses.name AS witness_name,
                 evidance_witnesses.phone AS witness_phone,
+                evidance_witnesses.email AS witness_email,
                 evidance_witnesses.address AS witness_address,
                 evidance_witnesses.dob AS witness_dob
 
@@ -123,6 +124,7 @@ exports.getComplaintById = async (complaintId) => {
                             ew.nic,
                             ew.name,
                             ew.phone,
+                            ew.email,
                             ew.address,
                             ew.dob,
                             e.type AS evidence_type,
@@ -140,6 +142,7 @@ exports.getComplaintById = async (complaintId) => {
                 nic: witnessRows[0].nic,
                 name: witnessRows[0].name,
                 phone: witnessRows[0].phone,
+                email: witnessRows[0].email,
                 address: witnessRows[0].address,
                 dob: witnessRows[0].dob,
             };
@@ -237,6 +240,7 @@ exports.searchComplaints = async (filters) => {
                 evidance_witnesses.nic AS witness_nic,
                 evidance_witnesses.name AS witness_name,
                 evidance_witnesses.phone AS witness_phone,
+                evidance_witnesses.email AS witness_email,
                 evidance_witnesses.address AS witness_address,
                 evidance_witnesses.dob AS witness_dob
 

@@ -25,8 +25,8 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
   const menuItems = {
     'OIC': [
       { id: 'dashboard', label: 'Dashboard', icon: <Dashboard /> },
-      { id: 'cases', label: 'Cases', icon: <Folder /> },
       { id: 'complaints', label: 'Complaints', icon: <Description /> },
+      { id: 'cases', label: 'Cases', icon: <Folder /> },
       { id: 'investigations', label: 'Investigations', icon: <Search /> },
       { id: 'evidence', label: 'Evidence', icon: <Inventory2 /> },
       { id: 'criminals', label: 'Criminal Records', icon: <Fingerprint /> },
@@ -38,8 +38,8 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
     ],
     'Crime OIC': [
       { id: 'dashboard', label: 'Dashboard', icon: <Dashboard /> },
-      { id: 'cases', label: 'Cases', icon: <Folder /> },
       { id: 'complaints', label: 'Complaints', icon: <Description /> },
+      { id: 'cases', label: 'Cases', icon: <Folder /> },
       { id: 'criminals', label: 'Criminal Records', icon: <Fingerprint /> },
       { id: 'crimeoffences', label: 'Crime Offences', icon: <Description /> },
       { id: 'officers', label: 'Officers', icon: <People /> },

@@ -69,8 +69,7 @@ const EvidenceTab = ({ caseData, canAddEvidence }) => {
                                     </div>
 
                                     {/* Officer Card */}
-                                    <div className="mt-4 pt-4 border-t border-gray-100">
-                                        <div className="text-xs text-gray-500 mb-2">Collected By</div>
+                                    <div className="mt-1 pt-4 border-t border-gray-100">
                                         <OfficerCard
                                             officer={{
                                                 name: item.collected_by,

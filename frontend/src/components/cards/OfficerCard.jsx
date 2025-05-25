@@ -26,23 +26,32 @@ const OfficerCard = ({ officer, size = "medium", className = "" }) => {
     };
 
     const containerClasses = {
-        small: "p-1.5 text-xs",
-        medium: "p-2 text-sm",
-        large: "p-3 text-base"
+        small: "p-2",
+        medium: "p-3",
+        large: "p-4"
+    };
+
+    const textClasses = {
+        small: "text-xs",
+        medium: "text-sm",
+        large: "text-base"
     };
 
     return (
         <div
-            className={`flex items-center justify-between hover:cursor-pointer hover:rounded-xl transition-colors hover:[box-shadow:2px_2px_8px_1px_rgba(0,0,0,0.1)] hover:border-white ${containerClasses[size]} border border-gray-200 rounded-lg bg-yellow-50/20 ${className} `}
+            className={`flex items-center justify-between rounded-lg transition-all 
+                hover:shadow-md hover:bg-blue-50/10 hover:border-blue-200
+                ${containerClasses[size]} 
+                ${className}`}
             onClick={() => {
                 if (officer && officer.id) {
                     navigate(`/officers/${officer.id}`);
                 }
             }}
         >
-            <div className="flex items-center">
+            <div className="flex items-center w-full">
                 {/* Officer Avatar */}
-                <div className={`flex-shrink-0 ${sizeClasses[size]} rounded-full overflow-hidden border-2 border-white shadow-sm`}>
+                <div className={`relative ${sizeClasses[size]} rounded-full flex-shrink-0 overflow-hidden border-2 border-white shadow-sm`}>
                     {officer.profilePic || officer.profile_pic || officer.image ? (
                         <img
                             src={officer.profilePic || officer.profile_pic || officer.image}
@@ -50,30 +59,42 @@ const OfficerCard = ({ officer, size = "medium", className = "" }) => {
                             className="h-full w-full object-cover"
                         />
                     ) : (
-                        <div className="h-full w-full bg-blue-600 flex items-center justify-center text-white font-medium">
+                        <div className="h-full w-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-medium">
                             {getInitials(officer.name)}
                         </div>
                     )}
                 </div>
 
                 {/* Officer Info */}
-                <div className="ml-3">
-                    <div className="font-medium text-gray-900 flex items-center gap-1">
-                        {officer.name}
+                <div className="ml-3 flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                        <div className="font-medium text-gray-800 truncate">
+                            {officer.name}
+                        </div>
+
                         {user && officer.id === user.user_id && (
-                            <span className="ml-0 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
-                                (you)
+                            <span className="ml-1.5 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-medium">
+                                you
                             </span>
                         )}
                     </div>
-                    <div className="flex items-center">
-                        <div className="text-xs text-gray-500">{officer.role || "Officer"}</div>
+
+                    <div className="flex items-center mt-0.5 overflow-hidden">
+                        <div className={`text-gray-500 truncate ${textClasses[size]}`}>
+                            {officer.role || "Officer"}
+                        </div>
                         {officer.type && (
-                            <div className="ml-2 px-1.5 py-0.5 bg-blue-100 text-xs rounded-full text-blue-700">
+                            <div className="ml-2 px-2 py-0.5 bg-blue-100 text-xs rounded-full text-blue-700 whitespace-nowrap">
                                 {officer.type}
                             </div>
                         )}
                     </div>
+                </div>
+            </div>
+
+            <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="p-1.5 rounded-full hover:bg-blue-100 text-gray-400 hover:text-blue-600">
+                    <Visibility fontSize="small" />
                 </div>
             </div>
         </div>
