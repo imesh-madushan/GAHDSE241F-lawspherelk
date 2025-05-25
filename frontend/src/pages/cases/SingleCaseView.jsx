@@ -5,23 +5,23 @@ import {
   Person, CalendarToday, Security, FormatListBulleted,
   Gavel, Attachment, Visibility, VisibilityOff, Add,
   Description, Timeline, DeviceHub, BarChart,
-  Cancel
+  Cancel, ScatterPlot, InfoOutlined
 } from '@mui/icons-material';
 import { apiClient } from '../../config/apiConfig';
 import { format } from 'date-fns';
 import PageHeader from '../../components/common/PageHeader';
-import CaseBasicInfo from '../../components/case/CaseBasicInfo';
 import TabNavigation from '../../components/case/TabNavigation';
-import OverviewTab from '../../components/case/tabs/OverviewTab';
 import EvidenceTab from '../../components/case/tabs/EvidenceTab';
 import InvestigationsTab from '../../components/case/tabs/InvestigationsTab';
 import ReportsTab from '../../components/case/tabs/ReportsTab';
 import OffencesTab from '../../components/case/tabs/OffencesTab';
-import SidebarCard from '../../components/cards/SidebarCard';
 import CaseComplaintCard from '../../components/case/CaseComplaintCard';
 import StatusBadge from '../../components/badges/StatusBadge';
 import { useAuth } from '../../contexts/AuthContext';
-import AssignedOfficers from '../../components/case/AssignedOfficers';
+import OutlinedButton from '../../components/buttons/OutlinedButton';
+import OfficerCard from '../../components/cards/OfficerCard';
+import CustomOfficerDropdown from '../../components/dropdowns/CustomOfficerDropdown';
+import { caseStatusList, complainStatusList } from '../../../data';
 
 const SingleCaseView = () => {
   const { user } = useAuth();
@@ -60,6 +60,7 @@ const SingleCaseView = () => {
   const [editedCase, setEditedCase] = useState({});
   const [activeTab, setActiveTab] = useState('overview');
   const [allOfficers, setAllOfficers] = useState([]);
+  const [availableOfficers, setAvailableOfficers] = useState([]);
 
   const canEdit = user.user_id == caseData.leader_id || user.role === "OIC" || user.role === "Crime OIC";
   const canChangeLeader = user.role === "Crime OIC";
@@ -139,6 +140,37 @@ const SingleCaseView = () => {
     console.log("View full complaint for ID:", complaint.complain_id);
   };
 
+  const handleLeaderChange = (officer) => {
+    setEditedCase(prev => ({
+      ...prev,
+      leader_id: officer.id,
+      leader_name: officer.name,
+      leader_role: officer.role,
+      leader_profile: officer.profilePic || officer.image
+    }));
+  };
+
+  // Fetch available officers for leader assignment
+  useEffect(() => {
+    const fetchAvailableOfficers = async () => {
+      if (isEditing && canChangeLeader) {
+        try {
+          // Get officers that could be assigned as leaders (based on roles)
+          const response = await apiClient.post('/officers/getAll');
+
+          if (response.data) {
+            console.log("Available officers fetched:", response.data);
+            setAvailableOfficers(response.data);
+          }
+        } catch (error) {
+          console.error("Failed to fetch available officers:", error);
+        }
+      }
+    };
+
+    fetchAvailableOfficers();
+  }, [isEditing, canChangeLeader]);
+
   const actions = {
     Edit: { icon: <Edit fontSize='small' />, label: 'Edit Case', onClick: handleEditToggle, styles: 'text-blue-700' },
     Cancel: { icon: <Cancel fontSize='small' />, label: 'Cancel', onClick: handleCancelEdit, styles: 'text-red-700' },
@@ -200,7 +232,6 @@ const SingleCaseView = () => {
         }
       });
     }
-
     // Add investigation officers
     if (caseData.assignedOfficers && caseData.assignedOfficers.length > 0) {
       caseData.assignedOfficers.forEach(officer => {
@@ -247,8 +278,6 @@ const SingleCaseView = () => {
           // Process all related officers
           const officers = processRelatedOfficers(formattedCaseData);
           setAllOfficers(officers);
-
-          console.log('Case data fetched successfully:', formattedCaseData);
         }
       } catch (error) {
         console.error('Error fetching case data:', error);
@@ -310,155 +339,344 @@ const SingleCaseView = () => {
             icon: <Cancel fontSize='small' />,
             label: 'Cancel',
             onClick: handleCancelEdit,
-            styles: 'text-red-700'
+            styles: 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
           } : {
             icon: <Edit fontSize='small' />,
             label: 'Edit Case',
             onClick: handleEditToggle,
-            styles: 'text-blue-700'
+            styles: 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
           },
           isEditing ? {
             icon: <Save fontSize='small' />,
-            label: 'Save',
+            label: 'Save Changes',
             onClick: handleSaveChanges,
-            styles: 'text-green-700'
+            styles: 'bg-green-600 text-white border-green-600 hover:bg-green-700'
           } : null
         ].filter(Boolean) : []}
       />
 
       <div className="container mx-auto px-4 py-6">
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center">
-            <Folder className="text-amber-500 mr-2" />
-            <div>
-              <p className="text-sm text-gray-700">Case Reference</p>
-              <p className="font-mono text-gray-500">{caseData.case_id}</p>
+        {/* Top Card - Case Header */}
+        <div className="bg-white rounded-xl shadow-sm mb-6">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-5 border-b border-gray-100">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+              <div className="flex items-center">
+                <div className="bg-blue-100 p-3 rounded-lg mr-4">
+                  <Folder className="text-blue-700" />
+                </div>
+                <div>
+                  <div className="text-gray-500 text-sm font-medium">Case Reference</div>
+                  <h1 className="text-xl font-bold text-gray-900">{caseData.case_id}</h1>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3 items-center">
+                <div className="flex items-center text-gray-500 px-3 py-1">
+                  <CalendarToday className="h-4 w-4 mr-2 text-blue-600" />
+                  <span className="text-sm font-medium">
+                    {formatDate(caseData.started_dt)}
+                  </span>
+                </div>
+
+                <StatusBadge
+                  status={caseData.status}
+                  statusList={caseStatusList}
+                  isEditing={isEditing}
+                  handleInputChange={handleInputChange}
+                />
+
+                <div className="bg-blue-50 px-3 py-1 rounded-full text-blue-700 text-sm font-medium border border-blue-100">
+                  <ScatterPlot fontSize="small" className="mr-1" />
+                  {caseData.case_type || "Unknown Type"}
+                </div>
+              </div>
             </div>
           </div>
-
-          <StatusBadge status={caseData.status} isEditing={isEditing} editedCase={editedCase} handleInputChange={handleInputChange} />
         </div>
 
+        {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <CaseBasicInfo
-              caseData={caseData}
-              isEditing={isEditing}
-              editedCase={editedCase}
-              handleInputChange={handleInputChange}
-              formatDate={formatDate}
-              canChangeLeader={canChangeLeader}
-            />
+          {/* Left Content - Main Case Details */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Case Info Card */}
+            <div className="bg-white rounded-xl shadow-sm ">
+              <div className="p-6">
+                <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                  <InfoOutlined className="h-5 w-5 mr-2 text-blue-600" />
+                  Case Topic
+                </h2>
 
+                {isEditing ? (
+                  <input
+                    type="text"
+                    name="topic"
+                    value={editedCase.topic}
+                    onChange={handleInputChange}
+                    className="w-full p-3 border border-blue-300 rounded-lg bg-blue-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter case topic"
+                  />
+                ) : (
+                  <div className="bg-gray-50 p-5 rounded-lg text-gray-800">
+                    <h3 className="text-xl font-medium">{caseData.topic || "No topic provided"}</h3>
+                  </div>
+                )}
+
+                <div className="mt-2">
+                  <div className="flex justify-between items-center mb-2">
+                    {isEditing && canChangeLeader && (
+                      <span className="text-xs text-blue-600 font-medium">Change Leader</span>
+                    )}
+                  </div>
+
+                  {isEditing && canChangeLeader ? (
+                    <CustomOfficerDropdown
+                      officers={availableOfficers}
+                      selectedOfficerId={editedCase.leader_id}
+                      onOfficerSelect={handleLeaderChange}
+                      className="mb-4"
+                    />
+                  ) : (
+                    <div className="mb-4">
+                      {caseData.leader_id ? (
+                        <OfficerCard
+                          officer={{
+                            id: caseData.leader_id,
+                            name: caseData.leader_name,
+                            role: caseData.leader_role,
+                            profilePic: caseData.leader_profile,
+                            type: "Case Leader"
+                          }}
+                          size="medium"
+                          className="bg-white/50 border border-gray-200 hover:border-blue-300 shadow-sm"
+                        />
+                      ) : (
+                        <div className="inline-flex items-center bg-yellow-50 px-3 py-1 rounded-md text-yellow-700 text-sm">
+                          <Person className="h-4 w-4 mr-1" />
+                          No case leader assigned
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex flex-col sm:items-end">
+                    <span className="text-sm text-gray-500">Case Duration:</span>
+                    <div className="mt-2 flex items-center">
+                      <Timeline className="text-gray-400 mr-2" />
+                      <span className="text-gray-700">
+                        {caseData.end_dt ?
+                          `${Math.ceil((new Date(caseData.end_dt) - new Date(caseData.started_dt)) / (1000 * 60 * 60 * 24))} days` :
+                          `${Math.ceil((new Date() - new Date(caseData.started_dt)) / (1000 * 60 * 60 * 24))} days (ongoing)`
+                        }
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Tab Navigation */}
             <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
 
-            <div className="rounded-xl bg-white shadow-md p-6">
-              {activeTab === 'overview' && (
-                <div>this is overvire tab </div>
-              )}
+            {/* Tab Content */}
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+              <div className="p-6">
+                {activeTab === 'overview' && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-6">
+                      Case Overview
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <div className="flex items-center mb-2">
+                          <BarChart className="text-blue-600 mr-2" />
+                          <h4 className="text-gray-700 font-medium">Case Progress</h4>
+                        </div>
+                        <div className="mt-4">
+                          <div className="flex justify-between mb-1">
+                            <span className="text-sm text-gray-700">Evidence Collected</span>
+                            <span className="text-sm text-gray-700 font-medium">
+                              {caseData.evidence?.length || 0} items
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-blue-600 h-2 rounded-full"
+                              style={{ width: `${Math.min(100, (caseData.evidence?.length || 0) * 10)}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                        <div className="mt-4">
+                          <div className="flex justify-between mb-1">
+                            <span className="text-sm text-gray-700">Investigations</span>
+                            <span className="text-sm text-gray-700 font-medium">
+                              {caseData.investigations?.length || 0} total
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-green-600 h-2 rounded-full"
+                              style={{ width: `${Math.min(100, (caseData.investigations?.length || 0) * 20)}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                        <div className="mt-4">
+                          <div className="flex justify-between mb-1">
+                            <span className="text-sm text-gray-700">Reports Generated</span>
+                            <span className="text-sm text-gray-700 font-medium">
+                              {caseData.reports?.length || 0} reports
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-purple-600 h-2 rounded-full"
+                              style={{ width: `${Math.min(100, (caseData.reports?.length || 0) * 25)}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
 
-              {activeTab === 'evidence' && (
-                <EvidenceTab
-                  caseData={caseData}
-                  canAddEvidence={canAddEvidence}
-                />
-              )}
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <div className="flex items-center mb-2">
+                          <Security className="text-blue-600 mr-2" />
+                          <h4 className="text-gray-700 font-medium">Offence Information</h4>
+                        </div>
+                        {caseData.offences?.length > 0 ? (
+                          <div className="space-y-3">
+                            {caseData.offences.map((offence, index) => (
+                              <div key={offence.offence_id || index} className="bg-white p-3 rounded-md shadow-sm">
+                                <div className="flex justify-between items-center">
+                                  <span className="font-medium text-gray-800">{offence.crime_type}</span>
+                                  <span className={`px-2 py-0.5 text-xs rounded-full ${offence.status === 'Convicted' ? 'bg-red-100 text-red-800' :
+                                    offence.status === 'Acquitted' ? 'bg-green-100 text-green-800' :
+                                      'bg-yellow-100 text-yellow-800'
+                                    }`}>
+                                    {offence.status}
+                                  </span>
+                                </div>
+                                <div className="mt-1 text-xs text-gray-500">
+                                  Risk Score:
+                                  <span className="ml-1 font-medium">
+                                    {offence.risk_score || 'N/A'}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-6 text-gray-500">
+                            No offences registered for this case yet
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-              {activeTab === 'investigations' && (
-                <InvestigationsTab
-                  caseData={caseData}
-                  canAddInvestigation={canAddInvestigation}
-                  formatDate={formatDate}
-                />
-              )}
+                {activeTab === 'evidence' && (
+                  <EvidenceTab
+                    caseData={caseData}
+                    canAddEvidence={canAddEvidence}
+                  />
+                )}
 
-              {activeTab === 'offences' && (
-                <OffencesTab
-                  caseData={caseData}
-                  canEdit={canEdit}
-                  formatDate={formatDate}
-                  formatTime={formatTime}
-                  getRiskLevel={getRiskLevel}
-                />
-              )}
+                {activeTab === 'investigations' && (
+                  <InvestigationsTab
+                    caseData={caseData}
+                    canAddInvestigation={canAddInvestigation}
+                    formatDate={formatDate}
+                  />
+                )}
 
-              {activeTab === 'reports' && (
-                <ReportsTab
-                  caseData={caseData}
-                  canEdit={canEdit}
-                  formatDate={formatDate}
-                />
-              )}
+                {activeTab === 'offences' && (
+                  <OffencesTab
+                    caseData={caseData}
+                    canEdit={canEdit}
+                    formatDate={formatDate}
+                    formatTime={formatTime}
+                    getRiskLevel={getRiskLevel}
+                  />
+                )}
+
+                {activeTab === 'reports' && (
+                  <ReportsTab
+                    caseData={caseData}
+                    canEdit={canEdit}
+                    formatDate={formatDate}
+                  />
+                )}
+              </div>
             </div>
           </div>
 
+          {/* Right Column - Sidebar */}
           <div className="space-y-6">
+            {/* Complaint Card */}
             <CaseComplaintCard
               complaint={complaint}
               formatDate={formatDate}
               onViewFullComplaint={handleViewFullComplaint}
             />
 
-            <AssignedOfficers
-              assignedOfficers={allOfficers}
-            />
-
-            <SidebarCard
-              title="Case Statistics"
-              icon={<BarChart />}
-            >
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <p className="text-blue-600">Evidence Items</p>
-                  <p className="text-gray-800 font-bold">{caseData.evidence?.length || 0}</p>
-                </div>
-                <div className="flex justify-between items-center">
-                  <p className="text-blue-600">Investigations</p>
-                  <p className="text-gray-800 font-bold">{caseData.investigations?.length || 0}</p>
-                </div>
-                <div className="flex justify-between items-center">
-                  <p className="text-blue-600">Reports Generated</p>
-                  <p className="text-gray-800 font-bold">{caseData.reports?.length || 0}</p>
-                </div>
-                <div className="flex justify-between items-center">
-                  <p className="text-blue-600">Days Active</p>
-                  <p className="text-gray-800 font-bold">
-                    {caseData.started_dt ?
-                      Math.ceil((new Date() - new Date(caseData.started_dt)) / (1000 * 60 * 60 * 24)) :
-                      'N/A'}
-                  </p>
+            {/* Assigned Officers */}
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+              <div className="bg-gradient-to-r from-gray-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
+                <h2 className="font-semibold text-gray-800 flex items-center">
+                  <Person className="h-5 w-5 mr-2 text-blue-600" />
+                  Assigned Officers
+                </h2>
+              </div>
+              <div className="p-4">
+                <div className="space-y-3">
+                  {allOfficers && allOfficers.length > 0 ? (
+                    allOfficers.map((officer, index) => (
+                      <OfficerCard
+                        key={officer.id || index}
+                        officer={officer}
+                      />
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-sm text-center py-2">No officers involved in this case</p>
+                  )}
                 </div>
               </div>
-            </SidebarCard>
+            </div>
 
-            <SidebarCard
-              title="Quick Actions"
-            >
-              <div className="space-y-2">
-                <button className="w-full py-2 text-sm bg-blue-600 hover:bg-blue-700 transition-colors rounded-md text-white flex items-center justify-center">
-                  <Assignment className="mr-2" fontSize="small" />
+            {/* Quick Actions */}
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+              <div className="bg-gradient-to-r from-gray-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
+                <h2 className="font-semibold text-gray-800 flex items-center">
+                  <DeviceHub className="h-5 w-5 mr-2 text-blue-600" />
+                  Quick Actions
+                </h2>
+              </div>
+              <div className="p-6 space-y-3">
+                <button className="w-full py-2.5 text-sm bg-blue-600 hover:bg-blue-700 transition-colors rounded-lg text-white flex items-center justify-center">
+                  <Description className="mr-2" fontSize="small" />
                   Create New Report
                 </button>
+
                 {canAddInvestigation && (
-                  <button className="w-full py-2 text-sm bg-indigo-600 hover:bg-indigo-700 transition-colors rounded-md text-white flex items-center justify-center">
+                  <button className="w-full py-2.5 text-sm bg-indigo-600 hover:bg-indigo-700 transition-colors rounded-lg text-white flex items-center justify-center">
                     <FormatListBulleted className="mr-2" fontSize="small" />
                     Add Investigation Task
                   </button>
                 )}
+
                 {canEdit && (
-                  <button className="w-full py-2 text-sm bg-green-600 hover:bg-green-700 transition-colors rounded-md text-white flex items-center justify-center">
+                  <button className="w-full py-2.5 text-sm bg-amber-600 hover:bg-amber-700 transition-colors rounded-lg text-white flex items-center justify-center">
                     <Gavel className="mr-2" fontSize="small" />
                     Register Offence
                   </button>
                 )}
+
                 {(user.role === "OIC" || user.role === "Crime OIC") && (
-                  <button className="w-full py-2 text-sm bg-red-600 hover:bg-red-700 transition-colors rounded-md text-white flex items-center justify-center">
+                  <button className="w-full py-2.5 text-sm bg-red-600 hover:bg-red-700 transition-colors rounded-lg text-white flex items-center justify-center">
                     <Close className="mr-2" fontSize="small" />
                     Close Case
                   </button>
                 )}
               </div>
-            </SidebarCard>
+            </div>
           </div>
         </div>
       </div>

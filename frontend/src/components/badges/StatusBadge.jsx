@@ -1,28 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { KeyboardArrowDown } from '@mui/icons-material';
 
-const StatusBadge = ({ status, isEditing, editedCase, handleInputChange }) => {
+const StatusBadge = ({ status, statusList, isEditing, handleInputChange }) => {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
-
-    const statusColors = {
-        'open': 'bg-green-100 text-green-800 border-green-200',
-        'inprogress': 'bg-blue-100 text-blue-800 border-blue-200',
-        'pending': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-        'closed': 'bg-gray-100 text-gray-800 border-gray-200',
-        'critical': 'bg-red-100 text-red-800 border-red-200',
-
-        'viewed': 'bg-yellow-100 text-gray-800 border-gray-200',
-        'new': 'bg-red-100 text-red-600 border-red-200',
-    };
-
-    const statusOptions = [
-        { value: 'open', label: 'Open' },
-        { value: 'inprogress', label: 'In Progress' },
-        { value: 'pending', label: 'Pending' },
-        { value: 'closed', label: 'Closed' },
-        { value: 'critical', label: 'Critical' }
-    ];
 
     // Handle click outside to close dropdown
     useEffect(() => {
@@ -49,7 +30,7 @@ const StatusBadge = ({ status, isEditing, editedCase, handleInputChange }) => {
     };
 
     const getSelectedLabel = () => {
-        const option = statusOptions.find(opt => opt.value === editedCase.status);
+        const option = statusList.find(opt => opt.value === status);
         return option ? option.label : 'Select Status';
     };
 
@@ -63,7 +44,7 @@ const StatusBadge = ({ status, isEditing, editedCase, handleInputChange }) => {
             >
                 <div className="flex items-center">
                     <span
-                        className={`w-3 h-3 rounded-full mr-2 ${statusColors[editedCase.status]?.split(' ')[0] || 'bg-gray-200'}`}
+                        className={`w-3 h-3 rounded-full mr-2 ${statusList.find(opt => opt.value === status)?.styles || 'bg-gray-200'}`}
                     ></span>
                     <span>{getSelectedLabel()}</span>
                 </div>
@@ -73,14 +54,14 @@ const StatusBadge = ({ status, isEditing, editedCase, handleInputChange }) => {
             {/* Dropdown options */}
             {isOpen && (
                 <div className="absolute mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-60 overflow-auto">
-                    {statusOptions.map(option => (
+                    {statusList.map(option => (
                         <div
                             key={option.value}
-                            className={`px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center ${editedCase.status === option.value ? 'bg-blue-50' : ''}`}
+                            className={`px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center ${status === option.value ? 'bg-blue-50' : ''}`}
                             onClick={() => handleStatusChange(option.value)}
                         >
                             <span
-                                className={`w-3 h-3 rounded-full mr-2 ${statusColors[option.value]?.split(' ')[0] || 'bg-gray-200'}`}
+                                className={`w-3 h-3 rounded-full mr-2 ${option.styles || 'bg-gray-200'}`}
                             ></span>
                             {option.label}
                         </div>
@@ -91,12 +72,12 @@ const StatusBadge = ({ status, isEditing, editedCase, handleInputChange }) => {
             {/* Hidden native select for form submission if needed */}
             <select
                 name="status"
-                value={editedCase.status}
+                value={status}
                 onChange={handleInputChange}
                 className="sr-only"
                 aria-hidden="true"
             >
-                {statusOptions.map(option => (
+                {statusList.map(option => (
                     <option key={option.value} value={option.value}>
                         {option.label}
                     </option>
@@ -104,8 +85,8 @@ const StatusBadge = ({ status, isEditing, editedCase, handleInputChange }) => {
             </select>
         </div>
     ) : (
-        <span className={`px-2.5 py-1 rounded-full text-sm font-medium  ${statusColors[status] || 'bg-gray-100 text-gray-800'}`}>
-            {status === 'inprogress' ? 'In Progress' : status.charAt(0).toUpperCase() + status.slice(1)}
+        <span className={`px-2.5 py-1 rounded-full text-sm font-medium  ${statusList.find(opt => opt.value === status)?.styles || 'bg-gray-100 text-gray-800'}`}>
+            {status.charAt(0).toUpperCase() + status.slice(1)}
         </span>
     );
 };

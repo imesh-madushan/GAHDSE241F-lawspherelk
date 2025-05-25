@@ -25,6 +25,7 @@ import OfficerCard from '../../components/cards/OfficerCard';
 import StatusBadge from '../../components/badges/StatusBadge';
 import OutlinedButton from '../../components/buttons/OutlinedButton';
 import SidebarCard from '../../components/cards/SidebarCard';
+import { complainStatusList } from '../../../data';
 
 const SingleComplaintView = () => {
     const { complaintId } = useParams();
@@ -265,7 +266,7 @@ const SingleComplaintView = () => {
                                     <span className="text-sm">Filed: {formatDate(complaint.complain_dt)}</span>
                                 </div>
 
-                                <StatusBadge status={complaint.status} />
+                                <StatusBadge status={complaint.status} statusList={complainStatusList} />
 
                                 {canStartCase() && (
                                     <OutlinedButton

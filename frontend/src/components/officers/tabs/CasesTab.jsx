@@ -2,38 +2,14 @@ import React from 'react';
 import { Gavel, CalendarMonth, AccessTime, Description } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import StatusBadge from '../../badges/StatusBadge';
+import { caseStatusList } from '../../../../data';
 
 const CasesTab = ({ data }) => {
     const navigate = useNavigate();
 
     const formatDate = (dateString) => format(new Date(dateString), 'dd MMM yyyy');
     const formatTime = (dateString) => format(new Date(dateString), 'hh:mm a');
-
-    const getStatusBadge = (status) => {
-        let bgColor, textColor;
-        switch (status?.toLowerCase()) {
-            case 'inprogress':
-                bgColor = 'bg-blue-100';
-                textColor = 'text-blue-700';
-                break;
-            case 'completed':
-                bgColor = 'bg-green-100';
-                textColor = 'text-green-700';
-                break;
-            case 'pending':
-                bgColor = 'bg-yellow-100';
-                textColor = 'text-yellow-700';
-                break;
-            default:
-                bgColor = 'bg-gray-100';
-                textColor = 'text-gray-700';
-        }
-        return (
-            <span className={`${bgColor} ${textColor} text-xs px-2 py-1 rounded-full`}>
-                {status}
-            </span>
-        );
-    };
 
     return (
         <div>
@@ -56,7 +32,7 @@ const CasesTab = ({ data }) => {
                                             <p className="text-sm text-gray-500">ID: {caseItem.case_id}</p>
                                         </div>
                                     </div>
-                                    {getStatusBadge(caseItem.status)}
+                                    <StatusBadge status={caseItem.status} statusList={caseStatusList} />
                                 </div>
 
                                 <div className="space-y-3">
