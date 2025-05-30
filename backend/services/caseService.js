@@ -1,4 +1,6 @@
 const db = require("../config/db");
+const { generateBatchId } = require("../utils/genarateIDs");
+const { logAuditTrail } = require("./commonService");
 
 exports.getAllCases = async (filters, userRole, userId) => {
   // Start with the base query
@@ -22,7 +24,7 @@ exports.getAllCases = async (filters, userRole, userId) => {
           LEFT JOIN users ON cases.leader_id = users.user_id
           LEFT JOIN case_evidance ON cases.case_id = case_evidance.case_id
 
-          WHERE cases.status != 'oicnotreviewed'`;
+          WHERE cases.status IN ('inprogress', 'closed')`;
 
   const params = [];
 
@@ -67,7 +69,7 @@ exports.getCaseById = async (caseId, userRole, userId) => {
                     u.profile_pic AS leader_profile
                   FROM cases c
                   LEFT JOIN users u ON c.leader_id = u.user_id
-                  WHERE c.case_id = ?`;
+                  WHERE c.topic is not null AND c.case_id = ?`;
 
   const params = [caseId];
   
@@ -222,7 +224,7 @@ exports.searchCases = async (filters, userRole, userId) => {
           FROM cases
           LEFT JOIN users ON cases.leader_id = users.user_id
           LEFT JOIN case_evidance ON cases.case_id = case_evidance.case_id
-          WHERE cases.status != 'oicnotreviewed'`;
+          WHERE cases.status IN ('inprogress', 'closed')`;
 
   const params = [];
 
@@ -279,6 +281,70 @@ exports.searchCases = async (filters, userRole, userId) => {
 
   const [rows] = await db.query(query, params);
   return rows;
+};
+
+exports.createCase = async (complaintId, topic, leaderId, caseId) => {
+    const now = new Date();
+
+    // Begin transaction
+    const connection = await db.getConnection();
+    await connection.beginTransaction();
+    
+    try {
+        // Generate batch ID for this operation to track all related changes
+        const batchId = await generateBatchId();
+
+        // Check if the case data is already filled
+        const [existingCase] = await connection.query(
+            "SELECT * FROM cases WHERE case_id = ?",
+            [caseId]
+        );
+
+        // Check if the case topic and leaderId are already in existing case
+        if (existingCase[0].topic != null && existingCase[0].leader_id != null) {
+            throw new Error("This case is already created with the same topic and leader.");
+        }
+
+        // Update the existing template of the case
+        await connection.query(
+            `UPDATE cases SET topic = ?, status = ?, started_dt = ?, leader_id = ? 
+            WHERE case_id = ?`,
+            [topic, "inprogress", now, leaderId, caseId]
+        );
+
+        // Update the complaint status
+        await connection.query(
+            "UPDATE complaints SET status = 'viewed' WHERE complain_id = ?",
+            [complaintId]
+        );
+
+        // Log all the updates in audit trail with new values only
+        const auditChanges = [
+            // Case updates - new values only
+            { tableName: 'cases', recordId: caseId, fieldName: 'topic', value: topic, actionType: 'INSERT' },
+            { tableName: 'cases', recordId: caseId, fieldName: 'status', value: 'inprogress', actionType: 'UPDATE' },
+            { tableName: 'cases', recordId: caseId, fieldName: 'started_dt', value: now.toISOString(), actionType: 'INSERT' },
+            { tableName: 'cases', recordId: caseId, fieldName: 'leader_id', value: leaderId, actionType: 'INSERT' },
+
+            // Complaint status update
+            { tableName: 'complaints', recordId: complaintId, fieldName: 'status', value: 'viewed', actionType: 'UPDATE' }
+        ];
+
+        await logAuditTrail({
+            batchId,
+            changes: auditChanges,
+            changedBy: leaderId,
+            connection
+        });
+        
+        await connection.commit();
+        return true;
+    } catch (error) {
+        await connection.rollback();
+        throw error;
+    } finally {
+        connection.release();
+    }
 };
 
 // You can add more case-related service methods here

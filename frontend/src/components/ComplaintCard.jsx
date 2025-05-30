@@ -16,15 +16,20 @@ const ComplaintCard = ({ complaint }) => {
 
   const statusColors = {
     'new': {
-      badge: 'bg-blue-100 text-blue-600',
+      badge: 'bg-red-100 text-red-600',
+      border: 'border-red-500',
+      icon: 'bg-red-100 text-red-600'
+    },
+    'viewed': {
+      badge: 'bg-blue-100 text-blue-800',
       border: 'border-blue-500',
       icon: 'bg-blue-100 text-blue-600'
     },
-    'viewed': {
-      badge: 'bg-gray-100 text-gray-800',
+    'closed': {
+      badge: 'bg-gray-100 text-gray-600',
       border: 'border-gray-500',
       icon: 'bg-gray-100 text-gray-600'
-    }
+    },
   };
 
   const formatDate = (dateString) => {

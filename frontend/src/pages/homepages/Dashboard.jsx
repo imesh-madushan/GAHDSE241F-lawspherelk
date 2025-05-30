@@ -21,6 +21,9 @@ const Dashboard = () => {
   const [recentComplaints, setRecentComplaints] = useState([]);
   const [recentCases, setRecentCases] = useState([]);
   const [statsValues, setStatsValues] = useState([]); //to store the stats count
+  const [isLoadingComplaints, setIsLoadingComplaints] = useState(true);
+  const [isLoadingCases, setIsLoadingCases] = useState(true);
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -39,6 +42,8 @@ const Dashboard = () => {
       }
       catch (error) {
         console.error('Error fetching complaints:', error);
+      } finally {
+        setIsLoadingComplaints(false);
       }
 
       //fetching recent cases from the backend
@@ -60,6 +65,8 @@ const Dashboard = () => {
         } else {
           console.error('Error fetching cases:', error);
         }
+      } finally {
+        setIsLoadingCases(false);
       }
 
       //get the all stats count
@@ -71,6 +78,8 @@ const Dashboard = () => {
       }
       catch (error) {
         console.error('Error fetching cases:', error);
+      } finally {
+        setIsLoadingStats(false);
       }
 
     }
@@ -83,7 +92,6 @@ const Dashboard = () => {
     ongoingInvestigations: { icon: <Search />, title: 'Ongoing Investigations', value: statsValues?.total_active_investigations ?? 'no data', color: 'green' },
     officersCount: { icon: <People />, title: 'Officers on Duty', value: statsValues?.x ?? 'no data', color: 'purple' }
   };
-
 
   //mapping for role and stats
   const roleStats = {
@@ -101,15 +109,21 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {roleStats[user.role].map((stat, index) => (
-          <StatCard
-            key={index}
-            icon={stat.icon}
-            title={stat.title}
-            value={stat.value}
-            color={stat.color}
-          />
-        ))}
+        {isLoadingStats ? (
+          <div className="col-span-full flex justify-center">
+            <Spinner />
+          </div>
+        ) : (
+          roleStats[user.role]?.map((stat, index) => (
+            <StatCard
+              key={index}
+              icon={stat.icon}
+              title={stat.title}
+              value={stat.value}
+              color={stat.color}
+            />
+          ))
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -125,15 +139,22 @@ const Dashboard = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mt-4">
-            {recentCases.length === 0 ? (
-              <Spinner />
+            {isLoadingCases ? (
+              <div className="flex justify-center py-8">
+                <Spinner />
+              </div>
+            ) : recentCases.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p>No recent cases found</p>
+              </div>
             ) : (
               recentCases.map((caseData, index) => (
                 <CaseCard
                   key={index}
                   caseData={caseData}
                 />
-              )))}
+              ))
+            )}
           </div>
         </div>
 
@@ -149,15 +170,22 @@ const Dashboard = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mt-4">
-            {recentComplaints.length === 0 ? (
-              <Spinner />
+            {isLoadingComplaints ? (
+              <div className="flex justify-center py-8">
+                <Spinner />
+              </div>
+            ) : recentComplaints.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p>No recent complaints found</p>
+              </div>
             ) : (
               recentComplaints.map((complaint, index) => (
                 <ComplaintCard
                   key={index}
                   complaint={complaint}
                 />
-              )))}
+              ))
+            )}
           </div>
         </div>
       </div>

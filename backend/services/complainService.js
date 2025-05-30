@@ -1,5 +1,6 @@
 const db = require("../config/db");
-const { generateUniqueId } = require("../utils/genarateIDs");
+const { generateUniqueId, generateBatchId } = require("../utils/genarateIDs");
+const { logAuditTrail } = require("./commonService");
 
 exports.getAllComplaints = async (filters) => {
     let query = `SELECT 
@@ -50,7 +51,11 @@ exports.getAllComplaints = async (filters) => {
         query += ` LIMIT ?`;
         params.push(filters.limit);
     }
+
     const [rows] = await db.query(query, params);
+
+
+
     return rows;
 };
 
@@ -295,11 +300,15 @@ exports.searchComplaints = async (filters) => {
     return rows;
 };
 
+// this will also create a case and evidence
 exports.createComplaint = async (description, complainer, evidence_details, complain_type, currentUser) => {
     const connection = await db.getConnection();
 
     try {
         await connection.beginTransaction();
+
+        // Generate batch ID for this operation to track all related changes
+        const batchId = await generateBatchId();
 
         const complainId = await generateUniqueId("complaints");
         const evidenceId = await generateUniqueId("evidance");
@@ -368,6 +377,44 @@ exports.createComplaint = async (description, complainer, evidence_details, comp
             ]
         );
 
+        // Log all the insertions in audit trail
+        const auditChanges = [
+            // Evidence creation
+            { tableName: 'evidance', recordId: evidenceId, fieldName: 'type', value: 'Voice Statement',  actionType: 'INSERT' },
+            { tableName: 'evidance', recordId: evidenceId, fieldName: 'details', value: evidence_details || "", actionType: 'INSERT' },
+            { tableName: 'evidance', recordId: evidenceId, fieldName: 'officer_id', value: currentUser.user_id, actionType: 'INSERT' },
+
+            // Complaint creation
+            { tableName: 'complaints', recordId: complainId, fieldName: 'description', value: description, actionType: 'INSERT' },
+            { tableName: 'complaints', recordId: complainId, fieldName: 'status', value: 'new', actionType: 'INSERT' },
+            { tableName: 'complaints', recordId: complainId, fieldName: 'officer_id', value: currentUser.user_id, actionType: 'INSERT' },
+            { tableName: 'complaints', recordId: complainId, fieldName: 'first_evidance_id', value: evidenceId, actionType: 'INSERT' },
+
+            // Evidence witness creation
+            { tableName: 'evidance_witnesses', recordId: `${evidenceId}_${complainer.nic}`, fieldName: 'nic', value: complainer.nic, actionType: 'INSERT' },
+            { tableName: 'evidance_witnesses', recordId: `${evidenceId}_${complainer.nic}`, fieldName: 'name', value: complainer.name, actionType: 'INSERT' },
+            { tableName: 'evidance_witnesses', recordId: `${evidenceId}_${complainer.nic}`, fieldName: 'phone', value: complainer.phone || null, actionType: 'INSERT' },
+            { tableName: 'evidance_witnesses', recordId: `${evidenceId}_${complainer.nic}`, fieldName: 'email', value: complainer.email || null, actionType: 'INSERT' },
+            { tableName: 'evidance_witnesses', recordId: `${evidenceId}_${complainer.nic}`, fieldName: 'address', value: complainer.address || null, actionType: 'INSERT' },
+            { tableName: 'evidance_witnesses', recordId: `${evidenceId}_${complainer.nic}`, fieldName: 'dob', value: complainer.dob || null, actionType: 'INSERT' },
+
+            // Case creation
+            { tableName: 'cases', recordId: caseId, fieldName: 'case_type', value: complain_type, actionType: 'INSERT' },
+            { tableName: 'cases', recordId: caseId, fieldName: 'status', value: 'oicnotreviewed', actionType: 'INSERT' },
+            { tableName: 'cases', recordId: caseId, fieldName: 'complain_id', value: complainId, actionType: 'INSERT' },
+
+            // Case evidence relationship
+            { tableName: 'case_evidance', recordId: `${caseId}_${evidenceId}`, fieldName: 'case_id', value: caseId, actionType: 'INSERT' },
+            { tableName: 'case_evidance', recordId: `${caseId}_${evidenceId}`, fieldName: 'evidence_id', value: evidenceId, actionType: 'INSERT' }
+        ];
+
+        await logAuditTrail({
+            batchId,
+            changes: auditChanges,
+            changedBy: currentUser.user_id,
+            connection
+        });
+
         await connection.commit();
 
         return {
@@ -377,6 +424,87 @@ exports.createComplaint = async (description, complainer, evidence_details, comp
     } catch (err) {
         await connection.rollback();
         throw err;
+    } finally {
+        connection.release();
+    }
+};
+
+exports.closeComplaint = async (complaintId, caseId, closedBy) => {
+    const connection = await db.getConnection();
+    
+    try {
+        await connection.beginTransaction();
+        
+        // Generate batch ID for this operation
+        const batchId = await generateBatchId();
+        if (!batchId) {
+            throw new Error("Failed to generate batch ID for audit trail");
+        }
+
+        // Get current complaint data before closing for audit
+        const [currentComplaint] = await connection.query(
+            "SELECT status, complain_dt FROM complaints WHERE complain_id = ?",
+            [complaintId]
+        );
+        
+        if (currentComplaint.length === 0) {
+            throw new Error("Complaint not found");
+        }
+        
+        const oldStatus = currentComplaint[0].status;
+        
+        if (oldStatus === 'closed') {
+            throw new Error("Complaint is already closed");
+        }
+        
+        // Update complaint status to closed
+        const [result] = await connection.query(
+            "UPDATE complaints SET status = 'closed' WHERE complain_id = ?",
+            [complaintId]
+        );
+        
+        if (result.affectedRows === 0) {
+            throw new Error("Failed to update complaint status");
+        }
+        
+        
+        
+        // Update case status to rejected if case exists
+        if (caseId) {
+            // Get current case data before updating
+            const [currentCase] = await connection.query(
+                "SELECT status, started_dt FROM cases WHERE case_id = ?",
+                [caseId]
+            );
+            
+            if (currentCase.length > 0) {
+                const oldCaseStatus = currentCase[0].status;
+                
+                const [caseResult] = await connection.query(
+                    "UPDATE cases SET status = 'oicrejected', end_dt = NOW() WHERE case_id = ?",
+                    [caseId]
+                );
+            }
+        }
+
+
+        // Log data in audit trail
+        await logAuditTrail({
+            batchId,
+            changes: [
+                {tableName: 'complaints', recordId: complaintId, fieldName: 'status', value: 'closed', actionType: 'UPDATE' },
+                {tableName: 'cases', recordId: caseId, fieldName: 'status', value: 'oicrejected', actionType: 'UPDATE' }
+            ],
+            changedBy: closedBy,
+            connection,
+        });
+
+        await connection.commit();
+        return true;
+        
+    } catch (error) {
+        await connection.rollback();
+        throw error;
     } finally {
         connection.release();
     }

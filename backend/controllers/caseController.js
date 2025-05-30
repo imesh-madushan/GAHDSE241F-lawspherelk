@@ -108,3 +108,35 @@ exports.searchCases = async (req, res) => {
     }
 };
 
+//this will update already created case with new topic and leader
+exports.createCase = async (req, res) => {
+    try {
+        const { complaintId, topic, leaderId, caseId } = req.body;
+        
+        // Validate required parameters
+        if (!complaintId) {
+            return res.status(400).json({ message: "Complaint ID is required" });
+        }
+
+        if (!topic) {
+            return res.status(400).json({ message: "Topic is required" });
+        }
+        if (!leaderId) {
+            return res.status(400).json({ message: "Leader ID is required" });
+        }
+        // Create the case
+        const result = await caseService.createCase(complaintId, topic, leaderId, caseId);
+        if (!result) {
+            return res.status(500).json({ message: "Failed to create case" });
+        }
+        
+        res.status(201).json({
+            success: true,
+            message: "Case created successfully",
+        });
+    } catch (error) {
+        console.error("Error creating case:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+

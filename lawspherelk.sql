@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: May 24, 2025 at 07:30 PM
+-- Generation Time: May 30, 2025 at 05:57 AM
 -- Server version: 5.7.36
 -- PHP Version: 8.1.0
 
@@ -24,6 +24,63 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `audit_log`
+--
+
+DROP TABLE IF EXISTS `audit_log`;
+CREATE TABLE IF NOT EXISTS `audit_log` (
+  `audit_id` varchar(36) NOT NULL,
+  `batch_id` varchar(36) NOT NULL,
+  `table_name` varchar(64) NOT NULL,
+  `record_id` varchar(64) NOT NULL,
+  `field_name` varchar(64) NOT NULL,
+  `value` text,
+  `action_type` enum('INSERT','UPDATE','DELETE') NOT NULL,
+  `changed_by` varchar(36) NOT NULL,
+  `changed_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`audit_id`),
+  KEY `batch_id` (`batch_id`),
+  KEY `table_name` (`table_name`),
+  KEY `record_id` (`record_id`),
+  KEY `changed_by` (`changed_by`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `audit_log`
+--
+
+INSERT INTO `audit_log` (`audit_id`, `batch_id`, `table_name`, `record_id`, `field_name`, `value`, `action_type`, `changed_by`, `changed_at`) VALUES
+('AUD1111981901', 'B1072279694', 'complaints', 'CMP001', 'status', 'closed', 'UPDATE', 'U001', '2025-05-29 23:08:39'),
+('AUD7101941941', 'B1072279694', 'cases', 'C001', 'status', 'oicrejected', 'UPDATE', 'U001', '2025-05-29 23:08:39'),
+('AUD6125721983', 'B2521907045', 'cases', 'C9818234044', 'status', 'inprogress', 'UPDATE', 'U002', '2025-05-29 23:47:30'),
+('AUD8415667402', 'B2521907045', 'cases', 'C9818234044', 'topic', 'Bike theft', 'INSERT', 'U002', '2025-05-29 23:47:30'),
+('AUD2795792874', 'B2521907045', 'cases', 'C9818234044', 'started_dt', '2025-05-29T18:17:30.718Z', 'INSERT', 'U002', '2025-05-29 23:47:30'),
+('AUD0497573427', 'B2521907045', 'cases', 'C9818234044', 'leader_id', 'U002', 'INSERT', 'U002', '2025-05-29 23:47:30'),
+('AUD9833002912', 'B2521907045', 'complaints', 'CMP3591845754', 'status', 'viewed', 'UPDATE', 'U002', '2025-05-29 23:47:30'),
+('AUD8348914338', 'B6521215820', 'evidance', 'EVD8738612103', 'type', 'Voice Statement', 'INSERT', 'U001', '2025-05-29 23:49:30'),
+('AUD6253810573', 'B6521215820', 'evidance', 'EVD8738612103', 'details', 'civil dispute 1', 'INSERT', 'U001', '2025-05-29 23:49:30'),
+('AUD0953072820', 'B6521215820', 'evidance', 'EVD8738612103', 'officer_id', 'U001', 'INSERT', 'U001', '2025-05-29 23:49:30'),
+('AUD5054966477', 'B6521215820', 'complaints', 'CMP3538836277', 'description', 'civil dispute 1', 'INSERT', 'U001', '2025-05-29 23:49:30'),
+('AUD3043376006', 'B6521215820', 'complaints', 'CMP3538836277', 'status', 'new', 'INSERT', 'U001', '2025-05-29 23:49:30'),
+('AUD0166505317', 'B6521215820', 'complaints', 'CMP3538836277', 'officer_id', 'U001', 'INSERT', 'U001', '2025-05-29 23:49:30'),
+('AUD1976097203', 'B6521215820', 'complaints', 'CMP3538836277', 'first_evidance_id', 'EVD8738612103', 'INSERT', 'U001', '2025-05-29 23:49:30'),
+('AUD7874112125', 'B6521215820', 'evidance_witnesses', 'EVD8738612103_200220202220', 'nic', '200220202220', 'INSERT', 'U001', '2025-05-29 23:49:30'),
+('AUD1687627808', 'B6521215820', 'evidance_witnesses', 'EVD8738612103_200220202220', 'name', 'Ghim Shasintha', 'INSERT', 'U001', '2025-05-29 23:49:30'),
+('AUD4665511351', 'B6521215820', 'evidance_witnesses', 'EVD8738612103_200220202220', 'phone', '0768141745', 'INSERT', 'U001', '2025-05-29 23:49:30'),
+('AUD6876443532', 'B6521215820', 'evidance_witnesses', 'EVD8738612103_200220202220', 'email', 'imeshmadush@gmail.com', 'INSERT', 'U001', '2025-05-29 23:49:30'),
+('AUD0099703995', 'B6521215820', 'evidance_witnesses', 'EVD8738612103_200220202220', 'address', 'Hiyare galle', 'INSERT', 'U001', '2025-05-29 23:49:30'),
+('AUD4957848547', 'B6521215820', 'evidance_witnesses', 'EVD8738612103_200220202220', 'dob', '2003-03-03', 'INSERT', 'U001', '2025-05-29 23:49:30'),
+('AUD6966436869', 'B6521215820', 'cases', 'C9999816989', 'case_type', 'Civil Dispute', 'INSERT', 'U001', '2025-05-29 23:49:30'),
+('AUD4668969787', 'B6521215820', 'cases', 'C9999816989', 'status', 'oicnotreviewed', 'INSERT', 'U001', '2025-05-29 23:49:30'),
+('AUD5591885200', 'B6521215820', 'cases', 'C9999816989', 'complain_id', 'CMP3538836277', 'INSERT', 'U001', '2025-05-29 23:49:30'),
+('AUD3369797090', 'B6521215820', 'case_evidance', 'C9999816989_EVD8738612103', 'case_id', 'C9999816989', 'INSERT', 'U001', '2025-05-29 23:49:30'),
+('AUD0084824391', 'B6521215820', 'case_evidance', 'C9999816989_EVD8738612103', 'evidence_id', 'EVD8738612103', 'INSERT', 'U001', '2025-05-29 23:49:30'),
+('AUD1219062609', 'B7848159803', 'complaints', 'CMP3538836277', 'status', 'closed', 'UPDATE', 'U001', '2025-05-29 23:50:23'),
+('AUD1971762057', 'B7848159803', 'cases', 'C9999816989', 'status', 'oicrejected', 'UPDATE', 'U001', '2025-05-29 23:50:23');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `cases`
 --
 
@@ -32,7 +89,7 @@ CREATE TABLE IF NOT EXISTS `cases` (
   `case_id` varchar(36) NOT NULL,
   `topic` varchar(255) DEFAULT NULL,
   `case_type` enum('Criminal','Civil Dispute','Child Abuse','Missing Person','Domestic Violence','Drug Offense','Motorcycle Theft','Land Dispute','Assault and Battery','Murder/Homicide','Illegal Firearms Possession','Sexual Abuse','Human Trafficking','Public Disturbance','Fraud or Financial Crime','Cyber Crime','Robbery','Rape','Bribery or Corruption','Terrorism or Extremism','Traffic Accident','Illegal Construction or Land Grabbing','Suicide or Sudden Death Investigation','Political Protest') DEFAULT NULL,
-  `status` enum('oicnotreviewed','inprogress','closed') NOT NULL,
+  `status` enum('oicnotreviewed','inprogress','closed','oicrejected') NOT NULL,
   `started_dt` datetime DEFAULT NULL,
   `end_dt` datetime DEFAULT NULL,
   `leader_id` varchar(36) DEFAULT NULL,
@@ -47,11 +104,13 @@ CREATE TABLE IF NOT EXISTS `cases` (
 --
 
 INSERT INTO `cases` (`case_id`, `topic`, `case_type`, `status`, `started_dt`, `end_dt`, `leader_id`, `complain_id`) VALUES
-('C001', '', 'Robbery', 'oicnotreviewed', NULL, NULL, NULL, 'CMP001'),
+('C001', NULL, 'Motorcycle Theft', 'oicrejected', '2025-05-26 15:01:04', '2025-05-29 23:08:39', NULL, 'CMP001'),
 ('C002', 'Missing Child Reported by School', 'Missing Person', 'inprogress', '2025-04-02 10:00:00', NULL, 'U005', 'CMP002'),
 ('C003', 'Gang Threat to School Principal', 'Criminal', 'inprogress', '2025-04-03 11:30:00', NULL, 'U002', 'CMP005'),
-('C004', 'Vehicle Theft – Honda CB150', 'Robbery', 'inprogress', '2025-04-04 18:00:00', NULL, 'U004', 'CMP004'),
-('C005', 'Online Scam – Fake Police Jobs', 'Cyber Crime', 'closed', '2025-03-28 14:00:00', '2025-04-01 17:30:00', 'U001', 'CMP003');
+('C004', 'Vehicle Theft – Honda CB150', 'Robbery', 'closed', '2025-04-04 18:00:00', '2025-05-25 00:37:03', 'U004', 'CMP004'),
+('C005', 'Online Scam – Fake Police Jobs', 'Cyber Crime', 'closed', '2025-03-28 14:00:00', '2025-04-01 17:30:00', 'U001', 'CMP003'),
+('C9818234044', 'Bike theft', 'Criminal', 'inprogress', '2025-05-29 23:47:31', NULL, 'U002', 'CMP3591845754'),
+('C9999816989', NULL, 'Civil Dispute', 'oicrejected', NULL, '2025-05-29 23:50:23', NULL, 'CMP3538836277');
 
 -- --------------------------------------------------------
 
@@ -77,7 +136,9 @@ INSERT INTO `case_evidance` (`case_id`, `evidence_id`) VALUES
 ('C003', 'EVD003'),
 ('C004', 'EVD004'),
 ('C004', 'EVD006'),
-('C005', 'EVD005');
+('C005', 'EVD005'),
+('C9818234044', 'EVD0425084493'),
+('C9999816989', 'EVD8738612103');
 
 -- --------------------------------------------------------
 
@@ -90,7 +151,7 @@ CREATE TABLE IF NOT EXISTS `complaints` (
   `complain_id` varchar(36) NOT NULL,
   `description` text NOT NULL,
   `complain_dt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `status` enum('new','viewed') DEFAULT NULL,
+  `status` enum('new','viewed','closed') DEFAULT NULL,
   `officer_id` varchar(36) NOT NULL,
   `first_evidance_id` varchar(36) DEFAULT NULL,
   PRIMARY KEY (`complain_id`),
@@ -103,11 +164,13 @@ CREATE TABLE IF NOT EXISTS `complaints` (
 --
 
 INSERT INTO `complaints` (`complain_id`, `description`, `complain_dt`, `status`, `officer_id`, `first_evidance_id`) VALUES
-('CMP001', 'Stolen motorcycle from residence at 23 Galle Road. Black Honda CB150, license KU-2343.', '2025-04-12 16:11:00', 'new', 'U001', 'EVD001'),
+('CMP001', 'Stolen motorcycle from residence at 23 Galle Road. Black Honda CB150, license KU-2343.', '2025-04-12 16:11:00', 'closed', 'U001', 'EVD001'),
 ('CMP002', 'A child from Colombo Central School went missing during school hours. Last seen near back gate.', '2025-04-02 09:50:00', 'viewed', 'U005', 'EVD002'),
-('CMP003', 'Multiple citizens reported an online scam claiming to offer fake police job openings.', '2025-03-28 13:45:00', 'viewed', 'U006', 'EVD003'),
+('CMP003', 'Multiple citizens reported an online scam claiming to offer fake police job openings.', '2025-03-28 13:45:00', 'viewed', 'U003', 'EVD003'),
 ('CMP004', 'Motorcycle stolen from galle BOC bank area. Honda CB150, license plate WP-KU2343.', '2025-04-03 18:00:00', 'viewed', 'U003', 'EVD004'),
-('CMP005', 'School principal received anonymous threats via phone from suspected gang members.', '2025-04-05 08:00:00', 'viewed', 'U002', 'EVD005');
+('CMP005', 'School principal received anonymous threats via phone from suspected gang members.', '2025-04-05 08:00:00', 'viewed', 'U002', 'EVD005'),
+('CMP3538836277', 'civil dispute 1', '2025-05-29 23:49:30', 'closed', 'U001', 'EVD8738612103'),
+('CMP3591845754', 'This is a test complaint.', '2025-05-26 00:31:04', 'viewed', 'U002', 'EVD0425084493');
 
 -- --------------------------------------------------------
 
@@ -251,9 +314,11 @@ INSERT INTO `evidance` (`evidence_id`, `type`, `location`, `details`, `collected
 ('EVD001', 'Voice Statement', NULL, 'I saw that kamal theft a motocycle', '2025-04-02 00:05:00', 'U001', NULL),
 ('EVD004', 'Voice Statement', NULL, 'Victim stated he parked the bike at 4:30 PM and it was missing by 5:10 PM.', '2025-04-03 18:30:00', 'U003', NULL),
 ('EVD006', 'Fingerprint', 'bank BOC', 'collect fingerprint data from a dropped leather wallet', '2025-04-30 08:53:59', 'U005', 'INV001'),
-('EVD003', 'Voice Statement', NULL, 'Victim described a phone call claiming fake police recruitment.', '2025-03-28 15:00:00', 'U006', NULL),
+('EVD003', 'Voice Statement', NULL, 'Victim described a phone call claiming fake police recruitment.', '2025-03-28 15:00:00', 'U003', NULL),
 ('EVD002', 'Voice Statement', NULL, 'Complainer explained child was last seen at 2:00 PM near the canteen.', '2025-04-02 10:15:00', 'U005', NULL),
-('EVD005', 'Voice Statement', NULL, 'Principal stated a caller warned about consequences if payment was not made.', '2025-04-05 08:30:00', 'U002', NULL);
+('EVD005', 'Voice Statement', NULL, 'Principal stated a caller warned about consequences if payment was not made.', '2025-04-05 08:30:00', 'U002', NULL),
+('EVD0425084493', 'Voice Statement', NULL, 'Voice statement details for test.', '2025-05-26 00:31:04', 'U002', NULL),
+('EVD8738612103', 'Voice Statement', NULL, 'civil dispute 1', '2025-05-29 23:49:30', 'U001', NULL);
 
 -- --------------------------------------------------------
 
@@ -267,6 +332,7 @@ CREATE TABLE IF NOT EXISTS `evidance_witnesses` (
   `nic` varchar(36) NOT NULL,
   `name` varchar(255) NOT NULL,
   `phone` varchar(20) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
   `address` text,
   `dob` date DEFAULT NULL,
   PRIMARY KEY (`evidence_id`,`nic`)
@@ -276,12 +342,14 @@ CREATE TABLE IF NOT EXISTS `evidance_witnesses` (
 -- Dumping data for table `evidance_witnesses`
 --
 
-INSERT INTO `evidance_witnesses` (`evidence_id`, `nic`, `name`, `phone`, `address`, `dob`) VALUES
-('EVD001', '200222222222', 'jason', '0771234567', 'Batduwa, Galle.', '2000-04-01'),
-('EVD002', 'NIC900000002V', 'Vimukthi Perera', '0774561230', 'Colombo Central School, Colombo 10', '2008-05-14'),
-('EVD003', 'NIC900000003V', 'Nuwan Senanayake', '0767895432', 'Kurunegala Town', '1992-08-25'),
-('EVD004', 'NIC900000004V', 'Ajith Kumara', '0712345678', 'Pettah Bus Stand Area', '1985-03-10'),
-('EVD005', 'NIC900000005V', 'Principal R. Silva', '0756543210', 'Colombo 07', '1975-12-05');
+INSERT INTO `evidance_witnesses` (`evidence_id`, `nic`, `name`, `phone`, `email`, `address`, `dob`) VALUES
+('EVD001', '200222222222', 'jason', '0771234567', 'j@gmail.com', 'Batduwa, Galle.', '2000-04-01'),
+('EVD002', 'NIC900000002V', 'Vimukthi Perera', '0774561230', 'v@gmail.com', 'Colombo Central School, Colombo 10', '2008-05-14'),
+('EVD003', 'NIC900000003V', 'Nuwan Senanayake', '0767895432', 'nuwan@gmail.com', 'Kurunegala Town', '1992-08-25'),
+('EVD004', 'NIC900000004V', 'Ajith Kumara', '0712345678', 'ajoth@gmail.com', 'Pettah Bus Stand Area', '1985-03-10'),
+('EVD005', 'NIC900000005V', 'Principal R. Silva', '0756543210', 'silva@gmail.com', 'Colombo 07', '1975-12-05'),
+('EVD8738612103', '200220202220', 'Ghim Shasintha', '0768141745', 'imeshmadush@gmail.com', 'Hiyare galle', '2003-03-03'),
+('EVD0425084493', '900000000V', 'Test User', '0771234567', 'test@example.com', '123 Main St', '2000-01-01');
 
 -- --------------------------------------------------------
 
@@ -392,11 +460,11 @@ CREATE TABLE IF NOT EXISTS `login` (
 --
 
 INSERT INTO `login` (`user_id`, `username`, `password_hash`, `lastlogin_dt`, `faild_attempts`, `account_locked`) VALUES
-('U001', 'user1', '$2b$10$.xeyDmg6SzYkxVF4joycreg4ANiSfiNFhiqt39i0lPKGUIkfyI4/a', NULL, 0, 0),
-('U002', 'user2', '$2b$10$.xeyDmg6SzYkxVF4joycreg4ANiSfiNFhiqt39i0lPKGUIkfyI4/a', NULL, 0, 0),
-('U003', 'user3', '$2b$10$.xeyDmg6SzYkxVF4joycreg4ANiSfiNFhiqt39i0lPKGUIkfyI4/a', NULL, 0, 1),
-('U004', 'user4', '$2b$10$.xeyDmg6SzYkxVF4joycreg4ANiSfiNFhiqt39i0lPKGUIkfyI4/a', NULL, 0, 1),
-('U005', 'user5', '$2b$10$.xeyDmg6SzYkxVF4joycreg4ANiSfiNFhiqt39i0lPKGUIkfyI4/a', NULL, 0, 1);
+('U001', 'user1', '$2b$10$.xeyDmg6SzYkxVF4joycreg4ANiSfiNFhiqt39i0lPKGUIkfyI4/a', '2025-05-13 01:47:56', 0, 0),
+('U002', 'user2', '$2b$10$.xeyDmg6SzYkxVF4joycreg4ANiSfiNFhiqt39i0lPKGUIkfyI4/a', '2025-05-13 01:48:00', 0, 0),
+('U003', 'user3', '$2b$10$.xeyDmg6SzYkxVF4joycreg4ANiSfiNFhiqt39i0lPKGUIkfyI4/a', '2025-05-13 01:48:04', 0, 1),
+('U004', 'user4', '$2b$10$.xeyDmg6SzYkxVF4joycreg4ANiSfiNFhiqt39i0lPKGUIkfyI4/a', '2025-05-21 01:48:07', 0, 1),
+('U005', 'user5', '$2b$10$.xeyDmg6SzYkxVF4joycreg4ANiSfiNFhiqt39i0lPKGUIkfyI4/a', '2025-05-09 01:48:10', 0, 1);
 
 -- --------------------------------------------------------
 

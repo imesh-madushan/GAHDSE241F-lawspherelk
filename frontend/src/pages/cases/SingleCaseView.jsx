@@ -366,7 +366,7 @@ const SingleCaseView = () => {
                 </div>
                 <div>
                   <div className="text-gray-500 text-sm font-medium">Case Reference</div>
-                  <h1 className="text-xl font-bold text-gray-900">{caseData.case_id}</h1>
+                  <h1 className="text-xl font-bold text-gray-900">{'#'+caseData.case_id}</h1>
                 </div>
               </div>
 

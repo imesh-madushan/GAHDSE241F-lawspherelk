@@ -13,7 +13,8 @@ import {
   Science,
   ChevronLeft,
   ChevronRight,
-  Copyright
+  Copyright,
+  History
 } from '@mui/icons-material';
 
 import { useAuth } from '../contexts/AuthContext';
@@ -34,6 +35,7 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
       { id: 'reports', label: 'Reports', icon: <Summarize /> },
       { id: 'officers', label: 'Officer Management', icon: <People /> },
       { id: 'analytics', label: 'Analytics', icon: <BarChart /> },
+      { id: 'recordhistory', label: 'Records History', icon: <History /> },
       { id: 'settings', label: 'Settings', icon: <Settings /> }
     ],
     'Crime OIC': [
@@ -45,6 +47,7 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
       { id: 'officers', label: 'Officers', icon: <People /> },
       { id: 'reports', label: 'Reports', icon: <Summarize /> },
       { id: 'analytics', label: 'Analytics', icon: <BarChart /> },
+      { id: 'recordhistory', label: 'Records History', icon: <History /> },
       { id: 'settings', label: 'Settings', icon: <Settings /> }
     ],
     'Sub Inspector': [

@@ -1,21 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
-    Description as FileText,
+    Description,
     CalendarToday,
-    Person as User,
+    Person,
     Edit,
-    RemoveRedEye as Eye,
-    BusinessCenter as Briefcase,
-    LocalOffer as Tag,
+    RemoveRedEye,
+    BusinessCenter,
+    LocalOffer,
     Phone,
-    LocationOn as MapPin,
-    FindInPage as FileSearch,
-    PersonAdd as UserPlus,
+    LocationOn,
+    FindInPage,
+    PersonAdd,
     Folder,
     Close,
     Email,
-    Badge
+    Badge,
+    Save,
+    History
 } from '@mui/icons-material';
 import { apiClient } from '../../config/apiConfig';
 import { useAuth } from '../../contexts/AuthContext';
@@ -24,8 +26,10 @@ import PageHeader from '../../components/common/PageHeader';
 import OfficerCard from '../../components/cards/OfficerCard';
 import StatusBadge from '../../components/badges/StatusBadge';
 import OutlinedButton from '../../components/buttons/OutlinedButton';
-import SidebarCard from '../../components/cards/SidebarCard';
-import { complainStatusList } from '../../../data';
+import { compCaseStatusList, complainStatusList } from '../../../data';
+import CreateCaseModal from '../../components/modals/CreateCaseModal';
+import ConfirmationPopup from '../../components/common/ConfirmationPopup';
+import StatusPopup from '../../components/common/StatusPopup';
 
 const SingleComplaintView = () => {
     const { complaintId } = useParams();
@@ -36,12 +40,8 @@ const SingleComplaintView = () => {
     const [error, setError] = useState(null);
     const [officers, setOfficers] = useState([]);
     const [showStartCaseModal, setShowStartCaseModal] = useState(false);
-    const [caseTopicInput, setCaseTopicInput] = useState('');
-    const [caseTypeInput, setCaseTypeInput] = useState('');
-    const [showCloseModal, setShowCloseModal] = useState(false);
-    const [closeCommentInput, setCloseCommentInput] = useState('');
-    const [showAssignLeaderModal, setShowAssignLeaderModal] = useState(false);
-    const [selectedCaseLeader, setSelectedCaseLeader] = useState('');
+    const [showCloseConfirmation, setShowCloseConfirmation] = useState(false);
+    const [popup, setPopup] = useState({ open: false, status: "success", message: "", description: "" });
 
     // Format date helper function
     const formatDate = (dateString) => {
@@ -54,13 +54,13 @@ const SingleComplaintView = () => {
 
     const actions = {
         startCase: {
-            icon: <Briefcase fontSize='small' />,
+            icon: <BusinessCenter fontSize='small' />,
             label: 'Start Case',
             onClick: () => setShowStartCaseModal(true),
             styles: 'bg-blue-700 text-white hover:bg-blue-800 border-blue-700 h-10'
         },
         viewrelatedcase: {
-            icon: <Eye fontSize='small' />,
+            icon: <RemoveRedEye fontSize='small' />,
             label: 'View Related Case',
             onClick: () => navigate(`/cases/${complaint.case.case_id}`),
             styles: 'bg-green-700 text-white hover:bg-green-800 border-green-700 h-10'
@@ -68,7 +68,7 @@ const SingleComplaintView = () => {
         closeComplaint: {
             icon: <Close fontSize='small' />,
             label: 'Close Complaint',
-            onClick: () => setShowCloseModal(true),
+            onClick: () => setShowCloseConfirmation(true),
             styles: 'bg-red-600 text-white hover:bg-red-700 border-red-600 h-10'
         },
     };
@@ -124,81 +124,52 @@ const SingleComplaintView = () => {
 
     const canViewRelatedCase = () => {
         return (user.role === "Crime OIC" || user.role === "OIC" || user.user_id === complaint.case?.leader_id) &&
-            complaint.case?.status !== "oicnotreviewed";
+            !compCaseStatusList.map(status => status.value).includes(complaint.case?.status);
     };
 
-    const handleStartCase = async () => {
-        if (!caseTopicInput || !caseTypeInput) return;
-
+    const handleConfirmClose = async () => {
         try {
-            const response = await apiClient.post('/cases/create', {
-                complaintId: complaintId,
-                topic: caseTopicInput,
-                caseType: caseTypeInput
-            });
-
-            if (response.data.caseId) {
-                setShowStartCaseModal(false);
-                // Navigate to the newly created case
-                navigate(`/cases/${response.data.caseId}`);
-            }
-        } catch (error) {
-            console.error("Error creating case:", error);
-            alert(error.response?.data?.message || "Failed to create case");
-        }
-    };
-
-    const handleCloseComplaint = async () => {
-        if (!closeCommentInput) return;
-
-        try {
-            const response = await apiClient.post(`/complaints/${complaintId}/close`, {
-                comment: closeCommentInput
+            const response = await apiClient.patch(`/complaints/close`, {
+                complain_id: complaintId,
+                case_id: complaint.case?.case_id
             });
 
             if (response.data.success) {
-                // Update the complaint status in the state
-                setComplaint(prev => ({
-                    ...prev,
-                    status: 'closed'
-                }));
-                setShowCloseModal(false);
-                alert("Complaint closed successfully");
+                setComplaint(prev => ({ ...prev, status: 'closed' }));
+                setPopup({
+                    open: true,
+                    status: "success",
+                    message: "Complaint Closed Successfully",
+                    description: `Complaint ${complaintId} has been marked as closed.`
+                });
+            } else {
+                setPopup({
+                    open: true,
+                    status: "error",
+                    message: "Failed to Close Complaint",
+                    description: response.data.message || "An error occurred while closing the complaint."
+                });
             }
         } catch (error) {
             console.error("Error closing complaint:", error);
-            alert(error.response?.data?.message || "Failed to close complaint");
+            setPopup({
+                open: true,
+                status: "error",
+                message: "Failed to Close Complaint",
+                description: error.response?.data?.message || "An error occurred while closing the complaint."
+            });
         }
+
+        setShowCloseConfirmation(false);
     };
 
-    const handleAssignCaseLeader = async () => {
-        if (!selectedCaseLeader || !complaint.case) return;
+    const handlePopupClose = () => {
+        setPopup({ ...popup, open: false });
+    };
 
-        try {
-            const response = await apiClient.post(`/cases/${complaint.case.case_id}/assignleader`, {
-                leaderId: selectedCaseLeader
-            });
-
-            if (response.data.success) {
-                // Update the case with the new leader
-                setComplaint(prev => ({
-                    ...prev,
-                    case: {
-                        ...prev.case,
-                        leader_id: selectedCaseLeader,
-                        leader_name: officers.find(o => o.user_id === selectedCaseLeader)?.name || 'Unknown',
-                        leader_role: officers.find(o => o.user_id === selectedCaseLeader)?.role || 'Unknown',
-                        status: 'in-progress' // Update status to in-progress
-                    }
-                }));
-
-                setShowAssignLeaderModal(false);
-                alert("Case leader assigned successfully");
-            }
-        } catch (error) {
-            console.error("Error assigning case leader:", error);
-            alert(error.response?.data?.message || "Failed to assign case leader");
-        }
+    const handleViewHistory = () => {
+        // Navigate to audit trail/history page for this complaint
+        
     };
 
     if (loading) {
@@ -242,6 +213,14 @@ const SingleComplaintView = () => {
                     { label: complaintId.substring(0, 8) }
                 ]}
                 onBack={() => navigate('/complaints')}
+                actions={[
+                    {
+                        icon: <History fontSize='small' />,
+                        label: 'History',
+                        onClick: handleViewHistory,
+                        styles: 'bg-white text-gray-700 border-purple-600'
+                    }
+                ]}
             />
 
             {/* Content section */}
@@ -280,7 +259,7 @@ const SingleComplaintView = () => {
                                     />
                                 )}
 
-                                {canCloseComplaint() && (
+                                {(canCloseComplaint() && complaint.case?.status === "oicnotreviewed") && (
                                     <OutlinedButton
                                         action={actions.closeComplaint}
                                     />
@@ -296,7 +275,7 @@ const SingleComplaintView = () => {
                         {/* Complaint Description Card */}
                         <div className="bg-white rounded-xl shadow-sm p-6">
                             <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                                <FileText className="h-5 w-5 mr-2 text-blue-600" />
+                                <Description className="h-5 w-5 mr-2 text-blue-600" />
                                 Complaint Details
                             </h2>
 
@@ -319,7 +298,7 @@ const SingleComplaintView = () => {
                                         />
                                     ) : (
                                         <div className="inline-flex items-center bg-yellow-50 px-3 py-1 rounded-md text-yellow-700 text-sm">
-                                            <UserPlus className="h-4 w-4 mr-1" />
+                                            <PersonAdd className="h-4 w-4 mr-1" />
                                             No officer assigned
                                         </div>
                                     )}
@@ -331,11 +310,21 @@ const SingleComplaintView = () => {
                         {complaint.case && (
                             <div className="bg-white rounded-xl shadow-sm p-6">
                                 <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                                    <Briefcase className="h-5 w-5 mr-2 text-blue-600" />
+                                    <BusinessCenter className="h-5 w-5 mr-2 text-blue-600" />
                                     Linked Case
                                 </h2>
 
-                                {complaint.case.status !== 'oicnotreviewed' ? (
+                                {complaint.status === 'closed' ? (
+                                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex items-center">
+                                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mr-3">
+                                            <Close className="text-gray-500" />
+                                        </div>
+                                        <div>
+                                            <p className="text-gray-700 font-medium">Complaint Closed</p>
+                                            <p className="text-gray-600 text-sm">This complaint has been closed and the related case information is no longer accessible.</p>
+                                        </div>
+                                    </div>
+                                ) : complaint.case.status !== 'oicnotreviewed' ? (
                                     <div className="border border-blue-100 rounded-lg overflow-hidden">
                                         <div className="bg-blue-50 p-4">
                                             <div className="flex justify-between items-start">
@@ -347,7 +336,7 @@ const SingleComplaintView = () => {
                                                     to={`/cases/${complaint.case.case_id}`}
                                                     className="bg-blue-100 text-blue-700 hover:bg-blue-200 p-2 rounded-lg transition-colors"
                                                 >
-                                                    <Eye className="h-5 w-5" />
+                                                    <RemoveRedEye className="h-5 w-5" />
                                                 </Link>
                                             </div>
                                         </div>
@@ -386,7 +375,7 @@ const SingleComplaintView = () => {
                                                     />
                                                 ) : (
                                                     <div className="inline-flex items-center bg-yellow-50 px-3 py-1 rounded-md text-yellow-700 text-sm">
-                                                        <UserPlus className="h-4 w-4 mr-1" />
+                                                        <PersonAdd className="h-4 w-4 mr-1" />
                                                         No leader assigned
                                                     </div>
                                                 )}
@@ -396,7 +385,7 @@ const SingleComplaintView = () => {
                                 ) : (
                                     <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-100 flex items-center">
                                         <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center mr-3">
-                                            <Eye className="text-yellow-700" />
+                                            <RemoveRedEye className="text-yellow-700" />
                                         </div>
                                         <div>
                                             <p className="text-yellow-800 font-medium">Case Review Required</p>
@@ -410,7 +399,7 @@ const SingleComplaintView = () => {
                         {/* Evidence Card */}
                         <div className="bg-white rounded-xl shadow-sm p-6">
                             <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                                <Tag className="h-5 w-5 mr-2 text-blue-600" />
+                                <LocalOffer className="h-5 w-5 mr-2 text-blue-600" />
                                 Evidence
                             </h2>
 
@@ -419,7 +408,7 @@ const SingleComplaintView = () => {
                                     <div className="flex justify-between">
                                         <div className="flex items-start">
                                             <div className="bg-indigo-100 p-2 rounded-lg mr-3">
-                                                <FileSearch className="text-indigo-700" />
+                                                <FindInPage className="text-indigo-700" />
                                             </div>
                                             <div>
                                                 <h4 className="font-medium text-gray-900">{complaint.firstEvidence.type}</h4>
@@ -434,7 +423,7 @@ const SingleComplaintView = () => {
                             ) : (
                                 <div className="bg-gray-50 p-4 rounded-lg text-gray-500 text-sm flex items-center">
                                     <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mr-3">
-                                        <FileSearch className="text-gray-500 h-4 w-4" />
+                                        <FindInPage className="text-gray-500 h-4 w-4" />
                                     </div>
                                     <p>No evidence items recorded for this complaint.</p>
                                 </div>
@@ -448,7 +437,7 @@ const SingleComplaintView = () => {
                         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
                             <div className="bg-gradient-to-r from-gray-50 to-blue-50 px-6 py-4 border-b border-gray-100">
                                 <h2 className="font-semibold text-gray-800 flex items-center">
-                                    <User className="h-5 w-5 mr-2 text-blue-600" />
+                                    <Person className="h-5 w-5 mr-2 text-blue-600" />
                                     Complainant Details
                                 </h2>
                             </div>
@@ -458,7 +447,7 @@ const SingleComplaintView = () => {
                                     <div className="flex flex-col space-y-4">
                                         <div className="flex items-center">
                                             <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-                                                <User className="text-blue-700" />
+                                                <Person className="text-blue-700" />
                                             </div>
                                             <div>
                                                 <h3 className="font-medium text-gray-900">{complaint.complainer.name}</h3>
@@ -482,7 +471,7 @@ const SingleComplaintView = () => {
                                                 </div>
 
                                                 <div className="flex items-start">
-                                                    <MapPin className="h-4 w-4 text-gray-400 mr-2 mt-0.5" />
+                                                    <LocationOn className="h-4 w-4 text-gray-400 mr-2 mt-0.5" />
                                                     <span className="text-sm">{complaint.complainer.address || "N/A"}</span>
                                                 </div>
 
@@ -497,7 +486,7 @@ const SingleComplaintView = () => {
                             ) : (
                                 <div className="p-6 text-center text-gray-500">
                                     <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
-                                        <User className="text-gray-400" />
+                                        <Person className="text-gray-400" />
                                     </div>
                                     <p className="text-sm">No complainant details available</p>
                                 </div>
@@ -508,11 +497,34 @@ const SingleComplaintView = () => {
             </div>
 
             {/* Modals */}
-            {/* These would remain the same as before */}
-            {/* Assign Officer Modal, Start Case Modal, Close Complaint Modal, Assign Leader Modal */}
+            <CreateCaseModal
+                open={showStartCaseModal}
+                onClose={() => setShowStartCaseModal(false)}
+                complaintId={complaintId}
+                caseId={complaint.case.case_id}
+            />
 
-            {/* For brevity, I'm skipping the modal code since it would be the same, 
-                but you could also modernize those designs to match the new UI */}
+            {/* Close Confirmation Popup */}
+            <ConfirmationPopup
+                open={showCloseConfirmation}
+                title="Close Complaint"
+                message="Are you sure you want to close this complaint? This action will mark the complaint as resolved and may affect related cases."
+                confirmLabel="Yes, Close"
+                cancelLabel="Cancel"
+                variant="danger"
+                onConfirm={handleConfirmClose}
+                onCancel={() => setShowCloseConfirmation(false)}
+            />
+
+            {/* Status Popup */}
+            <StatusPopup
+                open={popup.open}
+                status={popup.status}
+                message={popup.message}
+                description={popup.description}
+                onClose={handlePopupClose}
+                okLabel={popup.status === "success" ? "OK" : "Close"}
+            />
         </div>
     );
 };

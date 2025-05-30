@@ -49,6 +49,8 @@ function App() {
           <Route path="crimeoffences" element={<CrimeOffencesPage />} />
           <Route path="officers" element={<AllOfficersPage />} />
           <Route path="officers/:officerId" element={<OfficerProfile />} />
+          <Route path="recordhistory" element={<div>Record History</div>} />
+          <Route path="recordhistory/:table/:id" element={<div>Record History table and id</div>} />
           <Route path="test" element={<Test />} />
         </Route>
       </Route>

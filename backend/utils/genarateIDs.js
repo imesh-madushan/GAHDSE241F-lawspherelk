@@ -39,6 +39,22 @@ const generateUniqueId = async (table) => {
     return newId;
 };
 
+const generateBatchId = async () => {
+    const prefix = "B";
+    let unique = false;
+    let maxAttempts = 10;
+    let newId = "";
+    while (!unique && maxAttempts > 0) {
+        newId = randomId(prefix);
+        const query = `SELECT 1 FROM \`audit_log\` WHERE \`batch_id\` = ? LIMIT 1`;
+        const [rows] = await db.query(query, [newId]);
+        if (rows.length === 0) unique = true;
+        maxAttempts--;
+    }
+    return newId;
+}
+
 module.exports = {
-    generateUniqueId
+    generateUniqueId,
+    generateBatchId
 };

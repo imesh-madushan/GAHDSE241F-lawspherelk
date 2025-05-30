@@ -7,7 +7,7 @@ import OutlinedButton from '../../components/buttons/OutlinedButton';
 import Spinner from '../../components/Spinner';
 import PageHeader from '../../components/common/PageHeader';
 import SearchInterface from '../../components/searchsection/SearchInterface';
-import CreateComplaintModal from '../../components/complaints/CreateComplaintModal';
+import CreateComplaintModal from '../../components/modals/CreateComplaintModal';
 
 const ComplaintsPage = () => {
     const [complaints, setComplaints] = useState([]);

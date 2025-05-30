@@ -1,5 +1,6 @@
 const complainService = require("../services/complainService");
 const { getUserFromCookies } = require('../middlewares/authMiddleware');
+const { stat } = require("fs");
 
 // get all complaints
 exports.getAllComplaints = async (req, res) => {
@@ -184,5 +185,59 @@ exports.createComplaint = async (req, res) => {
         }
         
         res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+exports.closeComplaint = async (req, res) => {
+    try {
+        // Auth check
+        const token = req.cookies.authtoken;
+        if (!token) {
+            return res.status(401).json({ message: "No token provided" });
+        }
+        
+        const user = await getUserFromCookies(token);
+        if (!user) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        if (user.role !== 'Crime OIC' && user.role !== 'OIC') {
+            return res.status(403).json({ message: "Forbidden: Only OIC or Crime OIC can close complaints" });
+        }
+        const { complain_id } = req.body;
+        const { case_id } = req.body;
+
+        if (!complain_id) {
+            return res.status(400).json({ message: "Complaint ID is required" });
+        }
+
+        // Check if complaint exists and is not already closed
+        const complaint = await complainService.getComplaintById(complain_id);
+        if (!complaint) {
+            return res.status(404).json({ message: "Complaint not found" });
+        }
+
+        if (complaint.status === 'closed') {
+            return res.status(400).json({ message: "Complaint is already closed" });
+        }
+
+        // Close the complaint (you would implement this in complainService)
+        const result = await complainService.closeComplaint(complain_id, case_id, user.user_id);
+
+        if (!result) {
+            return res.status(500).json({ message: "Failed to close complaint" });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Complaint closed successfully"
+        });
+
+    } catch (error) {
+        console.error("Error closing complaint:", error);
+        res.status(500).json({ 
+            success: false,
+            message: "Internal server error" 
+        });
     }
 };
