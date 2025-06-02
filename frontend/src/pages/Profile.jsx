@@ -44,9 +44,18 @@ const Profile = () => {
             {/* Contact Info */}
             <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
               <h3 className="font-semibold mb-3">Contact Information</h3>
-              <div className="flex items-center gap-2 text-gray-700 mb-2"><span className="material-icons">email</span>{user.email}</div>
-              <div className="flex items-center gap-2 text-gray-700 mb-2"><span className="material-icons">phone</span>{user.phone}</div>
-              <div className="flex items-center gap-2 text-gray-700"><span className="material-icons">location_on</span>{user.address}</div>
+              <div className="flex items-center gap-3 text-gray-700 mb-2">
+                <img src="/icons/mail.svg" alt="email" className="w-6 h-6" />
+                {user.email}
+              </div>
+              <div className="flex items-center gap-3 text-gray-700 mb-2">
+                <img src="/icons/phone.svg" alt="phone" className="w-6 h-6" />
+                {user.phone}
+              </div>
+              <div className="flex items-center gap-3 text-gray-700">
+                <img src="/icons/location.svg" alt="location" className="w-6 h-6" />
+                {user.address}
+              </div>
             </div>
             {/* Security Info */}
             <div className="bg-gray-50 rounded-xl p-5 border border-gray-100 flex flex-col justify-between">
