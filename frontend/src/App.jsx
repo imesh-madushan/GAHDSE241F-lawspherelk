@@ -11,6 +11,7 @@ import ComplaintsPage from './pages/complaints/ComplaintsPage';
 import CriminalRecord from './pages/criminalrecord/CriminalRecord';
 import CriminalsPage from './pages/criminalrecord/CriminalsPage';
 import CrimeOffencesPage from './pages/crimeoffences/CrimeOffencesPage';
+import SingleOffenceView from './pages/crimeoffences/SingleOffenceView';
 import Test from './pages/Test';
 import OfficerProfile from './pages/officers/OfficerProfile';
 import AllOfficersPage from './pages/officers/AllOfficersPage';
@@ -47,6 +48,7 @@ function App() {
           <Route path="criminals" element={<CriminalsPage />} />
           <Route path="criminals/:criminalId" element={<CriminalRecord />} />
           <Route path="crimeoffences" element={<CrimeOffencesPage />} />
+          <Route path="crimeoffences/:offenceId" element={<SingleOffenceView />} />
           <Route path="officers" element={<AllOfficersPage />} />
           <Route path="officers/:officerId" element={<OfficerProfile />} />
           <Route path="recordhistory" element={<div>Record History</div>} />

@@ -115,7 +115,7 @@ exports.toggleOfficerAccount = async (req, res) => {
             return res.status(400).json({ message: "You cannot toggle your own account status" });
         }
         
-        const result = await officerService.toggleOfficerAccount(officerId);
+        const result = await officerService.toggleOfficerAccount(officerId, user.user_id); 
         
         if (!result) {
             return res.status(404).json({ message: "Officer not found" });
@@ -125,5 +125,67 @@ exports.toggleOfficerAccount = async (req, res) => {
     } catch (error) {
         console.error("Error in toggleOfficerAccount:", error);
         res.status(500).json({ message: "Failed to toggle account status", error: error.message });
+    }
+};
+
+exports.updateOfficer = async (req, res) => {
+    const token = req.cookies.authtoken;
+    if (!token) {
+        return res.status(401).json({ message: "No token provided" });
+    }
+
+    const user = await getUserFromCookies(token);
+    if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // Only OIC can update officer details
+    if (user.role !== "OIC") {
+        return res.status(403).json({ message: "Forbidden: Only OIC can update officer details" });
+    }
+
+    // Accept all updatable officer fields
+    const {
+        officerId,
+        name,
+        nic,
+        phone,
+        email,
+        address,
+        role,
+        profile_pic
+    } = req.body;
+
+    if (!officerId) {
+        return res.status(400).json({ message: "Officer ID is required" });
+    }
+
+    // Only send changed fields to service
+    const updateFields = {};
+    if (name !== undefined) updateFields.name = name;
+    if (nic !== undefined) updateFields.nic = nic;
+    if (phone !== undefined) updateFields.phone = phone;
+    if (email !== undefined) updateFields.email = email;
+    if (address !== undefined) updateFields.address = address;
+    if (role !== undefined) updateFields.role = role;
+    if (profile_pic !== undefined) updateFields.profile_pic = profile_pic;
+
+    if (Object.keys(updateFields).length === 0) {
+        return res.status(400).json({ message: "No changes detected" });
+    }
+
+    try {
+        const updatedOfficer = await officerService.updateOfficer(
+            officerId,
+            updateFields,
+            user.user_id // pass OIC user id for audit
+        );
+        if (!updatedOfficer) {
+            return res.status(404).json({ message: "Officer not found" });
+        }
+        res.status(200).json({ success: true, message: "Officer updated successfully", officer: updatedOfficer });
+    } catch (error) {
+        console.error("Error updating officer:", error);
+        res.status(500).json({ success: false, message: "Internal server error" });
     }
 };

@@ -1,4 +1,6 @@
-const db = require('../config/db');
+const db = require("../config/db");
+const { generateUniqueId, generateBatchId } = require("../utils/genarateIDs");
+const { logAuditTrail } = require("./commonService");
 
 // Helper: Only count Convicted offences for total_crimes and total_risk
 const CRIME_JOIN = `
@@ -70,6 +72,12 @@ exports.searchCriminals = async (filters, userRole, userId) => {
             params.push(`%${filters.fingerprint}%`);
         }
 
+        // criminal_id filter (exact match)
+        if (filters.id) {
+            whereClauses.push(`c.criminal_id = ?`);
+            params.push(filters.id);
+        }
+
         // Role-based filtering for Sub Inspector
         if (userRole === "Sub Inspector") {
             whereClauses.push(`EXISTS (
@@ -113,7 +121,7 @@ exports.searchCriminals = async (filters, userRole, userId) => {
     }
 };
 
-exports.getCriminalById = async (id, userRole, userId) => {
+exports.getCriminalById = async (criminal_id, userRole, userId) => {
     try {
         // Get main criminal data
         let query = `
@@ -126,7 +134,7 @@ exports.getCriminalById = async (id, userRole, userId) => {
             WHERE c.criminal_id = ?
             GROUP BY c.criminal_id
         `;
-        const params = [id];
+        const params = [criminal_id];
 
         // Add role-based filtering
         if (userRole === "Sub Inspector") {
@@ -164,7 +172,7 @@ exports.getCriminalById = async (id, userRole, userId) => {
             JOIN Cases c ON o.case_id = c.case_id
             LEFT JOIN CrimeOffence_Victim v ON o.offence_id = v.offence_id
             WHERE o.criminal_id = ?
-        `, [id]);
+        `, [criminal_id]);
 
         // Group victims by offence
         const offencesWithVictims = offences.reduce((acc, curr) => {
@@ -216,7 +224,7 @@ exports.getCriminalById = async (id, userRole, userId) => {
             JOIN CrimeOffence o ON ce.offence_id = o.offence_id
             LEFT JOIN Users u ON e.officer_id = u.user_id
             WHERE o.criminal_id = ?
-        `, [id]);
+        `, [criminal_id]);
 
         return {
             ...criminalData,
@@ -229,88 +237,124 @@ exports.getCriminalById = async (id, userRole, userId) => {
     }
 };
 
-exports.createCriminal = async (criminalData, userRole, userId) => {
+exports.createCriminal = async (criminalData, currentUser) => {
+    const connection = await db.getConnection();
     try {
-        const {
-            name,
-            nic,
-            phone,
-            address,
-            dob,
-            fingerprint_hash,
-            photo
-        } = criminalData;
+        await connection.beginTransaction();
 
-        const query = `
-            INSERT INTO CriminalRecord (
-                criminal_id,
+        // Generate batch ID for this operation to track all related changes
+        const batchId = await generateBatchId();
+        const criminalId = await generateUniqueId("criminalrecord");
+
+        const { name, nic, phone, address, dob, fingerprint_hash, photo } = criminalData;
+
+        // Insert criminal record
+        await connection.query(
+            `INSERT INTO criminalrecord (criminal_id, name, nic, phone, address, dob${fingerprint_hash ? ', fingerprint_hash' : ''}${photo ? ', photo' : ''})
+             VALUES (?, ?, ?, ?, ?, ?${fingerprint_hash ? ', ?' : ''}${photo ? ', ?' : ''})`,
+            [
+                criminalId,
                 name,
                 nic,
                 phone,
                 address,
                 dob,
-                fingerprint_hash,
-                photo,
-                total_crimes,
-                total_risk
-            ) VALUES (
-                UUID(),
-                ?, ?, ?, ?, ?, ?, ?,
-                0,
-                0.00
-            )
-            RETURNING *
-        `;
-        const values = [name, nic, phone, address, dob, fingerprint_hash, photo];
-        const [result] = await db.query(query, values);
-        return result[0];
-    } catch (error) {
-        console.error('Error in createCriminal service:', error);
-        throw error;
+                ...(fingerprint_hash ? [fingerprint_hash] : []),
+                ...(photo ? [photo] : [])
+            ]
+        );
+
+        // Log all the insertions in audit trail
+        const auditChanges = [
+            { tableName: 'criminalrecord', recordId: criminalId, fieldName: 'name', value: name, actionType: 'INSERT' },
+            { tableName: 'criminalrecord', recordId: criminalId, fieldName: 'nic', value: nic, actionType: 'INSERT' },
+            { tableName: 'criminalrecord', recordId: criminalId, fieldName: 'phone', value: phone, actionType: 'INSERT' },
+            { tableName: 'criminalrecord', recordId: criminalId, fieldName: 'address', value: address, actionType: 'INSERT' },
+            { tableName: 'criminalrecord', recordId: criminalId, fieldName: 'dob', value: dob, actionType: 'INSERT' }
+        ];
+        if (fingerprint_hash) {
+            auditChanges.push({ tableName: 'criminalrecord', recordId: criminalId, fieldName: 'fingerprint_hash', value: fingerprint_hash, actionType: 'INSERT' });
+        }
+        if (photo) {
+            auditChanges.push({ tableName: 'criminalrecord', recordId: criminalId, fieldName: 'photo', value: photo, actionType: 'INSERT' });
+        }
+
+        await logAuditTrail({
+            batchId,
+            changes: auditChanges,
+            changedBy: currentUser,
+            connection
+        });
+
+        await connection.commit();
+
+        // Return the created criminal
+        const [newCriminal] = await connection.query(
+            `SELECT criminal_id, name, nic, phone, address, dob, fingerprint_hash, photo 
+             FROM criminalrecord WHERE criminal_id = ?`,
+            [criminalId]
+        );
+
+        return newCriminal[0];
+
+    } catch (err) {
+        await connection.rollback();
+        throw err;
+    } finally {
+        connection.release();
     }
 };
 
-exports.updateCriminal = async (id, updateData, userRole, userId) => {
+exports.updateCriminal = async (criminal_id, updateData, userId) => {
+    const connection = await db.getConnection();
     try {
-        const {
-            name,
-            nic,
-            phone,
-            address,
-            dob,
-            fingerprint_hash,
-            photo
-        } = updateData;
-
-        const query = `
-            UPDATE CriminalRecord
-            SET 
-                name = COALESCE(?, name),
-                nic = COALESCE(?, nic),
-                phone = COALESCE(?, phone),
-                address = COALESCE(?, address),
-                dob = COALESCE(?, dob),
-                fingerprint_hash = COALESCE(?, fingerprint_hash),
-                photo = COALESCE(?, photo)
-            WHERE criminal_id = ?
-            RETURNING *
-        `;
-        const values = [name, nic, phone, address, dob, fingerprint_hash, photo, id];
-        const [result] = await db.query(query, values);
-        return result[0];
+        await connection.beginTransaction();
+        const batchId = await generateBatchId();
+        // Get current data
+        const [currentRows] = await connection.query("SELECT * FROM criminalrecord WHERE criminal_id = ?", [criminal_id]);
+        if (!currentRows || currentRows.length === 0) {
+            connection.release();
+            return null;
+        }
+        const current = currentRows[0];
+        // Only update changed fields
+        const fields = [];
+        const values = [];
+        const changes = [];
+        const updatable = ['name', 'nic', 'phone', 'address', 'dob', 'fingerprint_hash', 'photo'];
+        updatable.forEach(field => {
+            if (updateData[field] !== undefined && updateData[field] !== current[field]) {
+                fields.push(`${field} = ?`);
+                values.push(updateData[field]);
+                changes.push({
+                    tableName: 'criminalrecord',
+                    recordId: criminal_id,
+                    fieldName: field,
+                    value: updateData[field],
+                    actionType: 'UPDATE'
+                });
+            }
+        });
+        if (fields.length === 0) {
+            connection.release();
+            return current; // nothing to update
+        }
+        await connection.query(
+            `UPDATE criminalrecord SET ${fields.join(', ')} WHERE criminal_id = ?`,
+            [...values, criminal_id]
+        );
+        await logAuditTrail({
+            batchId,
+            changes,
+            changedBy: userId,
+            connection
+        });
+        await connection.commit();
+        return true;
     } catch (error) {
-        console.error('Error in updateCriminal service:', error);
+        await connection.rollback();
         throw error;
-    }
-};
-
-exports.deleteCriminal = async (id, userRole, userId) => {
-    try {
-        const query = 'DELETE FROM CriminalRecord WHERE criminal_id = ? RETURNING *';
-        const [result] = await db.query(query, [id]);
-        return result[0];
-    } catch (error) {
-        console.error('Error in deleteCriminal service:', error);
-        throw error;
+    } finally {
+        connection.release();
     }
 };

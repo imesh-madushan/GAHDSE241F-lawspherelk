@@ -11,20 +11,27 @@ import ReportsTab from '../../components/officers/tabs/ReportsTab';
 import { apiClient } from '../../config/apiConfig';
 import { useAuth } from '../../contexts/AuthContext';
 import {
-  Assignment, Gavel, Attachment, FormatListBulleted, Description, 
-  NotificationImportant, Lock, LockOpen, Phone, Mail, LocationOn, 
-  CalendarToday, AccessTime, Badge, LocalPolice, VerifiedUser
+  Assignment, Gavel, Attachment, FormatListBulleted, Description,
+  NotificationImportant, Lock, LockOpen, Phone, Mail, LocationOn,
+  CalendarToday, AccessTime, Badge, LocalPolice, VerifiedUser,
+  History
 } from '@mui/icons-material';
+import StatusPopup from '../../components/common/StatusPopup';
+import { Save, Edit, Cancel } from '@mui/icons-material';
 
 const OfficerProfile = () => {
   const { user } = useAuth();
   const { officerId } = useParams();
-  const navigate = useNavigate();  
+  const navigate = useNavigate();
 
   const [officerData, setOfficerData] = useState(null);
   const [activeTab, setActiveTab] = useState('cases');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedOfficer, setEditedOfficer] = useState({});
+  const [touched, setTouched] = useState({});
+  const [popup, setPopup] = useState({ open: false, status: "success", message: "", description: "" });
   const canToggleAccount = user?.role === "OIC";
 
   // navigate to profile page if officerId is equal to current user id
@@ -44,10 +51,10 @@ const OfficerProfile = () => {
       }
     };
 
-    if (officerId) {
+    if (officerId && !isEditing) {
       fetchOfficer();
     }
-  }, [officerId]);
+  }, [officerId, isEditing]);
 
   // Format date to readable format
   const formatDate = (dateString) => {
@@ -89,6 +96,99 @@ const OfficerProfile = () => {
       console.error("Error toggling account status:", err);
     }
   };
+
+  // Edit handlers (OIC only)
+  const handleEditToggle = () => {
+    if (isEditing) {
+      setEditedOfficer({});
+      setIsEditing(false);
+    } else {
+      setEditedOfficer({
+        name: officerData.name,
+        nic: officerData.nic,
+        phone: officerData.phone,
+        email: officerData.email,
+        address: officerData.address,
+        role: officerData.role,
+        profile_pic: officerData.profile_pic
+      });
+      setIsEditing(true);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditedOfficer({});
+    setIsEditing(false);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditedOfficer(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    setTouched(t => ({ ...t, [name]: true }));
+  };
+
+  // Only send changed fields
+  const getChangedFields = () => {
+    const changed = {};
+    for (const key of Object.keys(editedOfficer)) {
+      if (editedOfficer[key] !== officerData[key]) {
+        changed[key] = editedOfficer[key];
+      }
+    }
+    return changed;
+  };
+
+  const handleSaveChanges = async () => {
+    const changedFields = getChangedFields();
+    if (Object.keys(changedFields).length === 0) {
+      setPopup({
+        open: true,
+        status: "info",
+        message: "No changes detected.",
+        description: ""
+      });
+      setIsEditing(false);
+      return;
+    }
+    try {
+      const response = await apiClient.put(`/officers/update`, {
+        officerId: officerData.user_id,
+        ...changedFields
+      });
+      if (response.data && response.data.success) {
+        setOfficerData(prev => ({
+          ...prev,
+          ...changedFields
+        }));
+        setPopup({
+          open: true,
+          status: "success",
+          message: "Officer updated successfully",
+          description: ""
+        });
+        setIsEditing(false);
+      } else {
+        setPopup({
+          open: true,
+          status: "error",
+          message: "Failed to update officer",
+          description: response.data?.message || ""
+        });
+      }
+    } catch (err) {
+      setPopup({
+        open: true,
+        status: "error",
+        message: "Failed to update officer",
+        description: err.response?.data?.message || ""
+      });
+    }
+  };
+
+  const handlePopupClose = () => setPopup({ ...popup, open: false });
 
   const tabs = [
     { id: 'cases', icon: <Gavel fontSize="small" />, label: 'Cases', count: officerData?.cases?.length },
@@ -166,14 +266,40 @@ const OfficerProfile = () => {
           { label: officerData.name }
         ]}
         onBack={() => navigate('/officers')}
-        actions={canToggleAccount ? [{
-          label: officerData.account_locked ? 'Activate Account' : 'Disable Account',
-          icon: officerData.account_locked ? <LockOpen fontSize='small' /> : <Lock fontSize='small' />,
-          onClick: handleToggleAccount,
-          styles: officerData.account_locked
-            ? 'border-green-500 text-green-700 hover:bg-green-50 hover:text-green-700'
-            : 'border-red-500 text-red-700 hover:bg-red-50 hover:text-red-700'
-        }] : []}
+        actions={[
+          ...(canToggleAccount ? [{
+            label: officerData.account_locked ? 'Activate Account' : 'Disable Account',
+            icon: officerData.account_locked ? <LockOpen fontSize='small' /> : <Lock fontSize='small' />,
+            onClick: handleToggleAccount,
+            styles: officerData.account_locked
+              ? 'border-green-500 text-green-700 hover:bg-green-50 hover:text-green-700'
+              : 'border-red-500 text-red-700 hover:bg-red-50 hover:text-red-700'
+          }] : []),
+          ...(user?.role === "OIC" ? [
+            isEditing ? {
+              icon: <Cancel fontSize='small' />,
+              label: 'Cancel',
+              onClick: handleCancelEdit,
+              styles: 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
+            } : {
+              icon: <Edit fontSize='small' />,
+              label: 'Edit Officer',
+              onClick: handleEditToggle,
+              styles: 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
+            },
+            isEditing ? {
+              icon: <Save fontSize='small' />,
+              label: 'Save Changes',
+              onClick: handleSaveChanges,
+              styles: 'bg-green-600 text-white border-green-600 hover:bg-green-700'
+            } : null
+          ].filter(Boolean) : []),
+          {
+            icon: <History fontSize='small' />,
+            onClick: () => navigate(`/recordhistory/user/${officerId}`),
+            styles: 'bg-white rounded-full text-gray-700 border-purple-600'
+          }
+        ]}
       />
 
       <div className="container mx-auto px-4 py-6">
@@ -185,8 +311,8 @@ const OfficerProfile = () => {
             <div className="flex-shrink-0 mb-4 md:mb-0 md:mr-8">
               <div className="relative">
                 <div className="w-36 h-36 rounded-full border-4 border-white shadow-xl overflow-hidden bg-white">
-                  <img 
-                    src={officerData.profile_pic || "/default-profile.png"} 
+                  <img
+                    src={officerData.profile_pic || "/default-profile.png"}
                     alt={officerData.name}
                     className="w-full h-full object-cover"
                     onError={(e) => { e.target.src = "/default-profile.png" }}
@@ -197,7 +323,7 @@ const OfficerProfile = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* Officer Info */}
             <div className="flex-1 text-center md:text-left">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between">
@@ -206,18 +332,17 @@ const OfficerProfile = () => {
                   <div className="mt-1 flex items-center justify-center md:justify-start">
                     <Badge className="mr-1.5 h-5 w-5" />
                     <span className="font-medium">{officerData.role}</span>
-                    
+
                     {/* Account Status Badge */}
-                    <span className={`ml-3 px-2 py-0.5 text-xs font-medium rounded-full ${
-                      officerData.account_locked 
-                        ? "bg-red-100 text-red-800 border border-red-300" 
-                        : "bg-green-100 text-green-800 border border-green-300"
-                    }`}>
+                    <span className={`ml-3 px-2 py-0.5 text-xs font-medium rounded-full ${officerData.account_locked
+                      ? "bg-red-100 text-red-800 border border-red-300"
+                      : "bg-green-100 text-green-800 border border-green-300"
+                      }`}>
                       {officerData.account_locked ? "Inactive" : "Active"}
                     </span>
                   </div>
                 </div>
-                
+
                 {/* Last Login */}
                 <div className="mt-3 md:mt-0 text-sm opacity-90">
                   <div className="flex items-center justify-center md:justify-end">
@@ -228,7 +353,7 @@ const OfficerProfile = () => {
                   </div>
                 </div>
               </div>
-              
+
               {/* Quick Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
                 <div className="bg-white bg-opacity-30 backdrop-blur-sm rounded-lg px-4 py-3 text-center shadow-md">
@@ -251,7 +376,7 @@ const OfficerProfile = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Contact & Service Info Cards */}
         <div className="bg-white shadow-md p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
           {/* Contact Info */}
@@ -265,26 +390,59 @@ const OfficerProfile = () => {
                 <Mail className="h-5 w-5 mr-3 text-gray-500 mt-0.5" />
                 <div>
                   <p className="text-sm text-gray-500">Email</p>
-                  <p className="font-medium">{officerData.email}</p>
+                  {isEditing ? (
+                    <input
+                      type="email"
+                      name="email"
+                      value={editedOfficer.email || ""}
+                      onChange={handleInputChange}
+                      className="font-medium bg-blue-50 border rounded px-2 py-1"
+                      placeholder="Email"
+                    />
+                  ) : (
+                    <p className="font-medium">{officerData.email}</p>
+                  )}
                 </div>
               </li>
               <li className="flex items-start">
                 <Phone className="h-5 w-5 mr-3 text-gray-500 mt-0.5" />
                 <div>
                   <p className="text-sm text-gray-500">Phone</p>
-                  <p className="font-medium">{officerData.phone}</p>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      name="phone"
+                      value={editedOfficer.phone || ""}
+                      onChange={handleInputChange}
+                      className="font-medium bg-blue-50 border rounded px-2 py-1"
+                      placeholder="Phone"
+                    />
+                  ) : (
+                    <p className="font-medium">{officerData.phone}</p>
+                  )}
                 </div>
               </li>
               <li className="flex items-start">
                 <LocationOn className="h-5 w-5 mr-3 text-gray-500 mt-0.5" />
                 <div>
                   <p className="text-sm text-gray-500">Address</p>
-                  <p className="font-medium">{officerData.address}</p>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      name="address"
+                      value={editedOfficer.address || ""}
+                      onChange={handleInputChange}
+                      className="font-medium bg-blue-50 border rounded px-2 py-1"
+                      placeholder="Address"
+                    />
+                  ) : (
+                    <p className="font-medium">{officerData.address}</p>
+                  )}
                 </div>
               </li>
             </ul>
           </div>
-          
+
           {/* Service Info */}
           <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
@@ -310,16 +468,31 @@ const OfficerProfile = () => {
                 <Badge className="h-5 w-5 mr-3 text-gray-500 mt-0.5" />
                 <div>
                   <p className="text-sm text-gray-500">Department</p>
-                  <p className="font-medium">
-                    {officerData.role === 'Crime OIC' ? 'Crime Division' :
-                      officerData.role === 'OIC' ? 'Administration' :
-                        officerData.role === 'Forensic Officer' ? 'Forensic Department' : 'Field Operations'}
-                  </p>
+                  {isEditing ? (
+                    <select
+                      name="role"
+                      value={editedOfficer.role || officerData.role}
+                      onChange={handleInputChange}
+                      className="font-medium bg-blue-50 border rounded px-2 py-1"
+                    >
+                      <option value="OIC">OIC</option>
+                      <option value="Crime OIC">Crime OIC</option>
+                      <option value="Forensic Officer">Forensic Officer</option>
+                      <option value="Sub Inspector">Sub Inspector</option>
+                      <option value="Sergeant">Sergeant</option>
+                    </select>
+                  ) : (
+                    <p className="font-medium">
+                      {officerData.role === 'Crime OIC' ? 'Crime Division' :
+                        officerData.role === 'OIC' ? 'Administration' :
+                          officerData.role === 'Forensic Officer' ? 'Forensic Department' : 'Field Operations'}
+                    </p>
+                  )}
                 </div>
               </li>
             </ul>
           </div>
-          
+
           {/* Cases Summary */}
           <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
@@ -342,15 +515,15 @@ const OfficerProfile = () => {
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Recent Activity:</span>
                 <span className="font-semibold">
-                  {officerData.cases?.length > 0 
-                    ? formatDate(officerData.cases[0].started_dt) 
+                  {officerData.cases?.length > 0
+                    ? formatDate(officerData.cases[0].started_dt)
                     : "No recent activity"}
                 </span>
               </div>
             </div>
           </div>
         </div>
-        
+
         {/* Tabs and content */}
         <div className="bg-white rounded-xl shadow-md">
           {/* Tabs Navigation */}
@@ -359,13 +532,22 @@ const OfficerProfile = () => {
             activeTab={activeTab}
             setActiveTab={setActiveTab}
           />
-          
+
           {/* Tab Content */}
           <div className="p-6">
             {renderTabContent()}
           </div>
         </div>
       </div>
+      {/* Status Popup */}
+      <StatusPopup
+        open={popup.open}
+        status={popup.status}
+        message={popup.message}
+        description={popup.description}
+        onClose={handlePopupClose}
+        okLabel={popup.status === "success" ? "OK" : "Close"}
+      />
     </div>
   );
 };

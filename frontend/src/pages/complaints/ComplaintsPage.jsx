@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../../config/apiConfig';
 import ComplaintCard from '../../components/ComplaintCard';
 import { Add, FilterList, NewReleases, Visibility } from '@mui/icons-material';
-import OutlinedButton from '../../components/buttons/OutlinedButton';
 import Spinner from '../../components/Spinner';
 import PageHeader from '../../components/common/PageHeader';
 import SearchInterface from '../../components/searchsection/SearchInterface';

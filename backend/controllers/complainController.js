@@ -201,7 +201,7 @@ exports.closeComplaint = async (req, res) => {
             return res.status(401).json({ message: "Unauthorized" });
         }
 
-        if (user.role !== 'Crime OIC' && user.role !== 'OIC') {
+        if (user.role !== 'Crime OIC' && user.role !== 'OIC' && user.user_id) {
             return res.status(403).json({ message: "Forbidden: Only OIC or Crime OIC can close complaints" });
         }
         const { complain_id } = req.body;
@@ -238,6 +238,71 @@ exports.closeComplaint = async (req, res) => {
         res.status(500).json({ 
             success: false,
             message: "Internal server error" 
+        });
+    }
+};
+
+exports.updateComplaint = async (req, res) => {
+    try {
+        // Auth check
+        const token = req.cookies.authtoken;
+        if (!token) {
+            return res.status(401).json({ message: "No token provided" });
+        }
+
+        const user = await getUserFromCookies(token);
+        if (!user) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        if (user.role !== 'Crime OIC' && user.role !== 'OIC'){
+            return res.status(403).json({ message: "Forbidden: Only OIC or Crime OIC can update complaints" });
+        }
+
+        const { complain_id } = req.body;
+        const { description, status, complainer } = req.body;
+
+        // At least one field must be present to update
+        if (
+            description === undefined &&
+            status === undefined &&
+            (complainer === undefined || Object.keys(complainer).length === 0)
+        ) {
+            return res.status(400).json({ message: "No changes detected" });
+        }
+
+        // If complainer is present, validate at least NIC and name if those fields are being updated
+        if (complainer) {
+            if (complainer.nic === undefined || !complainer.nic) {
+                return res.status(400).json({ message: "Complainer NIC is required for update" });
+            }
+            if (complainer.name !== undefined && !complainer.name) {
+                return res.status(400).json({ message: "Complainer name cannot be empty" });
+            }
+        }
+
+        // Optionally: validate status if provided
+        if (status && !['new', 'viewed', 'closed'].includes(status)) {
+            return res.status(400).json({ message: "Invalid complaint status" });
+        }
+
+        // Update the complaint
+        const result = await complainService.updateComplaint(complain_id, { description, status, complainer }, user.user_id);
+
+        if (!result) {
+            return res.status(500).json({ message: "Failed to update complaint" });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Complaint updated successfully"
+        });
+
+    } catch (error) {
+        console.error("Error updating complaint:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error"
         });
     }
 };

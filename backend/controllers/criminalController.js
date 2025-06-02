@@ -41,6 +41,7 @@ exports.searchCriminals = async (req, res) => {
         const filters = { 
            name: req.query.name || "", 
            nic: req.query.nic || "", 
+           id: req.query.criminal_id || "",
            fingerprint: req.query.fingerprint || "" 
         };
 
@@ -100,23 +101,42 @@ exports.getCriminalById = async (req, res) => {
 
 // Create new criminal record
 exports.createCriminal = async (req, res) => {
-    const criminalData = req.body;
-
-    const token = req.cookies.authtoken;
-    if (!token) {
-        return res.status(401).json({ message: "No token provided" });
-    }
-
-    const user = await getUserFromCookies(token);
-    if (!user) {
-        return res.status(401).json({ message: "Unauthorized" });
-    }
-
     try {
-        const newCriminal = await criminalService.createCriminal(criminalData, user.role, user.id);
-        res.status(201).json({ message: "Criminal record created successfully", criminal: newCriminal });
-    }
-    catch (error) {
+        const token = req.cookies.authtoken;
+        if (!token) {
+            return res.status(401).json({ message: "No token provided" });
+        }
+        const user = await getUserFromCookies(token);
+        if (!user) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        // Only OIC, Crime OIC, Inspector, Sub Inspector can create criminal records
+        if (
+            user.role !== 'OIC' &&
+            user.role !== 'Crime OIC' &&
+            user.role !== 'Inspector' &&
+            user.role !== 'Sub Inspector'
+        ) {
+            return res.status(403).json({ message: "Forbidden: You do not have permission to create a criminal record" });
+        }
+
+        const criminalData = req.body;
+
+        if (!criminalData.name || !criminalData.nic || !criminalData.dob) {
+            return res.status(400).json({ message: "Name, NIC, and Date of Birth are required" });
+        }
+
+        // Additional validation can be added here
+
+        try {
+            const newCriminal = await criminalService.createCriminal(criminalData, user.user_id);
+            res.status(201).json({ message: "Criminal record created successfully", criminal: newCriminal });
+        }
+        catch (error) {
+            res.status(500).json({ message: error.sqlMessage });
+        }
+    } catch (error) {
         console.error("Error creating criminal record:", error);
         res.status(500).json({ message: "Internal server error" });
     }
@@ -124,9 +144,6 @@ exports.createCriminal = async (req, res) => {
 
 // Update criminal record
 exports.updateCriminal = async (req, res) => {
-    const { id } = req.params;
-    const updateData = req.body;
-
     const token = req.cookies.authtoken;
     if (!token) {
         return res.status(401).json({ message: "No token provided" });
@@ -137,46 +154,40 @@ exports.updateCriminal = async (req, res) => {
         return res.status(401).json({ message: "Unauthorized" });
     }
 
-    try {
-        const updatedCriminal = await criminalService.updateCriminal(id, updateData, user.role, user.id);
+    const { criminal_id, name, nic, dob } = req.body;
+    if (!criminal_id) {
+        return res.status(400).json({ message: "Criminal ID is required" });
+    }
+    if (name !== undefined && (!name || !name.trim())) {
+        return res.status(400).json({ message: "Name cannot be empty" });
+    }
+    if (nic !== undefined && (!nic || !nic.trim())) {
+        return res.status(400).json({ message: "NIC cannot be empty" });
+    }
+    if (dob !== undefined && (!dob || !dob.trim())) {
+        return res.status(400).json({ message: "Date of Birth cannot be empty" });
+    }
 
-        if (!updatedCriminal) {
-            return res.status(404).json({ message: "Criminal not found" });
+    // Only allow update if at least one field is present
+    const updatableFields = ['name', 'nic', 'phone', 'address', 'dob', 'fingerprint_hash', 'photo'];
+    const hasUpdate = updatableFields.some(f => req.body[f] !== undefined);
+    if (!hasUpdate) {
+        return res.status(400).json({ message: "No changes detected" });
+    }
+
+    const updateData = req.body;
+
+    try {
+        const result = await criminalService.updateCriminal(criminal_id, updateData, user.user_id);
+
+        if (!result) {
+            return res.status(404).json({ message: "Criminal Data update failed" });
         }
 
-        res.status(200).json({ message: "Criminal record updated successfully", criminal: updatedCriminal });
+        res.status(200).json({ message: "Criminal record updated successfully", success: result });
     }
     catch (error) {
         console.error("Error updating criminal record:", error);
         res.status(500).json({ message: "Internal server error" });
     }
 };
-
-// Delete criminal record
-exports.deleteCriminal = async (req, res) => {
-    const { id } = req.params;
-
-    const token = req.cookies.authtoken;
-    if (!token) {
-        return res.status(401).json({ message: "No token provided" });
-    }
-
-    const user = await getUserFromCookies(token);
-    if (!user) {
-        return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    try {
-        const result = await criminalService.deleteCriminal(id, user.role, user.id);
-
-        if (!result) {
-            return res.status(404).json({ message: "Criminal not found" });
-        }
-
-        res.status(200).json({ message: "Criminal record deleted successfully" });
-    }
-    catch (error) {
-        console.error("Error deleting criminal record:", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
-}; 

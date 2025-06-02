@@ -3,16 +3,22 @@ import { Link } from 'react-router-dom';
 import { apiClient } from '../../config/apiConfig';
 import PageHeader from '../../components/common/PageHeader';
 import SearchInterface from '../../components/searchsection/SearchInterface';
+import CreateCriminalModal from '../../components/modals/CreateCriminalModal';
+import { Add } from '@mui/icons-material';
+import { useAuth } from '../../contexts/AuthContext';
 
 const CriminalsPage = () => {
     const [criminals, setCriminals] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [openCreateModal, setOpenCreateModal] = useState(false);
+    const { user } = useAuth();
 
     // Search/filter config
     const searchOptions = [
         { value: 'name', label: 'Name' },
         { value: 'nic', label: 'NIC' },
+        { value: 'id', label: 'Criminal ID' },
         { value: 'fingerprint', label: 'Fingerprint' }
     ];
 
@@ -42,6 +48,7 @@ const CriminalsPage = () => {
             if (searchParams.searchTerm && searchParams.searchTerm.trim() !== '') {
                 if (searchParams.searchType === 'name') params.name = searchParams.searchTerm.trim();
                 if (searchParams.searchType === 'nic') params.nic = searchParams.searchTerm.trim();
+                if (searchParams.searchType === 'id') params.criminal_id = searchParams.searchTerm.trim();
                 if (searchParams.searchType === 'fingerprint') params.fingerprint = searchParams.searchTerm.trim();
             }
 
@@ -78,6 +85,19 @@ const CriminalsPage = () => {
                 breadcrumbItems={[
                     { label: 'Dashboard', link: '/dashboard' },
                     { label: 'Criminal Records' }
+                ]}
+                actions={[
+                    ...(user && (
+                        user.role === 'OIC' ||
+                        user.role === 'Crime OIC' ||
+                        user.role === 'Inspector' ||
+                        user.role === 'Sub Inspector'
+                    ) ? [{
+                        icon: <Add fontSize='small' className='bg-white text-blue-800 rounded-full' />,
+                        label: 'Add Criminal',
+                        onClick: () => setOpenCreateModal(true),
+                        styles: 'h-10 bg-blue-800 text-white border-blue-800'
+                    }] : [])
                 ]}
             />
 
@@ -151,6 +171,25 @@ const CriminalsPage = () => {
                     </div>
                 )}
             </div>
+
+            {/* Create Criminal Modal */}
+            <CreateCriminalModal
+                open={openCreateModal}
+                onClose={() => setOpenCreateModal(false)}
+                onCriminalCreated={criminal => {
+                    setOpenCreateModal(false);
+                    setCriminals(prev => [criminal, ...prev]);
+                }}
+                canCreate={
+                    user &&
+                    (
+                        user.role === 'OIC' ||
+                        user.role === 'Crime OIC' ||
+                        user.role === 'Inspector' ||
+                        user.role === 'Sub Inspector'
+                    )
+                }
+            />
         </div>
     );
 };

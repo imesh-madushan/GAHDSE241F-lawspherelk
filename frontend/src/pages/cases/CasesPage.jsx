@@ -160,14 +160,6 @@ const CasesPage = () => {
                 breadcrumbItems={breadcrumbItems}
                 showBackButton={true}
                 onBack={() => navigate(-1)}
-                actions={[
-                    {
-                        icon: <Add fontSize='small' className='bg-white rounded-full text-blue-800' />,
-                        label: 'Create New Case',
-                        onClick: () => navigate('/cases/new'),
-                        styles: 'h-10 bg-blue-800 text-white border-blue-800'
-                    }
-                ]}
             />
             <div className="container mx-auto px-4 py-4">
                 {/* Search Section */}

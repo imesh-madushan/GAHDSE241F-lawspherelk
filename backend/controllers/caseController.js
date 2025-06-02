@@ -78,7 +78,6 @@ exports.searchCases = async (req, res) => {
             timePeriod: req.query.timePeriod
         };
 
-        console.log('Search filters:', filters);
         const token = req.cookies.authtoken;
         if (!token) {
             return res.status(401).json({ message: "No token provided" });
@@ -111,6 +110,16 @@ exports.searchCases = async (req, res) => {
 //this will update already created case with new topic and leader
 exports.createCase = async (req, res) => {
     try {
+        const token = req.cookies.authtoken;
+        if (!token) {
+            return res.status(401).json({ message: "No token provided" });
+        }
+
+        const user = await getUserFromCookies(token);
+        if (!user) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
         const { complaintId, topic, leaderId, caseId } = req.body;
         
         // Validate required parameters
@@ -140,3 +149,44 @@ exports.createCase = async (req, res) => {
     }
 };
 
+exports.updateCase = async (req, res) => {
+    try{
+        const token = req.cookies.authtoken;
+        if (!token) {
+            return res.status(401).json({ message: "No token provided" });
+        }
+
+        const user = await getUserFromCookies(token);
+        if (!user) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        //update code here
+        const { case_id, topic, leader_id } = req.body;
+        if (!case_id) {
+            return res.status(400).json({ message: "Case ID is required" });
+        }
+
+        if (topic && user.role !== 'OIC' && user.role !== 'Crime OIC' && user.user_id !== leader_id) {
+            return res.status(403).json({ message: "You are not authorized to update this case" });
+        }
+
+        if (leader_id && user.role !== 'OIC' && user.role !== 'Crime OIC') {
+            return res.status(403).json({ message: "You are not authorized to change the case leader" });
+        }
+
+        const result = await caseService.updateCase(case_id, {topic, leader_id}, user.user_id);
+        if (!result) {
+            return res.status(404).json({ message: "Case update failed" });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Case updated successfully"
+        });
+    }
+    catch (error){
+        console.error("Error updating case:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}

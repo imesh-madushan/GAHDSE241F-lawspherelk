@@ -347,4 +347,72 @@ exports.createCase = async (complaintId, topic, leaderId, caseId) => {
     }
 };
 
-// You can add more case-related service methods here
+exports.updateCase = async (case_id, updateData, updatedBy) => {
+    const connection = await db.getConnection();
+    try {
+        await connection.beginTransaction();
+        const batchId = await generateBatchId();
+        const changes = [];
+
+        // Get current case data
+        const [currentRows] = await connection.query("SELECT * FROM cases WHERE case_id = ?", [case_id]);
+        if (!currentRows || currentRows.length === 0) {
+            throw new Error("Case not found");
+        }
+        const current = currentRows[0];
+
+        // Prepare update fields and audit log
+        const fields = [];
+        const values = [];
+        if (updateData.topic !== undefined && updateData.topic !== current.topic) {
+            fields.push("topic = ?");
+            values.push(updateData.topic);
+            changes.push({
+                tableName: 'cases',
+                recordId: case_id,
+                fieldName: 'topic',
+                value: updateData.topic,
+                actionType: 'UPDATE'
+            });
+        }
+        if (updateData.leader_id !== undefined && updateData.leader_id !== current.leader_id) {
+            fields.push("leader_id = ?");
+            values.push(updateData.leader_id);
+            changes.push({
+                tableName: 'cases',
+                recordId: case_id,
+                fieldName: 'leader_id',
+                value: updateData.leader_id,
+                actionType: 'UPDATE'
+            });
+        }
+        // Add more fields as needed
+
+        if (fields.length === 0) {
+            connection.release();
+            return false; // Nothing to update
+        }
+
+        // Update the case
+        await connection.query(
+            `UPDATE cases SET ${fields.join(", ")} WHERE case_id = ?`,
+            [...values, case_id]
+        );
+
+        // Log audit trail
+        await logAuditTrail({
+            batchId,
+            changes,
+            changedBy: updatedBy,
+            connection
+        });
+
+        await connection.commit();
+        return true;
+    } catch (err) {
+        await connection.rollback();
+        throw err;
+    } finally {
+        connection.release();
+    }
+};

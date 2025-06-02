@@ -1,16 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { KeyboardArrowDown, Search, Person, Clear } from '@mui/icons-material';
+import { apiClient } from '../../config/apiConfig';
 
 const CustomOfficerDropdown = ({
-    officers,
     selectedOfficerId,
     onOfficerSelect,
+    setError,
     className = ""
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const dropdownRef = useRef(null);
     const inputRef = useRef(null);
+    const [officers, setAvailableOfficers] = useState([]);
 
     // Find the selected officer
     const selectedOfficer = officers.find(officer => officer.id === selectedOfficerId);
@@ -20,6 +22,24 @@ const CustomOfficerDropdown = ({
         officer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (officer.role && officer.role.toLowerCase().includes(searchTerm.toLowerCase()))
     );
+
+    const fetchAvailableOfficers = async () => {
+        try {
+            const response = await apiClient.post('/officers/getAll');
+            if (response.data && Array.isArray(response.data)) {
+                const formattedOfficers = response.data.map(officer => ({
+                    id: officer.user_id || officer.id,
+                    name: officer.name,
+                    role: officer.role,
+                    image: officer.profile_pic || officer.image
+                }));
+                setAvailableOfficers(formattedOfficers);
+            }
+        } catch (err) {
+            console.error("Error fetching officers:", err);
+            setError("Failed to load available officers");
+        }
+    };
 
     // Handle click outside to close dropdown
     useEffect(() => {
@@ -42,6 +62,10 @@ const CustomOfficerDropdown = ({
             inputRef.current.focus();
         }
     }, [isOpen]);
+
+    useEffect(() => {
+        fetchAvailableOfficers();
+    }, [])
 
     // Generate initials from name for fallback avatar
     const getInitials = (name) => {

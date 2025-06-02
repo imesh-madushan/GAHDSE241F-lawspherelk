@@ -509,3 +509,142 @@ exports.closeComplaint = async (complaintId, caseId, closedBy) => {
         connection.release();
     }
 };
+
+// Update complaint and complainer details
+exports.updateComplaint = async (complaintId, updateData, updatedBy) => {
+    const connection = await db.getConnection();
+    try {
+        await connection.beginTransaction();
+        const batchId = await generateBatchId();
+       
+        // Track audit changes
+        const auditChanges = [];
+
+        // Update complaint fields (description, status, etc.)
+        if (updateData.description !== undefined) {
+            await connection.query(
+                "UPDATE complaints SET description = ? WHERE complain_id = ?",
+                [updateData.description, complaintId]
+            );
+            auditChanges.push({
+                tableName: 'complaints',
+                recordId: complaintId,
+                fieldName: 'description',
+                value: updateData.description,
+                actionType: 'UPDATE'
+            });
+        }
+        if (updateData.status !== undefined) {
+            await connection.query(
+                "UPDATE complaints SET status = ? WHERE complain_id = ?",
+                [updateData.status, complaintId]
+            );
+            auditChanges.push({
+                tableName: 'complaints',
+                recordId: complaintId,
+                fieldName: 'status',
+                value: updateData.status,
+                actionType: 'UPDATE'
+            });
+        }
+
+        // Update complainer (evidance_witnesses) fields
+        if (updateData.complainer && updateData.complainer.nic) {
+            // Get first_evidance_id for this complaint
+            const [[complaintRow]] = await connection.query(
+                "SELECT first_evidance_id FROM complaints WHERE complain_id = ?",
+                [complaintId]
+            );
+            const evidenceId = complaintRow?.first_evidance_id;
+            if (evidenceId) {
+                const { nic, name, phone, email, address, dob } = updateData.complainer;
+                // Only update if NIC is present (primary key)
+                if (name !== undefined) {
+                    await connection.query(
+                        "UPDATE evidance_witnesses SET name = ? WHERE evidence_id = ? AND nic = ?",
+                        [name, evidenceId, nic]
+                    );
+                    auditChanges.push({
+                        tableName: 'evidance_witnesses',
+                        recordId: `${evidenceId}_${nic}`,
+                        fieldName: 'name',
+                        value: name,
+                        actionType: 'UPDATE'
+                    });
+                }
+                if (phone !== undefined) {
+                    await connection.query(
+                        "UPDATE evidance_witnesses SET phone = ? WHERE evidence_id = ? AND nic = ?",
+                        [phone, evidenceId, nic]
+                    );
+                    auditChanges.push({
+                        tableName: 'evidance_witnesses',
+                        recordId: `${evidenceId}_${nic}`,
+                        fieldName: 'phone',
+                        value: phone,
+                        actionType: 'UPDATE'
+                    });
+                }
+                if (email !== undefined) {
+                    await connection.query(
+                        "UPDATE evidance_witnesses SET email = ? WHERE evidence_id = ? AND nic = ?",
+                        [email, evidenceId, nic]
+                    );
+                    auditChanges.push({
+                        tableName: 'evidance_witnesses',
+                        recordId: `${evidenceId}_${nic}`,
+                        fieldName: 'email',
+                        value: email,
+                        actionType: 'UPDATE'
+                    });
+                }
+                if (address !== undefined) {
+                    await connection.query(
+                        "UPDATE evidance_witnesses SET address = ? WHERE evidence_id = ? AND nic = ?",
+                        [address, evidenceId, nic]
+                    );
+                    auditChanges.push({
+                        tableName: 'evidance_witnesses',
+                        recordId: `${evidenceId}_${nic}`,
+                        fieldName: 'address',
+                        value: address,
+                        actionType: 'UPDATE'
+                    });
+                }
+                if (dob !== undefined) {
+                    // Ensure only the date part is used (YYYY-MM-DD)
+                    const dobDate = dob ? String(dob).slice(0, 10) : null;
+                    await connection.query(
+                        "UPDATE evidance_witnesses SET dob = ? WHERE evidence_id = ? AND nic = ?",
+                        [dobDate, evidenceId, nic]
+                    );
+                    auditChanges.push({
+                        tableName: 'evidance_witnesses',
+                        recordId: `${evidenceId}_${nic}`,
+                        fieldName: 'dob',
+                        value: dobDate,
+                        actionType: 'UPDATE'
+                    });
+                }
+            }
+        }
+
+        // Log audit
+        if (auditChanges.length > 0) {
+            await logAuditTrail({
+                batchId,
+                changes: auditChanges,
+                changedBy: updatedBy,
+                connection
+            });
+        }
+
+        await connection.commit();
+        return true;
+    } catch (err) {
+        await connection.rollback();
+        throw err;
+    } finally {
+        connection.release();
+    }
+};

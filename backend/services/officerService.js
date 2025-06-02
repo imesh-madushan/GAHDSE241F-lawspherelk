@@ -1,4 +1,6 @@
 const db = require("../config/db");
+const { generateBatchId } = require("../utils/genarateIDs");
+const { logAuditTrail } = require("./commonService");
 
 exports.getAllOfficers = async (roles, userRole, userId) => {
     try {
@@ -265,18 +267,122 @@ exports.getOfficerById = async (officerId) => {
     };
 };
 
-exports.toggleOfficerAccount = async (officerId) => {
-    const [rows] = await db.query(
-        "SELECT account_locked FROM login WHERE user_id = ?",
-        [officerId]
-    );
+exports.toggleOfficerAccount = async (officerId, updatedBy) => {
+    const connection = await db.getConnection();
+    try {
+        await connection.beginTransaction();
 
-    if (!rows.length) return null;
-    const current = rows[0].account_locked ? 1 : 0;
-    const newStatus = current ? 0 : 1;
-    await db.query(
-        "UPDATE login SET account_locked = ? WHERE user_id = ?",
-        [newStatus, officerId]
-    );
-    return true;
+        const [rows] = await connection.query(
+            "SELECT account_locked FROM login WHERE user_id = ?",
+            [officerId]
+        );
+
+        if (!rows.length) {
+            await connection.rollback();
+            return null;
+        }
+        const current = rows[0].account_locked ? 1 : 0;
+        const newStatus = current ? 0 : 1;
+
+        await connection.query(
+            "UPDATE login SET account_locked = ? WHERE user_id = ?",
+            [newStatus, officerId]
+        );
+
+        // Audit log for account status toggle
+        const batchId = await generateBatchId();
+        await logAuditTrail({
+            batchId,
+            changes: [{
+                tableName: 'login',
+                recordId: officerId,
+                fieldName: 'account_locked',
+                value: newStatus,
+                actionType: 'UPDATE'
+            }],
+            changedBy: updatedBy,
+            connection
+        });
+
+        await connection.commit();
+        return true;
+    } catch (err) {
+        await connection.rollback();
+        throw err;
+    } finally {
+        connection.release();
+    }
 };
+
+exports.updateOfficer = async (officerId, updateFields, updatedBy) => {
+    const connection = await db.getConnection();
+    try {
+        await connection.beginTransaction();
+        // Get current officer data for comparison
+        const [[currentOfficer]] = await connection.query(
+            "SELECT name, nic, phone, email, address, role, profile_pic FROM users WHERE user_id = ?",
+            [officerId]
+        );
+        if (!currentOfficer) {
+            await connection.rollback();
+            return null;
+        }
+
+        // Only update changed fields
+        const fieldsToUpdate = {};
+        const auditChanges = [];
+        for (const key of Object.keys(updateFields)) {
+            if (updateFields[key] !== undefined && updateFields[key] !== currentOfficer[key]) {
+                fieldsToUpdate[key] = updateFields[key];
+                auditChanges.push({
+                    tableName: 'users',
+                    recordId: officerId,
+                    fieldName: key,
+                    value: updateFields[key],
+                    actionType: 'UPDATE'
+                });
+            }
+        }
+
+        if (Object.keys(fieldsToUpdate).length === 0) {
+            await connection.rollback();
+            return currentOfficer;
+        }
+
+        // Build update query dynamically
+        const setClause = Object.keys(fieldsToUpdate).map(f => `${f} = ?`).join(', ');
+        const values = Object.values(fieldsToUpdate);
+        values.push(officerId);
+
+        await connection.query(
+            `UPDATE users SET ${setClause} WHERE user_id = ?`,
+            values
+        );
+
+        // Audit log
+        if (auditChanges.length > 0) {
+            const batchId = await generateBatchId();
+            await logAuditTrail({
+                batchId,
+                changes: auditChanges,
+                changedBy: updatedBy,
+                connection
+            });
+        }
+
+        await connection.commit();
+
+        // Return updated officer data
+        const [[updatedOfficer]] = await connection.query(
+            "SELECT user_id, name, nic, phone, email, address, role, profile_pic FROM users WHERE user_id = ?",
+            [officerId]
+        );
+        return updatedOfficer;
+    } catch (err) {
+        await connection.rollback();
+        throw err;
+    } finally {
+        connection.release();
+    }
+};
+

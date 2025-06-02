@@ -17,6 +17,7 @@ import {
     Email,
     Badge,
     Save,
+    Cancel,
     History
 } from '@mui/icons-material';
 import { apiClient } from '../../config/apiConfig';
@@ -42,6 +43,10 @@ const SingleComplaintView = () => {
     const [showStartCaseModal, setShowStartCaseModal] = useState(false);
     const [showCloseConfirmation, setShowCloseConfirmation] = useState(false);
     const [popup, setPopup] = useState({ open: false, status: "success", message: "", description: "" });
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedComplaint, setEditedComplaint] = useState({});
+    const [editedComplainer, setEditedComplainer] = useState({});
+    const [touched, setTouched] = useState({ description: false, name: false, nic: false });
 
     // Format date helper function
     const formatDate = (dateString) => {
@@ -83,6 +88,8 @@ const SingleComplaintView = () => {
 
                 if (data.complaintData) {
                     setComplaint(data.complaintData);
+                    setEditedComplaint(data.complaintData); // set for editing
+                    setEditedComplainer(data.complaintData.complainer || {});
                 } else {
                     setError("No complaint data returned from server");
                 }
@@ -123,9 +130,14 @@ const SingleComplaintView = () => {
     };
 
     const canViewRelatedCase = () => {
-        return (user.role === "Crime OIC" || user.role === "OIC" || user.user_id === complaint.case?.leader_id) &&
-            !compCaseStatusList.map(status => status.value).includes(complaint.case?.status);
+        return complaint?.case?.status !== "oicnotreviewed";
     };
+
+
+    // Only allow edit if complaint is not viewed or closed
+    const canEdit =
+        (user.role === "OIC" || user.role === "Crime OIC" || user.id === complaint?.officer_id) &&
+        complaint?.status === "new";
 
     const handleConfirmClose = async () => {
         try {
@@ -167,9 +179,169 @@ const SingleComplaintView = () => {
         setPopup({ ...popup, open: false });
     };
 
-    const handleViewHistory = () => {
-        // Navigate to audit trail/history page for this complaint
-        
+
+    // Edit handlers
+    const handleEditToggle = () => {
+        if (isEditing) {
+            setEditedComplaint(complaint);
+            setEditedComplainer(complaint.complainer || {});
+            setIsEditing(false);
+        } else {
+            setIsEditing(true);
+        }
+    };
+
+    const handleCancelEdit = () => {
+        setEditedComplaint(complaint);
+        setEditedComplainer(complaint.complainer || {});
+        setIsEditing(false);
+    };
+
+    // Validation helpers
+    const isDescriptionValid = editedComplaint.description && editedComplaint.description.trim().length > 0;
+    const isNameValid = editedComplainer.name && editedComplainer.name.trim().length > 0;
+    const isNicValid = editedComplainer.nic && editedComplainer.nic.trim().length > 0;
+
+    const isFormValid = isDescriptionValid && isNameValid && isNicValid;
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setEditedComplaint(prev => ({
+            ...prev,
+            [name]: value
+        }));
+        setTouched(t => ({ ...t, [name]: true }));
+    };
+
+    const handleComplainerInputChange = (e) => {
+        const { name, value } = e.target;
+        setEditedComplainer(prev => ({
+            ...prev,
+            [name]: name === "dob" && value ? value.slice(0, 10) : value // Ensure only date part for dob
+        }));
+        setTouched(t => ({ ...t, [name]: true }));
+    };
+
+    // Only allow valid status transitions:
+    const getAllowedStatusOptions = () => {
+        if (complaint.status === 'new') {
+            return complainStatusList;
+        }
+        if (complaint.status === 'closed') {
+            return complainStatusList.filter(opt => opt.value === 'closed' || opt.value === 'viewed');
+        }
+        if (complaint.status === 'viewed') {
+            return complainStatusList.filter(opt => opt.value === 'viewed');
+        }
+        return complainStatusList;
+    };
+
+    const handleSaveChanges = async () => {
+        setTouched({ description: true, name: true, nic: true });
+        if (!isFormValid) {
+            setPopup({
+                open: true,
+                status: "error",
+                message: "Please fill all required fields.",
+                description: "Complaint description, complainant name, and NIC are required."
+            });
+            return;
+        }
+
+        // Prevent setting status to 'new' if complaint is not new
+        if (
+            editedComplaint.status === 'new' &&
+            complaint.status !== 'new'
+        ) {
+            setPopup({
+                open: true,
+                status: "error",
+                message: "Invalid status change.",
+                description: "You cannot set the complaint status back to 'New' once it has been viewed or closed."
+            });
+            return;
+        }
+
+        // Only send changed fields for audit log accuracy
+        const payload = { complain_id: complaintId };
+        // Compare complaint fields
+        if (editedComplaint.description !== complaint.description)
+            payload.description = editedComplaint.description;
+        if (editedComplaint.status !== complaint.status)
+            payload.status = editedComplaint.status;
+
+        // Compare complainer fields
+        const complainerPayload = {};
+        if (editedComplainer.name !== (complaint.complainer?.name || ""))
+            complainerPayload.name = editedComplainer.name;
+        if (editedComplainer.nic !== (complaint.complainer?.nic || ""))
+            complainerPayload.nic = editedComplainer.nic;
+        if (editedComplainer.phone !== (complaint.complainer?.phone || ""))
+            complainerPayload.phone = editedComplainer.phone;
+        if (editedComplainer.email !== (complaint.complainer?.email || ""))
+            complainerPayload.email = editedComplainer.email;
+        if (editedComplainer.address !== (complaint.complainer?.address || ""))
+            complainerPayload.address = editedComplainer.address;
+        if (
+            (editedComplainer.dob && complaint.complainer?.dob && editedComplainer.dob !== complaint.complainer.dob) ||
+            (editedComplainer.dob && !complaint.complainer?.dob) ||
+            (!editedComplainer.dob && complaint.complainer?.dob)
+        ) {
+            complainerPayload.dob = editedComplainer.dob;
+        }
+
+        if (Object.keys(complainerPayload).length > 0) {
+            // Always send NIC for update if any complainer field changed
+            complainerPayload.nic = editedComplainer.nic;
+            payload.complainer = complainerPayload;
+        }
+
+        // If nothing changed, don't send request
+        if (Object.keys(payload).length <= 1 && !payload.complainer) {
+            setPopup({
+                open: true,
+                status: "info",
+                message: "No changes detected.",
+                description: ""
+            });
+            setIsEditing(false);
+            return;
+        }
+
+        try {
+            const response = await apiClient.put(`/complaints/update`, payload);
+            if (response.data && response.data.success) {
+                setComplaint(prev => ({
+                    ...prev,
+                    ...((payload.description !== undefined || payload.status !== undefined) ? editedComplaint : prev),
+                    complainer: {
+                        ...prev.complainer,
+                        ...complainerPayload
+                    }
+                }));
+                setPopup({
+                    open: true,
+                    status: "success",
+                    message: "Complaint updated successfully",
+                    description: ""
+                });
+                setIsEditing(false);
+            } else {
+                setPopup({
+                    open: true,
+                    status: "error",
+                    message: "Failed to update complaint",
+                    description: response.data?.message || ""
+                });
+            }
+        } catch (err) {
+            setPopup({
+                open: true,
+                status: "error",
+                message: "Failed to update complaint",
+                description: err.response?.data?.message || ""
+            });
+        }
     };
 
     if (loading) {
@@ -214,11 +386,29 @@ const SingleComplaintView = () => {
                 ]}
                 onBack={() => navigate('/complaints')}
                 actions={[
+                    ...(canEdit ? [
+                        isEditing ? {
+                            icon: <Cancel fontSize='small' />,
+                            label: 'Cancel',
+                            onClick: handleCancelEdit,
+                            styles: 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
+                        } : {
+                            icon: <Edit fontSize='small' />,
+                            label: 'Edit Complaint',
+                            onClick: handleEditToggle,
+                            styles: 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
+                        },
+                        isEditing ? {
+                            icon: <Save fontSize='small' />,
+                            label: 'Save Changes',
+                            onClick: handleSaveChanges,
+                            styles: 'bg-green-600 text-white border-green-600 hover:bg-green-700'
+                        } : null
+                    ].filter(Boolean) : []),
                     {
                         icon: <History fontSize='small' />,
-                        label: 'History',
-                        onClick: handleViewHistory,
-                        styles: 'bg-white text-gray-700 border-purple-600'
+                        onClick: () => navigate(`/recordhistory/complaints/${complaintId}`),
+                        styles: 'bg-white rounded-full text-gray-700 border-purple-600'
                     }
                 ]}
             />
@@ -226,7 +416,7 @@ const SingleComplaintView = () => {
             {/* Content section */}
             <div className="max-w-7xl mx-auto px-4 py-6">
                 {/* Top Card - Complaint Header */}
-                <div className="bg-white rounded-xl shadow-sm mb-6 overflow-hidden">
+                <div className="bg-white rounded-xl shadow-sm mb-6">
                     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-5 border-b border-gray-100">
                         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                             <div className="flex items-center">
@@ -245,7 +435,13 @@ const SingleComplaintView = () => {
                                     <span className="text-sm">Filed: {formatDate(complaint.complain_dt)}</span>
                                 </div>
 
-                                <StatusBadge status={complaint.status} statusList={complainStatusList} />
+                                {/* Show status as readonly (not editable) while editing */}
+                                <StatusBadge
+                                    status={complaint.status}
+                                    statusList={getAllowedStatusOptions()}
+                                    isEditing={false}
+                                // No handleInputChange or name prop needed since not editable
+                                />
 
                                 {canStartCase() && (
                                     <OutlinedButton
@@ -278,10 +474,27 @@ const SingleComplaintView = () => {
                                 <Description className="h-5 w-5 mr-2 text-blue-600" />
                                 Complaint Details
                             </h2>
-
-                            <div className="bg-gray-50 p-5 rounded-lg text-gray-800 whitespace-pre-wrap">
-                                {complaint.description}
-                            </div>
+                            {isEditing ? (
+                                <>
+                                    <textarea
+                                        name="description"
+                                        value={editedComplaint.description}
+                                        onChange={handleInputChange}
+                                        onBlur={() => setTouched(t => ({ ...t, description: true }))}
+                                        className={`w-full p-3 border rounded-lg bg-blue-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${touched.description && !isDescriptionValid ? 'border-red-500' : 'border-blue-300'
+                                            }`}
+                                        rows={4}
+                                        placeholder="Enter complaint details"
+                                    />
+                                    {touched.description && !isDescriptionValid && (
+                                        <span className="text-xs text-red-600">Description is required.</span>
+                                    )}
+                                </>
+                            ) : (
+                                <div className="bg-gray-50 p-5 rounded-lg text-gray-800 whitespace-pre-wrap">
+                                    {complaint.description}
+                                </div>
+                            )}
 
                             <div className="mt-2 flex-col items-center">
                                 <div className="flex-grow ml-0 mt-3">
@@ -441,8 +654,100 @@ const SingleComplaintView = () => {
                                     Complainant Details
                                 </h2>
                             </div>
+                            {isEditing ? (
+                                <div className="p-6">
+                                    <div className="flex flex-col space-y-4">
+                                        <div className="flex items-center">
+                                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                                                <Person className="text-blue-700" />
+                                            </div>
+                                            <div>
+                                                <input
+                                                    type="text"
+                                                    name="name"
+                                                    value={editedComplainer.name || ""}
+                                                    onChange={handleComplainerInputChange}
+                                                    onBlur={() => setTouched(t => ({ ...t, name: true }))}
+                                                    className={`font-medium text-gray-900 bg-blue-50 border rounded px-2 py-1 ${touched.name && !isNameValid ? 'border-red-500' : 'border-blue-200'
+                                                        }`}
+                                                    placeholder="Name"
+                                                />
+                                                {touched.name && !isNameValid && (
+                                                    <span className="text-xs text-red-600 block">Name is required.</span>
+                                                )}
+                                                <div className="flex items-center mt-0.5">
+                                                    <Badge className="h-3.5 w-3.5 text-gray-400 mr-1" />
+                                                    <input
+                                                        type="text"
+                                                        name="nic"
+                                                        value={editedComplainer.nic || ""}
+                                                        onChange={handleComplainerInputChange}
+                                                        onBlur={() => setTouched(t => ({ ...t, nic: true }))}
+                                                        className={`text-xs text-gray-500 bg-blue-50 border rounded px-1 py-0.5 ${touched.nic && !isNicValid ? 'border-red-500' : 'border-blue-200'
+                                                            }`}
+                                                        placeholder="NIC"
+                                                    />
+                                                </div>
+                                                {touched.nic && !isNicValid && (
+                                                    <span className="text-xs text-red-600 block">NIC is required.</span>
+                                                )}
+                                            </div>
+                                        </div>
 
-                            {complaint.complainer ? (
+                                        <div className="pt-3 border-t border-gray-100">
+                                            <div className="grid grid-cols-1 gap-3">
+                                                <div className="flex items-center">
+                                                    <Phone className="h-4 w-4 text-gray-400 mr-2" />
+                                                    <input
+                                                        type="text"
+                                                        name="phone"
+                                                        value={editedComplainer.phone || ""}
+                                                        onChange={handleComplainerInputChange}
+                                                        className="text-sm bg-blue-50 border border-blue-200 rounded px-2 py-1"
+                                                        placeholder="Phone"
+                                                    />
+                                                </div>
+
+                                                <div className="flex items-center">
+                                                    <Email className="h-4 w-4 text-gray-400 mr-2" />
+                                                    <input
+                                                        type="email"
+                                                        name="email"
+                                                        value={editedComplainer.email || ""}
+                                                        onChange={handleComplainerInputChange}
+                                                        className="text-sm bg-blue-50 border border-blue-200 rounded px-2 py-1"
+                                                        placeholder="Email"
+                                                    />
+                                                </div>
+
+                                                <div className="flex items-start">
+                                                    <LocationOn className="h-4 w-4 text-gray-400 mr-2 mt-0.5" />
+                                                    <textarea
+                                                        name="address"
+                                                        value={editedComplainer.address || ""}
+                                                        onChange={handleComplainerInputChange}
+                                                        className="text-sm bg-blue-50 border border-blue-200 rounded px-2 py-1"
+                                                        placeholder="Address"
+                                                        rows={2}
+                                                    />
+                                                </div>
+
+                                                <div className="flex items-center">
+                                                    <CalendarToday className="h-4 w-4 text-gray-400 mr-2" />
+                                                    <input
+                                                        type="date"
+                                                        name="dob"
+                                                        value={editedComplainer.dob ? editedComplainer.dob.slice(0, 10) : ""}
+                                                        onChange={handleComplainerInputChange}
+                                                        className="text-sm bg-blue-50 border border-blue-200 rounded px-2 py-1"
+                                                        placeholder="DOB"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : complaint.complainer ? (
                                 <div className="p-6">
                                     <div className="flex flex-col space-y-4">
                                         <div className="flex items-center">

@@ -1,4 +1,6 @@
 const db = require('../config/db');
+const { generateUniqueId, generateBatchId } = require("../utils/genarateIDs");
+const { logAuditTrail } = require("./commonService");
 
 const buildSortClause = (sortBy, sortOrder) => {
     const validColumns = ['reported_dt', 'happened_dt', 'risk_score', 'crime_type', 'status'];
@@ -247,6 +249,182 @@ exports.searchOffences = async (filters, userRole, userId, options = {}) => {
     } catch (error) {
         console.error('Error in searchOffences:', error);
         throw new Error('Search failed');
+    }
+};
+
+exports.createOffence = async (offenceData, createdBy) => {
+    const connection = await db.getConnection();
+    try {
+        await connection.beginTransaction();
+        const batchId = await generateBatchId();
+
+        const offence_id = await generateUniqueId("crimeoffence");
+        const {
+            crime_type,
+            risk_score,
+            reported_dt,
+            happened_dt,
+            criminal_id,
+            case_id
+        } = offenceData;
+
+        await connection.query(
+            `INSERT INTO crimeoffence (offence_id, crime_type, risk_score, reported_dt, happened_dt, criminal_id, case_id)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [
+                offence_id,
+                crime_type,
+                risk_score,
+                reported_dt,
+                happened_dt,
+                criminal_id,
+                case_id
+            ]
+        );
+
+        // Audit log
+        const auditChanges = [
+            { tableName: 'crimeoffence', recordId: offence_id, fieldName: 'crime_type', value: crime_type, actionType: 'INSERT' },
+            { tableName: 'crimeoffence', recordId: offence_id, fieldName: 'status', value: 'Alleged', actionType: 'INSERT' },
+            { tableName: 'crimeoffence', recordId: offence_id, fieldName: 'risk_score', value: risk_score, actionType: 'INSERT' },
+            { tableName: 'crimeoffence', recordId: offence_id, fieldName: 'reported_dt', value: reported_dt, actionType: 'INSERT' },
+            { tableName: 'crimeoffence', recordId: offence_id, fieldName: 'happened_dt', value: happened_dt, actionType: 'INSERT' },
+            { tableName: 'crimeoffence', recordId: offence_id, fieldName: 'criminal_id', value: criminal_id, actionType: 'INSERT' },
+            { tableName: 'crimeoffence', recordId: offence_id, fieldName: 'case_id', value: case_id, actionType: 'INSERT' }
+        ];
+
+        await logAuditTrail({
+            batchId,
+            changes: auditChanges,
+            changedBy: createdBy,
+            connection
+        });
+
+        await connection.commit();
+        return { offence_id };
+    } catch (err) {
+        await connection.rollback();
+        throw err;
+    } finally {
+        connection.release();
+    }
+};
+
+exports.getOffenceById = async (offenceId) => {
+    try {
+        const query = `
+            SELECT 
+                co.offence_id,
+                co.crime_type,
+                co.status,
+                co.risk_score,
+                co.reported_dt,
+                co.happened_dt,
+                co.criminal_id,
+                co.case_id,
+                cr.name AS criminal_name,
+                cr.phone AS criminal_phone,
+                cr.address AS criminal_address,
+                cr.nic AS criminal_nic,
+                c.topic AS case_topic,
+                c.status AS case_status,
+                c.case_type,
+                c.leader_id AS case_leader_id,
+                leader.name AS case_leader_name,
+                leader.role AS case_leader_role,
+                leader.profile_pic AS case_leader_profile
+            FROM crimeoffence co
+            LEFT JOIN criminalrecord cr ON co.criminal_id = cr.criminal_id
+            LEFT JOIN cases c ON co.case_id = c.case_id
+            LEFT JOIN users leader ON c.leader_id = leader.user_id
+            WHERE co.offence_id = ?
+        `;
+        
+        const [rows] = await db.query(query, [offenceId]);
+        
+        if (rows.length === 0) {
+            return null;
+        }
+        
+        return rows[0];
+    } catch (error) {
+        console.error("Error fetching offence by ID:", error);
+        throw error;
+    }
+};
+
+exports.updateOffence = async (offenceId, updateFields, updatedBy) => {
+    const connection = await db.getConnection();
+    try {
+        await connection.beginTransaction();
+        
+        // Get current offence data for comparison
+        const [[currentOffence]] = await connection.query(
+            "SELECT crime_type, status, risk_score, reported_dt, happened_dt FROM crimeoffence WHERE offence_id = ?",
+            [offenceId]
+        );
+        
+        if (!currentOffence) {
+            await connection.rollback();
+            return null;
+        }
+
+        // Only update changed fields
+        const fieldsToUpdate = {};
+        const auditChanges = [];
+        
+        for (const key of Object.keys(updateFields)) {
+            if (updateFields[key] !== undefined && updateFields[key] !== currentOffence[key]) {
+                fieldsToUpdate[key] = updateFields[key];
+                auditChanges.push({
+                    tableName: 'crimeoffence',
+                    recordId: offenceId,
+                    fieldName: key,
+                    value: updateFields[key],
+                    actionType: 'UPDATE'
+                });
+            }
+        }
+
+        if (Object.keys(fieldsToUpdate).length === 0) {
+            await connection.rollback();
+            return currentOffence;
+        }
+
+        // Build update query dynamically
+        const setClause = Object.keys(fieldsToUpdate).map(f => `${f} = ?`).join(', ');
+        const values = Object.values(fieldsToUpdate);
+        values.push(offenceId);
+
+        await connection.query(
+            `UPDATE crimeoffence SET ${setClause} WHERE offence_id = ?`,
+            values
+        );
+
+        // Audit log
+        if (auditChanges.length > 0) {
+            const batchId = await generateBatchId();
+            await logAuditTrail({
+                batchId,
+                changes: auditChanges,
+                changedBy: updatedBy,
+                connection
+            });
+        }
+
+        await connection.commit();
+
+        // Return updated offence data
+        const [[updatedOffence]] = await connection.query(
+            "SELECT offence_id, crime_type, status, risk_score, reported_dt, happened_dt FROM crimeoffence WHERE offence_id = ?",
+            [offenceId]
+        );
+        return updatedOffence;
+    } catch (err) {
+        await connection.rollback();
+        throw err;
+    } finally {
+        connection.release();
     }
 };
 

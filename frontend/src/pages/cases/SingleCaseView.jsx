@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowBack, Edit, Save, Close, Folder, Assignment,
   Person, CalendarToday, Security, FormatListBulleted,
   Gavel, Attachment, Visibility, VisibilityOff, Add,
   Description, Timeline, DeviceHub, BarChart,
-  Cancel, ScatterPlot, InfoOutlined
+  Cancel, ScatterPlot, InfoOutlined,
+  History
 } from '@mui/icons-material';
 import { apiClient } from '../../config/apiConfig';
 import { format } from 'date-fns';
@@ -18,14 +19,16 @@ import OffencesTab from '../../components/case/tabs/OffencesTab';
 import CaseComplaintCard from '../../components/case/CaseComplaintCard';
 import StatusBadge from '../../components/badges/StatusBadge';
 import { useAuth } from '../../contexts/AuthContext';
-import OutlinedButton from '../../components/buttons/OutlinedButton';
 import OfficerCard from '../../components/cards/OfficerCard';
 import CustomOfficerDropdown from '../../components/dropdowns/CustomOfficerDropdown';
 import { caseStatusList, complainStatusList } from '../../../data';
+import StatusPopup from '../../components/common/StatusPopup';
 
 const SingleCaseView = () => {
   const { user } = useAuth();
   const { caseId } = useParams();
+  const navigate = useNavigate();
+
 
   const [caseData, setCaseData] = useState({
     case_id: '',
@@ -60,12 +63,11 @@ const SingleCaseView = () => {
   const [editedCase, setEditedCase] = useState({});
   const [activeTab, setActiveTab] = useState('overview');
   const [allOfficers, setAllOfficers] = useState([]);
-  const [availableOfficers, setAvailableOfficers] = useState([]);
+  const [popup, setPopup] = useState({ open: false, status: 'success', message: '', description: '', referenceLink: null });
+  const [pendingUpdate, setPendingUpdate] = useState(null);
 
   const canEdit = user.user_id == caseData.leader_id || user.role === "OIC" || user.role === "Crime OIC";
   const canChangeLeader = user.role === "Crime OIC";
-  const canAssignOfficers = user.user_id == caseData.leader_id || user.role === "Crime OIC";
-  const canUpdateTimeLine = user.user_id == caseData.leader_id || user.role === "Crime OIC" || user.role === "Forrensic Officer";
   const canAddEvidence = user.user_id == caseData.leader_id || user.role === "Crime OIC" || user.role === "Sub Inspector" || user.role === "Sergeant" || user.role === "Police Constable";
   const canAddInvestigation = user.user_id == caseData.leader_id || user.role === "Crime OIC";
 
@@ -102,9 +104,105 @@ const SingleCaseView = () => {
     }
   };
 
-  const handleSaveChanges = () => {
-    handleEditToggle();
+  const handleSaveChanges = async () => {
+    // Prevent removing topic or leader
+    if (!editedCase.topic || !editedCase.topic.trim()) {
+      setPopup({
+        open: true,
+        status: 'error',
+        message: 'Case topic is required',
+        description: 'Case topic cannot be empty or removed.',
+        referenceLink: null
+      });
+      return;
+    }
+    if (!editedCase.leader_id) {
+      setPopup({
+        open: true,
+        status: 'error',
+        message: 'Case leader is required',
+        description: 'Case leader cannot be removed or set to none.',
+        referenceLink: null
+      });
+      return;
+    }
+
+    // Find changed fields only
+    const updatedFields = {};
+    Object.keys(editedCase).forEach(key => {
+      if (editedCase[key] !== caseData[key]) {
+        // Only send leader_id if leader changed
+        if (key === 'leader_id') {
+          updatedFields['leader_id'] = editedCase['leader_id'];
+        } else if (key !== 'leader_name' && key !== 'leader_role' && key !== 'leader_profile') {
+          updatedFields[key] = editedCase[key];
+        }
+      }
+    });
+
+    if (Object.keys(updatedFields).length === 0) {
+      setIsEditing(false);
+      return;
+    }
+
+    setIsEditing(false);
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      const response = await apiClient.put('/cases/update', {
+        case_id: caseData.case_id,
+        ...updatedFields
+      });
+      if (response.data && response.data.success) {
+        setPopup({
+          open: true,
+          status: 'success',
+          message: 'Case updated successfully',
+          description: '',
+          referenceLink: `/cases/${caseData.case_id}`
+        });
+        setPendingUpdate({ ...caseData, ...updatedFields });
+      } else {
+        setPopup({
+          open: true,
+          status: 'error',
+          message: 'Case update failed',
+          description: response.data?.message || 'Failed to update case.',
+          referenceLink: null
+        });
+      }
+    } catch (error) {
+      setPopup({
+        open: true,
+        status: 'error',
+        message: 'Case update failed',
+        description: error?.response?.data?.message || 'An error occurred.',
+        referenceLink: null
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const handlePopupClose = useCallback(() => {
+    setPopup(prev => ({ ...prev, open: false }));
+    if (popup.status === 'success' && pendingUpdate) {
+      // If leader_id changed, update leader details as well
+      let newCaseData = { ...pendingUpdate };
+      if (
+        editedCase.leader_id &&
+        editedCase.leader_id !== caseData.leader_id &&
+        (editedCase.leader_name || editedCase.leader_role || editedCase.leader_profile)
+      ) {
+        newCaseData.leader_name = editedCase.leader_name;
+        newCaseData.leader_role = editedCase.leader_role;
+        newCaseData.leader_profile = editedCase.leader_profile;
+      }
+      setCaseData(newCaseData);
+      setPendingUpdate(null);
+    }
+  }, [popup, pendingUpdate, editedCase, caseData.leader_id]);
 
   const handleCancelEdit = () => {
     setEditedCase(caseData);
@@ -119,25 +217,8 @@ const SingleCaseView = () => {
     }));
   };
 
-  const handleAssignOfficer = (officer) => {
-    const updatedOfficers = [
-      ...caseData.assignedOfficers,
-      {
-        id: officer.id,
-        name: officer.name,
-        role: officer.role || "Assigned Officer",
-        image: officer.image
-      }
-    ];
-
-    setCaseData({
-      ...caseData,
-      assignedOfficers: updatedOfficers
-    });
-  };
-
   const handleViewFullComplaint = () => {
-    console.log("View full complaint for ID:", complaint.complain_id);
+    navigate(`/complaints/${complaint.complain_id}`);
   };
 
   const handleLeaderChange = (officer) => {
@@ -148,33 +229,6 @@ const SingleCaseView = () => {
       leader_role: officer.role,
       leader_profile: officer.profilePic || officer.image
     }));
-  };
-
-  // Fetch available officers for leader assignment
-  useEffect(() => {
-    const fetchAvailableOfficers = async () => {
-      if (isEditing && canChangeLeader) {
-        try {
-          // Get officers that could be assigned as leaders (based on roles)
-          const response = await apiClient.post('/officers/getAll');
-
-          if (response.data) {
-            console.log("Available officers fetched:", response.data);
-            setAvailableOfficers(response.data);
-          }
-        } catch (error) {
-          console.error("Failed to fetch available officers:", error);
-        }
-      }
-    };
-
-    fetchAvailableOfficers();
-  }, [isEditing, canChangeLeader]);
-
-  const actions = {
-    Edit: { icon: <Edit fontSize='small' />, label: 'Edit Case', onClick: handleEditToggle, styles: 'text-blue-700' },
-    Cancel: { icon: <Cancel fontSize='small' />, label: 'Cancel', onClick: handleCancelEdit, styles: 'text-red-700' },
-    Save: { icon: <Save fontSize='small' />, label: 'Save', onClick: handleSaveChanges, styles: 'text-green-700' },
   };
 
   // Process and collect all officers related to the case
@@ -334,25 +388,33 @@ const SingleCaseView = () => {
           { label: caseData.case_id.substring(0, 8) }
         ]}
         onBack={() => window.history.back()}
-        actions={canEdit ? [
-          isEditing ? {
-            icon: <Cancel fontSize='small' />,
-            label: 'Cancel',
-            onClick: handleCancelEdit,
-            styles: 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
-          } : {
-            icon: <Edit fontSize='small' />,
-            label: 'Edit Case',
-            onClick: handleEditToggle,
-            styles: 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
-          },
-          isEditing ? {
-            icon: <Save fontSize='small' />,
-            label: 'Save Changes',
-            onClick: handleSaveChanges,
-            styles: 'bg-green-600 text-white border-green-600 hover:bg-green-700'
-          } : null
-        ].filter(Boolean) : []}
+        actions={[
+          ...(canEdit ? [
+            isEditing ? {
+              icon: <Cancel fontSize='small' />,
+              label: 'Cancel',
+              onClick: handleCancelEdit,
+              styles: 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
+            } : {
+              icon: <Edit fontSize='small' />,
+              label: 'Edit Case',
+              onClick: handleEditToggle,
+              styles: 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
+            },
+            isEditing ? {
+              icon: <Save fontSize='small' />,
+              label: 'Save Changes',
+              onClick: handleSaveChanges,
+              styles: 'bg-green-600 text-white border-green-600 hover:bg-green-700'
+            } : null
+          ].filter(Boolean) : []),
+          {
+            icon: <History fontSize='small' />,
+            onClick: () => navigate(`/recordhistory/cases/${caseId}`),
+            styles: 'bg-white rounded-full text-gray-700 border-purple-600'
+          }
+
+        ]}
       />
 
       <div className="container mx-auto px-4 py-6">
@@ -366,7 +428,7 @@ const SingleCaseView = () => {
                 </div>
                 <div>
                   <div className="text-gray-500 text-sm font-medium">Case Reference</div>
-                  <h1 className="text-xl font-bold text-gray-900">{'#'+caseData.case_id}</h1>
+                  <h1 className="text-xl font-bold text-gray-900">{'#' + caseData.case_id}</h1>
                 </div>
               </div>
 
@@ -430,10 +492,10 @@ const SingleCaseView = () => {
 
                   {isEditing && canChangeLeader ? (
                     <CustomOfficerDropdown
-                      officers={availableOfficers}
                       selectedOfficerId={editedCase.leader_id}
                       onOfficerSelect={handleLeaderChange}
                       className="mb-4"
+                      setError={setError}
                     />
                   ) : (
                     <div className="mb-4">
@@ -680,6 +742,16 @@ const SingleCaseView = () => {
           </div>
         </div>
       </div>
+
+      <StatusPopup
+        open={popup.open}
+        status={popup.status}
+        message={popup.message}
+        description={popup.description}
+        referenceLink={popup.referenceLink}
+        onClose={handlePopupClose}
+        okLabel={popup.status === 'success' ? 'Ok' : 'Close'}
+      />
     </div>
   );
 };

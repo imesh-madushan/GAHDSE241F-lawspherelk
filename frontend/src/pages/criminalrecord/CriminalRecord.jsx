@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Print, Edit, Save, Cancel } from '@mui/icons-material';
+import { Print, Edit, Save, Cancel, History } from '@mui/icons-material';
 import PageHeader from '../../components/common/PageHeader';
 import CriminalProfile from '../../components/criminal/CriminalProfile';
 import CriminalTabs from '../../components/criminal/CriminalTabs';
@@ -8,6 +8,7 @@ import OffencesTab from '../../components/criminal/tabs/OffencesTab';
 import EvidenceTab from '../../components/criminal/tabs/EvidenceTab';
 import ForensicTab from '../../components/criminal/tabs/ForensicTab';
 import { apiClient } from '../../config/apiConfig';
+import StatusPopup from '../../components/common/StatusPopup';
 
 const CriminalRecord = () => {
     const { criminalId } = useParams();
@@ -17,6 +18,8 @@ const CriminalRecord = () => {
     const [activeTab, setActiveTab] = useState('offences');
     const [isEditing, setIsEditing] = useState(false);
     const [editedCriminal, setEditedCriminal] = useState(null);
+    const [popup, setPopup] = useState({ open: false, status: '', message: '', description: '' });
+    const [pendingUpdate, setPendingUpdate] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -79,19 +82,53 @@ const CriminalRecord = () => {
     };
 
     const handleSaveChanges = async () => {
+        // Validation: name, nic, dob required
+        if (!editedCriminal.name || !editedCriminal.name.trim()) {
+            setPopup({ open: true, status: 'error', message: 'Name is required', description: 'Criminal name cannot be empty.' });
+            return;
+        }
+        if (!editedCriminal.nic || !editedCriminal.nic.trim()) {
+            setPopup({ open: true, status: 'error', message: 'NIC is required', description: 'NIC cannot be empty.' });
+            return;
+        }
+        if (!editedCriminal.dob || !editedCriminal.dob.trim()) {
+            setPopup({ open: true, status: 'error', message: 'Date of Birth is required', description: 'DOB cannot be empty.' });
+            return;
+        }
+        // Only send changed fields
+        const changedFields = { criminal_id: criminalData.criminal_id };
+        [
+            'name', 'nic', 'phone', 'address', 'dob', 'fingerprint_hash', 'photo'
+        ].forEach(field => {
+            if (editedCriminal[field] !== criminalData[field]) {
+                changedFields[field] = editedCriminal[field];
+            }
+        });
+        if (Object.keys(changedFields).length === 1) {
+            setIsEditing(false);
+            return;
+        }
         try {
-            setLoading(true);
-            // You would typically make an API call here
-            const response = await apiClient.put(`/criminals/${criminalId}`, editedCriminal);
-            setCriminalData(response.data.criminal || editedCriminal);
+            const response = await apiClient.put('/criminals/update', changedFields);
+            if (response.data && response.data.success) {
+                setPopup({ open: true, status: 'success', message: 'Criminal record updated successfully', description: '' });
+            } else {
+                setPopup({ open: true, status: 'error', message: 'Update failed', description: response.data?.message || 'Failed to update criminal record.' });
+            }
+            setPendingUpdate(editedCriminal);
             setIsEditing(false);
-            setLoading(false);
         } catch (err) {
-            console.error("Error saving criminal data:", err);
-            // Keep the edited data for now so user doesn't lose changes
-            setCriminalData(editedCriminal);
+            setPopup({ open: true, status: 'error', message: 'Update failed', description: err?.response?.data?.message || 'An error occurred.' });
+        }
+    };
+
+    const handlePopupClose = () => {
+        setPopup(prev => ({ ...prev, open: false }));
+        if (popup.status === 'success' && pendingUpdate) {
+            setCriminalData(pendingUpdate);
+            setEditedCriminal(pendingUpdate);
+            setPendingUpdate(editedCriminal);
             setIsEditing(false);
-            setLoading(false);
         }
     };
 
@@ -165,7 +202,12 @@ const CriminalRecord = () => {
                         label: 'Save',
                         onClick: handleSaveChanges,
                         styles: 'bg-green-700 text-white'
-                    } : null
+                    } : null,
+                    {
+                        icon: <History fontSize='small' />,
+                        onClick: () => navigate(`/recordhistory/criminalrecord/${criminalId}`),
+                        styles: 'bg-white rounded-full text-gray-700 border-purple-600'
+                    }
                 ].filter(Boolean)}
             />
 
@@ -209,6 +251,15 @@ const CriminalRecord = () => {
                     </div>
                 </div>
             </div>
+
+            <StatusPopup
+                open={popup.open}
+                status={popup.status}
+                message={popup.message}
+                description={popup.description}
+                onClose={handlePopupClose}
+                okLabel={popup.status === 'success' ? 'Ok' : 'Close'}
+            />
 
             {/* Footer */}
             <footer className="bg-gray-200 text-gray-600 py-4 mt-8">

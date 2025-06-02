@@ -19,13 +19,30 @@ apiClient.interceptors.request.use((config) => {
 });
 
 // Decrypt if backend sends encrypted
-apiClient.interceptors.response.use((response) => {
-  if (response.data?.payload) {
-    try {
-      response.data = decryptAES(response.data.payload);
-    } catch {
-      console.warn("Failed to decrypt response");
+apiClient.interceptors.response.use(
+  (response) => {
+    if (response.data?.payload) {
+      try {
+        response.data = decryptAES(response.data.payload);
+      } catch {
+        console.warn("Failed to decrypt response");
+      }
     }
+    return response;
+  },
+  (error) => {
+    // Decrypt error response if encrypted
+    if (
+      error.response &&
+      error.response.data &&
+      error.response.data.payload
+    ) {
+      try {
+        error.response.data = decryptAES(error.response.data.payload);
+      } catch {
+        console.warn("Failed to decrypt error response");
+      }
+    }
+    return Promise.reject(error);
   }
-  return response;
-});
+);

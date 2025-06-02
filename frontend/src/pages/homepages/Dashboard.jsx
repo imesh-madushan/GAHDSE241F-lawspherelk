@@ -176,7 +176,7 @@ const Dashboard = () => {
               </div>
             ) : recentComplaints.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                <p>No recent complaints found</p>
+                <p>No new complaints found</p>
               </div>
             ) : (
               recentComplaints.map((complaint, index) => (

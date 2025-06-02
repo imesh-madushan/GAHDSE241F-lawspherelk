@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { CalendarMonth, AccessTime } from '@mui/icons-material';
+import { CalendarMonth, AccessTime, Add } from '@mui/icons-material';
 import { apiClient } from '../../config/apiConfig';
 import PageHeader from '../../components/common/PageHeader';
 import SearchInterface from '../../components/searchsection/SearchInterface';
+import CreateOffenceModal from '../../components/modals/CreateOffenceModal';
+import { useAuth } from '../../contexts/AuthContext';
 
 const CrimeOffencesPage = () => {
     const [offences, setOffences] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [openCreateModal, setOpenCreateModal] = useState(false);
+    const { user } = useAuth();
 
     const searchOptions = [
         { value: 'crime_type', label: 'Crime Type' },
@@ -147,6 +151,19 @@ const CrimeOffencesPage = () => {
                     { label: 'Dashboard', link: '/dashboard' },
                     { label: 'Crime Offences' }
                 ]}
+                actions={[
+                    ...(user && (
+                        user.role === 'OIC' ||
+                        user.role === 'Crime OIC' ||
+                        user.role === 'Inspector' ||
+                        user.role === 'Sub Inspector'
+                    ) ? [{
+                        icon: <Add fontSize='small' className='bg-white text-blue-800 rounded-full' />,
+                        label: 'Create Offence',
+                        onClick: () => setOpenCreateModal(true),
+                        styles: 'h-10 bg-blue-800 text-white border-blue-800'
+                    }] : [])
+                ]}
             />
 
             <div className="container mx-auto p-4">
@@ -177,7 +194,11 @@ const CrimeOffencesPage = () => {
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {offences.map((offence) => (
                                     <tr key={offence.offence_id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{offence.offence_id}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            <Link to={`/crimeoffences/${offence.offence_id}`} className="hover:underline text-blue-600">
+                                                {offence.offence_id}
+                                            </Link>
+                                        </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{offence.crime_type}</td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${offence.status === "Under Investigation"
@@ -227,8 +248,22 @@ const CrimeOffencesPage = () => {
                     </div>
                 )}
             </div>
+
+            <CreateOffenceModal
+                open={openCreateModal}
+                onClose={() => setOpenCreateModal(false)}
+                canCreate={
+                    user &&
+                    (
+                        user.role === 'OIC' ||
+                        user.role === 'Crime OIC' ||
+                        user.role === 'Inspector' ||
+                        user.role === 'Sub Inspector'
+                    )
+                }
+            />
         </div>
     );
 };
 
-export default CrimeOffencesPage; 
+export default CrimeOffencesPage;
