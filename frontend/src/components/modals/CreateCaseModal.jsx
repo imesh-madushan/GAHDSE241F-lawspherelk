@@ -28,6 +28,13 @@ const CreateCaseModal = ({ open, onClose, complaintId, caseId }) => {
         onClose();
     };
 
+    const dropOfficerRoles = [
+        'OIC',
+        'Crime OIC',
+        'Police Constable',
+        'Forensic Officer'
+    ];
+
     const validateForm = () => {
         if (!caseTopicInput.trim()) {
             setError("Please enter a case topic");
@@ -204,6 +211,9 @@ const CreateCaseModal = ({ open, onClose, complaintId, caseId }) => {
                                                 Case Leader <span className="text-red-500">*</span>
                                             </label>
                                             <CustomOfficerDropdown
+                                                filters={{
+                                                    dropRoles: dropOfficerRoles
+                                                }}
                                                 selectedOfficerId={selectedLeader?.id}
                                                 onOfficerSelect={(officer) => setSelectedLeader(officer)}
                                                 setError={setError}

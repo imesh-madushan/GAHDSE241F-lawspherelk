@@ -8,7 +8,7 @@ const searchOptions = [
 ];
 
 const CustomCaseDropdown = ({
-    cases = [],
+    filters = {},
     selectedCaseId,
     onCaseSelect,
     className = ""
@@ -23,8 +23,7 @@ const CustomCaseDropdown = ({
     const dropdownRef = useRef(null);
     const inputRef = useRef(null);
 
-    const selectedCase = cases.find(c => c.case_id === selectedCaseId) ||
-        searchResults.find(c => c.case_id === selectedCaseId);
+    const selectedCase = searchResults.find(c => c.case_id === selectedCaseId);
 
     // Handle outside clicks to close dropdown
     useEffect(() => {
@@ -47,31 +46,24 @@ const CustomCaseDropdown = ({
     // Search cases when term/type changes
     useEffect(() => {
         const delayDebounceSearch = setTimeout(async () => {
-            if (isOpen && searchTerm.trim().length > 0) {
-                setIsLoading(true);
-                try {
-                    let params = { limit: 25 };
-                    if (searchType === 'topic') params.topic = searchTerm;
-                    if (searchType === 'case_id') params.case_id = searchTerm;
-                    const { data } = await apiClient.get('/cases/search', { params });
-                    setSearchResults(data.cases || []);
-                } catch (error) {
-                    setSearchResults([]);
-                } finally {
-                    setIsLoading(false);
-                }
-            } else if (searchTerm.trim() === '') {
-                setSearchResults(cases);
+            setIsLoading(true);
+            try {
+                let params = { limit: 25  };
+                if (filters.status) params.status = filters.status;
+                if (searchType === 'topic') params.topic = searchTerm;
+                if (searchType === 'case_id') params.case_id = searchTerm;
+                const { data } = await apiClient.get('/cases/search', { params });
+                setSearchResults(data.cases || []);
+            } catch (error) {
+                setSearchResults([]);
+            } finally {
+                setIsLoading(false);
             }
+
         }, 300);
 
         return () => clearTimeout(delayDebounceSearch);
-    }, [searchTerm, searchType, isOpen, cases]);
-
-    // Initialize search results with provided cases
-    useEffect(() => {
-        setSearchResults(cases);
-    }, [cases]);
+    }, [searchTerm, searchType, isOpen]);
 
     const loadMoreResults = () => {
         setDisplayLimit(prev => prev + 10);
@@ -120,7 +112,7 @@ const CustomCaseDropdown = ({
 
             {/* Dropdown menu */}
             {isOpen && (
-                <div className="absolute mt-1 w-full bg-white rounded-lg shadow-lg z-40 border border-gray-200 overflow-hidden">
+                <div className="absolute mt-1 w-full bg-white rounded-lg shadow-lg z-50 border border-gray-200 overflow-hidden">
                     <div className="sticky top-0 p-2 border-b border-gray-200 bg-gray-50">
                         <div className="flex gap-2 mb-2">
                             <select

@@ -79,6 +79,13 @@ const SingleCaseView = () => {
     }
   };
 
+  const dropOfficerRoles = [
+    'OIC',
+    'Crime OIC',
+    'Police Constable',
+    'Forensic Officer'
+  ];
+
   // Format time
   const formatTime = (dateString) => {
     const date = new Date(dateString);
@@ -492,6 +499,9 @@ const SingleCaseView = () => {
 
                   {isEditing && canChangeLeader ? (
                     <CustomOfficerDropdown
+                      filters={{
+                        dropRoles: dropOfficerRoles,
+                      }}
                       selectedOfficerId={editedCase.leader_id}
                       onOfficerSelect={handleLeaderChange}
                       className="mb-4"

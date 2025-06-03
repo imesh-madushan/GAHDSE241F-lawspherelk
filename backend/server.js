@@ -11,6 +11,7 @@ const commonRoutes = require('./routes/commonRoutes');
 const officerRoutes = require('./routes/officerRoutes');
 const criminalRoutes = require('./routes/criminalRoutes');
 const crimeOffenceRoutes = require('./routes/crimeOffenceRoutes');
+const investigationRoutes = require('./routes/investigationRoutes');
 const { decryptRequest, encryptResponse } = require('./middlewares/encryptionMiddleware');
 
 const app = express();
@@ -31,6 +32,7 @@ app.use('/api/common', commonRoutes);
 app.use('/api/officers', officerRoutes);
 app.use('/api/criminals', criminalRoutes);
 app.use('/api/crimeoffences', crimeOffenceRoutes);
+app.use('/api/investigations', investigationRoutes);
 
 app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);

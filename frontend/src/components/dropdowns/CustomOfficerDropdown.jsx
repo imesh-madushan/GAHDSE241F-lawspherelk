@@ -3,6 +3,7 @@ import { KeyboardArrowDown, Search, Person, Clear } from '@mui/icons-material';
 import { apiClient } from '../../config/apiConfig';
 
 const CustomOfficerDropdown = ({
+    filters = {},
     selectedOfficerId,
     onOfficerSelect,
     setError,
@@ -13,33 +14,53 @@ const CustomOfficerDropdown = ({
     const dropdownRef = useRef(null);
     const inputRef = useRef(null);
     const [officers, setAvailableOfficers] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
 
     // Find the selected officer
     const selectedOfficer = officers.find(officer => officer.id === selectedOfficerId);
 
-    // Filter officers based on search term
-    const filteredOfficers = officers.filter(officer =>
-        officer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (officer.role && officer.role.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+    // Filter officers based on search term (for local fallback)
+    const filteredOfficers = officers;
 
-    const fetchAvailableOfficers = async () => {
-        try {
-            const response = await apiClient.post('/officers/getAll');
-            if (response.data && Array.isArray(response.data)) {
-                const formattedOfficers = response.data.map(officer => ({
-                    id: officer.user_id || officer.id,
-                    name: officer.name,
-                    role: officer.role,
-                    image: officer.profile_pic || officer.image
-                }));
-                setAvailableOfficers(formattedOfficers);
+    // Debounced search from backend
+    useEffect(() => {
+        if (!isOpen) return;
+        setIsLoading(true);
+        const delayDebounce = setTimeout(async () => {
+            try {
+                const reqFilters = { ...filters };
+                if (searchTerm && searchTerm.trim().length > 0) {
+                    reqFilters.name = searchTerm.trim();
+                }
+                const response = await apiClient.post('/officers/search', reqFilters);
+                if (response.data && Array.isArray(response.data)) {
+                    const formattedOfficers = response.data.map(officer => ({
+                        id: officer.user_id || officer.id,
+                        name: officer.name,
+                        role: officer.role,
+                        image: officer.profile_pic || officer.image
+                    }));
+                    setAvailableOfficers(formattedOfficers);
+                } else {
+                    setAvailableOfficers([]);
+                }
+            } catch (err) {
+                setAvailableOfficers([]);
+                if (setError) setError("Failed to load available officers");
+            } finally {
+                setIsLoading(false);
             }
-        } catch (err) {
-            console.error("Error fetching officers:", err);
-            setError("Failed to load available officers");
+        }, 300);
+
+        return () => clearTimeout(delayDebounce);
+    }, [searchTerm, isOpen, filters, setError]);
+
+    // Initial fetch when dropdown opens
+    useEffect(() => {
+        if (isOpen) {
+            setSearchTerm('');
         }
-    };
+    }, [isOpen]);
 
     // Handle click outside to close dropdown
     useEffect(() => {
@@ -62,10 +83,6 @@ const CustomOfficerDropdown = ({
             inputRef.current.focus();
         }
     }, [isOpen]);
-
-    useEffect(() => {
-        fetchAvailableOfficers();
-    }, [])
 
     // Generate initials from name for fallback avatar
     const getInitials = (name) => {
@@ -136,7 +153,7 @@ const CustomOfficerDropdown = ({
                     ) : (
                         <div className="text-gray-500 flex items-center">
                             <Person className="mr-2 text-gray-400" />
-                            <span>Select Case Leader</span>
+                            <span>Select officer</span>
                         </div>
                     )}
                 </div>
@@ -178,7 +195,11 @@ const CustomOfficerDropdown = ({
 
                     {/* Officers list */}
                     <div className="max-h-60 overflow-y-auto py-1">
-                        {filteredOfficers.length > 0 ? (
+                        {isLoading ? (
+                            <div className="flex justify-center items-center py-4">
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+                            </div>
+                        ) : filteredOfficers.length > 0 ? (
                             filteredOfficers.map(officer => (
                                 <div
                                     key={officer.id}

@@ -49,9 +49,10 @@ exports.searchOfficers = async (filters, userRole, userId) => {
         phone,
         email,
         page = 1,
-        pageSize = 12
+        pageSize = 12,
+        dropIds,
+        dropRoles
     } = filters;
-
     let query = `SELECT
                 u.user_id AS id,
                 u.name,
@@ -92,6 +93,23 @@ exports.searchOfficers = async (filters, userRole, userId) => {
     if (email) {
         query += " AND u.email LIKE ?";
         params.push(`%${email}%`);
+    }
+    if (dropIds && dropIds.length > 0) {
+        query += " AND u.user_id NOT IN (";
+        dropIds.forEach((id, index) => {
+            query += index === 0 ? "?" : ", ?";
+            params.push(id);
+        });
+        query += ")";
+    }
+
+    if (dropRoles && dropRoles.length > 0) {
+        query += " AND u.role NOT IN (";
+        dropRoles.forEach((role, index) => {
+            query += index === 0 ? "?" : ", ?";
+            params.push(role);
+        });
+        query += ")";
     }
 
     const offset = (page - 1) * pageSize;

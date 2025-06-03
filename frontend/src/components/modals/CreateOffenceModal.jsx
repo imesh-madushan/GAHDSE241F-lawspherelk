@@ -339,7 +339,6 @@ const CreateOffenceModal = ({ open, onClose }) => {
                                                 Select Criminal <span className="text-red-500">*</span>
                                             </label>
                                             <CustomCriminalDropdown
-                                                criminals={criminals}
                                                 selectedCriminalId={form.criminal_id}
                                                 onCriminalSelect={(criminal) => setForm(prev => ({ ...prev, criminal_id: criminal.criminal_id }))}
                                                 onCreateNewCriminal={handleCreateNewCriminal}
@@ -363,7 +362,7 @@ const CreateOffenceModal = ({ open, onClose }) => {
                                                 Select Case <span className="text-red-500">*</span>
                                             </label>
                                             <CustomCaseDropdown
-                                                cases={cases}
+                                                filters={{ status: 'inprogress' }}
                                                 selectedCaseId={form.case_id}
                                                 onCaseSelect={(caseObj) => setForm(prev => ({ ...prev, case_id: caseObj.case_id }))}
                                                 className="w-full"

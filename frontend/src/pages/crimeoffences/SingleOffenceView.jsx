@@ -14,13 +14,7 @@ import StatusBadge from '../../components/badges/StatusBadge';
 import OutlinedButton from '../../components/buttons/OutlinedButton';
 import { crimeTypes } from '../../../data';
 import StatusPopup from '../../components/common/StatusPopup';
-
-const offenceStatusList = [
-    { value: 'Alleged', label: 'Alleged', colorVariant: 'yellow' },
-    { value: 'Under Investigation', label: 'Under Investigation', colorVariant: 'blue' },
-    { value: 'Convicted', label: 'Convicted', colorVariant: 'red' },
-    { value: 'Acquitted', label: 'Acquitted', colorVariant: 'green' }
-];
+import { offenceStatusList } from '../../../data';
 
 const SingleOffenceView = () => {
     const { offenceId } = useParams();
@@ -86,8 +80,13 @@ const SingleOffenceView = () => {
 
     // Determine permissions
     const canEdit = () => {
-        return user?.role === "OIC" || user?.role === "Crime OIC";
+        return user?.role === "OIC" || user?.role === "Crime OIC" || user?.user_id === offence?.case_leader_id;
     };
+
+    const canChangeStatus = () => {
+        return user?.role === "OIC";
+    };
+
 
     // Edit handlers
     const handleEditToggle = () => {
@@ -331,7 +330,8 @@ const SingleOffenceView = () => {
                                 <StatusBadge
                                     status={offence.status}
                                     statusList={offenceStatusList}
-                                    isEditing={false}
+                                    isEditing={(isEditing && canChangeStatus())}
+                                    handleInputChange={handleInputChange}
                                 />
 
                                 <div className={`px-3 py-1 rounded-full text-sm font-medium ${riskData.bgColor} ${riskData.color}`}>
@@ -381,26 +381,6 @@ const SingleOffenceView = () => {
                                     ) : (
                                         <div className="bg-gray-50 p-3 rounded-lg text-gray-800">
                                             {offence.crime_type}
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                                    {isEditing ? (
-                                        <select
-                                            name="status"
-                                            value={editedOffence.status || ''}
-                                            onChange={handleInputChange}
-                                            className="w-full p-3 border border-blue-300 rounded-lg bg-blue-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        >
-                                            {offenceStatusList.map(status => (
-                                                <option key={status.value} value={status.value}>{status.label}</option>
-                                            ))}
-                                        </select>
-                                    ) : (
-                                        <div className="bg-gray-50 p-3 rounded-lg text-gray-800">
-                                            {offence.status}
                                         </div>
                                     )}
                                 </div>
@@ -497,12 +477,12 @@ const SingleOffenceView = () => {
                                         <div className="flex items-center mb-4">
                                             <span className="text-sm text-gray-500">Status:</span>
                                             <span className={`ml-2 font-medium ${offence.case_status === 'inprogress' ? 'text-green-700' :
-                                                    offence.case_status === 'closed' ? 'text-red-700' : 'text-yellow-700'
+                                                offence.case_status === 'closed' ? 'text-red-700' : 'text-yellow-700'
                                                 }`}>
                                                 {offence.case_status || "Unknown"}
                                             </span>
                                             <div className={`h-3 w-3 rounded-full ml-2 ${offence.case_status === 'inprogress' ? 'bg-green-500' :
-                                                    offence.case_status === 'closed' ? 'bg-red-500' : 'bg-yellow-500'
+                                                offence.case_status === 'closed' ? 'bg-red-500' : 'bg-yellow-500'
                                                 }`} />
                                         </div>
                                     </div>

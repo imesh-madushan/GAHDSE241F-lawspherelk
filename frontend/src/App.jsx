@@ -12,9 +12,11 @@ import CriminalRecord from './pages/criminalrecord/CriminalRecord';
 import CriminalsPage from './pages/criminalrecord/CriminalsPage';
 import CrimeOffencesPage from './pages/crimeoffences/CrimeOffencesPage';
 import SingleOffenceView from './pages/crimeoffences/SingleOffenceView';
+import InvestigationsPage from './pages/investigations/InvestigationsPage';
 import Test from './pages/Test';
 import OfficerProfile from './pages/officers/OfficerProfile';
 import AllOfficersPage from './pages/officers/AllOfficersPage';
+import SingleInvestigationView from './pages/investigations/SingleInvestigationView';
 
 function App() {
   // temp login
@@ -49,6 +51,8 @@ function App() {
           <Route path="criminals/:criminalId" element={<CriminalRecord />} />
           <Route path="crimeoffences" element={<CrimeOffencesPage />} />
           <Route path="crimeoffences/:offenceId" element={<SingleOffenceView />} />
+          <Route path="investigations" element={<InvestigationsPage />} />
+          <Route path="investigations/:investigationId" element={<SingleInvestigationView />} />
           <Route path="officers" element={<AllOfficersPage />} />
           <Route path="officers/:officerId" element={<OfficerProfile />} />
           <Route path="recordhistory" element={<div>Record History</div>} />

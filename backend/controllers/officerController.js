@@ -17,7 +17,11 @@ exports.getAll = async (req, res) => {
         const roles = req.body.roles || [];
         const officers = await officerService.getAllOfficers(roles, user.role, user.user_id);
 
-        res.status(200).json(officers);
+        if (!officers || officers.length === 0) {   
+            return res.status(404).json({ message: "No officers found" });
+        }
+
+        res.status(200).json({ officers: officers });
     } catch (error) {
         console.error("Error in getAll officers:", error);
         res.status(500).json({ message: "Failed to fetch officers", error: error.message });
@@ -33,7 +37,9 @@ exports.searchOfficers = async (req, res) => {
         phone: req.body.phone || null,
         email: req.body.email || null,
         page: req.body.page || 1,
-        pageSize: req.body.pageSize || 12
+        pageSize: req.body.pageSize || 12,
+        dropIds: req.body.dropIds || [],
+        dropRoles: req.body.dropRoles || []
     };
 
     const token = req.cookies.authtoken;
@@ -45,7 +51,6 @@ exports.searchOfficers = async (req, res) => {
     if (!user) {
         return res.status(401).json({ message: "Unauthorized" });
     }
-
 
     try {
         const officers = await officerService.searchOfficers(filters, user.role, user.user_id);

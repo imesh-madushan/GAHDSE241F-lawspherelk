@@ -45,7 +45,7 @@ const OfficersPage = () => {
         setLoading(true);
         try {
             const res = await apiClient.post('/officers/getAll');
-            setOfficers(res.data);
+            setOfficers(res.data.officers);
             setTotalPages(1);
         } catch (err) {
             setOfficers([]);

@@ -42,6 +42,7 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
       { id: 'dashboard', label: 'Dashboard', icon: <Dashboard /> },
       { id: 'complaints', label: 'Complaints', icon: <Description /> },
       { id: 'cases', label: 'Cases', icon: <Folder /> },
+      { id: 'investigations', label: 'Investigations', icon: <Search /> },
       { id: 'criminals', label: 'Criminal Records', icon: <Fingerprint /> },
       { id: 'crimeoffences', label: 'Crime Offences', icon: <Description /> },
       { id: 'officers', label: 'Officers', icon: <People /> },

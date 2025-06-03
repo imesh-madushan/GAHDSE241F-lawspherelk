@@ -9,7 +9,7 @@ const searchOptions = [
 ];
 
 const CustomCriminalDropdown = ({
-    criminals = [],
+    filters = {},
     selectedCriminalId,
     onCriminalSelect,
     onCreateNewCriminal,
@@ -25,8 +25,7 @@ const CustomCriminalDropdown = ({
     const dropdownRef = useRef(null);
     const inputRef = useRef(null);
 
-    const selectedCriminal = criminals.find(c => c.criminal_id === selectedCriminalId) ||
-        searchResults.find(c => c.criminal_id === selectedCriminalId);
+    const selectedCriminal = searchResults.find(c => c.criminal_id === selectedCriminalId);
 
     // Handle outside clicks to close dropdown
     useEffect(() => {
@@ -49,32 +48,24 @@ const CustomCriminalDropdown = ({
     // Search criminals when term/type changes
     useEffect(() => {
         const delayDebounceSearch = setTimeout(async () => {
-            if (isOpen && searchTerm.trim().length > 0) {
-                setIsLoading(true);
-                try {
-                    let params = { limit: 25 };
-                    if (searchType === 'name') params.name = searchTerm;
-                    if (searchType === 'nic') params.nic = searchTerm;
-                    if (searchType === 'criminal_id') params.criminal_id = searchTerm;
-                    const { data } = await apiClient.get('/criminals/search', { params });
-                    setSearchResults(data.criminals || []);
-                } catch (error) {
-                    setSearchResults([]);
-                } finally {
-                    setIsLoading(false);
-                }
-            } else if (searchTerm.trim() === '') {
-                setSearchResults(criminals);
+            setIsLoading(true);
+            try {
+                let params = { limit: 25 };
+                if (searchType === 'name') params.name = searchTerm;
+                if (searchType === 'nic') params.nic = searchTerm;
+                if (searchType === 'criminal_id') params.criminal_id = searchTerm;
+                const { data } = await apiClient.get('/criminals/search', { params });
+                setSearchResults(data.criminals || []);
+            } catch (error) {
+                setSearchResults([]);
+            } finally {
+                setIsLoading(false);
             }
         }, 300);
 
         return () => clearTimeout(delayDebounceSearch);
-    }, [searchTerm, searchType, isOpen, criminals]);
+    }, [searchTerm, searchType, isOpen]);
 
-    // Initialize search results with provided criminals
-    useEffect(() => {
-        setSearchResults(criminals);
-    }, [criminals]);
 
     const loadMoreResults = () => {
         setDisplayLimit(prev => prev + 10);
