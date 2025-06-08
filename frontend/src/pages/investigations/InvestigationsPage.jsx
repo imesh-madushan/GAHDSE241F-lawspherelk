@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { CalendarMonth, AccessTime, Add, Group, Fingerprint } from '@mui/icons-material';
 import { apiClient } from '../../config/apiConfig';
 import PageHeader from '../../components/common/PageHeader';
@@ -13,6 +13,8 @@ const InvestigationsPage = () => {
     const [error, setError] = useState(null);
     const [openCreateModal, setOpenCreateModal] = useState(false);
     const { user } = useAuth();
+
+    const navigate = useNavigate();
 
     const searchOptions = [
         { value: 'topic', label: 'Investigation Topic' },
@@ -171,6 +173,7 @@ const InvestigationsPage = () => {
                         styles: 'h-10 bg-blue-800 text-white border-blue-800'
                     }] : [])
                 ]}
+                onBack={() => navigate(-1)}
             />
 
             <div className="container mx-auto p-4">

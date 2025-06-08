@@ -13,7 +13,9 @@ const CustomCriminalDropdown = ({
     selectedCriminalId,
     onCriminalSelect,
     onCreateNewCriminal,
-    className = ""
+    className = "",
+    isAutoSelected = false,
+    dropdownLocked = false
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchType, setSearchType] = useState('name');
@@ -66,6 +68,23 @@ const CustomCriminalDropdown = ({
         return () => clearTimeout(delayDebounceSearch);
     }, [searchTerm, searchType, isOpen]);
 
+    // New useEffect to fetch selected criminal details if auto-selected
+    useEffect(() => {
+        const fetchSelectedCriminal = async () => {
+            if (selectedCriminalId && !selectedCriminal && isAutoSelected) {
+                try {
+                    const { data } = await apiClient.get(`/criminals/${selectedCriminalId}`);
+                    if (data.criminalData) {
+                        setSearchResults(prev => [data.criminalData, ...prev]);
+                    }
+                } catch (error) {
+                    console.error('Error fetching selected criminal:', error);
+                }
+            }
+        };
+
+        fetchSelectedCriminal();
+    }, [selectedCriminalId, selectedCriminal, isAutoSelected]);
 
     const loadMoreResults = () => {
         setDisplayLimit(prev => prev + 10);
@@ -77,37 +96,73 @@ const CustomCriminalDropdown = ({
         <div className={`relative ${className}`} ref={dropdownRef}>
             {/* Selected criminal display */}
             <div
-                onClick={() => setIsOpen(!isOpen)}
-                className={`w-full border rounded-lg p-1.5 flex items-center justify-between cursor-pointer transition-all 
-                    ${isOpen ? 'border-blue-400 ring-2 ring-blue-100 shadow-md' : 'border-gray-200 hover:border-blue-300'}`}
+                onClick={() => !dropdownLocked && setIsOpen(!isOpen)}
+                className={`w-full border rounded-lg p-3 flex items-center justify-between transition-all 
+                    ${!dropdownLocked ? 'cursor-pointer' : 'cursor-not-allowed'} 
+                    ${isOpen ? 'border-blue-400 ring-2 ring-blue-100 shadow-md' : 'border-gray-300 hover:border-blue-300'}
+                    ${isAutoSelected ? 'bg-green-50 border-green-300' : 'bg-white'}
+                    ${dropdownLocked ? 'opacity-75' : ''}`}
             >
                 <div className="flex items-center flex-1 min-w-0">
                     {selectedCriminal ? (
-                        <>
-                            <Person className="text-blue-700 mr-1.5" style={{ fontSize: '1rem' }} />
-                            <div className="truncate">
-                                <div className="text-gray-900 font-medium truncate text-sm">{selectedCriminal.name}</div>
-                                <div className="text-xs text-gray-500 truncate">{selectedCriminal.criminal_id}</div>
+                        <div className="flex items-center w-full">
+                            <div className="w-10 h-10 mr-3 flex-shrink-0">
+                                <img
+                                    src={selectedCriminal.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedCriminal.name)}&background=3b82f6&color=ffffff&size=40`}
+                                    alt={selectedCriminal.name}
+                                    className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                                    onError={(e) => {
+                                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedCriminal.name)}&background=3b82f6&color=ffffff&size=40`;
+                                    }}
+                                />
                             </div>
-                        </>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between">
+                                    <div className="min-w-0 flex-1">
+                                        <div className="text-sm font-semibold text-gray-900 truncate">
+                                            {selectedCriminal.name}
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <span className="text-xs text-gray-500 font-medium">#{selectedCriminal.criminal_id}</span>
+                                            {selectedCriminal.nic && (
+                                                <>
+                                                    <span className="text-xs text-gray-400">•</span>
+                                                    <span className="text-xs text-gray-500">{selectedCriminal.nic}</span>
+                                                </>
+                                            )}
+                                            {isAutoSelected && (
+                                                <>
+                                                    <span className="text-xs text-gray-400">•</span>
+                                                    <span className="text-xs text-green-600 font-medium">Auto-selected</span>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     ) : (
                         <div className="text-gray-500 flex items-center">
-                            <Person className="mr-1.5 text-gray-400" style={{ fontSize: '1rem' }} />
+                            <div className="w-10 h-10 mr-3 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center">
+                                <Person className="text-gray-400" style={{ fontSize: '1.2rem' }} />
+                            </div>
                             <span className="text-sm">Select Criminal</span>
                         </div>
                     )}
                 </div>
                 <div className="flex items-center ml-2">
-                    <div className={`text-gray-400 transition-transform duration-200 ${isOpen ? 'transform rotate-180' : ''}`}>
-                        <KeyboardArrowDown fontSize="small" />
-                    </div>
+                    {!dropdownLocked && (
+                        <div className={`text-gray-400 transition-transform duration-200 ${isOpen ? 'transform rotate-180' : ''}`}>
+                            <KeyboardArrowDown fontSize="small" />
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* Dropdown menu */}
-            {isOpen && (
+            {/* Dropdown menu - only show if not locked */}
+            {isOpen && !dropdownLocked && (
                 <div className="absolute mt-1 w-full bg-white rounded-lg shadow-lg z-40 border border-gray-200 overflow-hidden">
-                    <div className="sticky top-0 p-2 border-b border-gray-200 bg-gray-50">
+                    <div className="sticky top-0 p-3 border-b border-gray-200 bg-gray-50">
                         <div className="flex gap-2 mb-2">
                             <select
                                 value={searchType}
@@ -128,7 +183,7 @@ const CustomCriminalDropdown = ({
                                     placeholder={`Search by ${searchOptions.find(o => o.value === searchType).label}...`}
                                     value={searchTerm}
                                     onChange={e => setSearchTerm(e.target.value)}
-                                    className="block w-full pl-9 pr-3 py-1.5 text-sm border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="block w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 />
                             </div>
                         </div>
@@ -145,7 +200,7 @@ const CustomCriminalDropdown = ({
                         </button>
                     </div>
 
-                    <div className="max-h-48 overflow-y-auto py-1">
+                    <div className="max-h-60 overflow-y-auto py-1">
                         {isLoading ? (
                             <div className="flex justify-center items-center py-4">
                                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
@@ -155,14 +210,34 @@ const CustomCriminalDropdown = ({
                                 {displayedCriminals.map(criminal => (
                                     <div
                                         key={criminal.criminal_id}
-                                        className={`px-3 py-1.5 hover:bg-blue-50 cursor-pointer flex items-center transition-colors text-sm ${selectedCriminalId === criminal.criminal_id ? 'bg-blue-50' : ''}`}
+                                        className={`px-3 py-3 hover:bg-blue-50 cursor-pointer flex items-center transition-colors ${selectedCriminalId === criminal.criminal_id ? 'bg-blue-50 border-r-2 border-blue-500' : ''}`}
                                         onClick={() => { onCriminalSelect(criminal); setIsOpen(false); }}
                                     >
-                                        <Person className="text-blue-700 mr-2" fontSize="small" />
-                                        <div className="truncate flex-1">
-                                            <div className="text-gray-900 font-medium truncate">{criminal.name}</div>
-                                            <div className="text-xs text-gray-500 truncate">{criminal.criminal_id}</div>
+                                        <div className="w-8 h-8 mr-3 flex-shrink-0">
+                                            <img
+                                                src={criminal.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(criminal.name)}&background=3b82f6&color=ffffff&size=32`}
+                                                alt={criminal.name}
+                                                className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                                                onError={(e) => {
+                                                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(criminal.name)}&background=3b82f6&color=ffffff&size=32`;
+                                                }}
+                                            />
                                         </div>
+                                        <div className="truncate flex-1">
+                                            <div className="text-sm font-medium text-gray-900 truncate">{criminal.name}</div>
+                                            <div className="text-xs text-gray-500 truncate flex items-center gap-2">
+                                                <span>#{criminal.criminal_id}</span>
+                                                {criminal.nic && (
+                                                    <>
+                                                        <span className="text-gray-400">•</span>
+                                                        <span>{criminal.nic}</span>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                        {selectedCriminalId === criminal.criminal_id && (
+                                            <div className="ml-2 w-2 h-2 bg-blue-600 rounded-full"></div>
+                                        )}
                                     </div>
                                 ))}
 
@@ -178,7 +253,7 @@ const CustomCriminalDropdown = ({
                             </>
                         ) : (
                             <div className="flex flex-col items-center justify-center py-4 px-3 text-center">
-                                <div className="flex bg-gray-100 rounded-full p-1.5 mb-2">
+                                <div className="flex bg-gray-100 rounded-full p-2 mb-2">
                                     <Person className="text-gray-400" fontSize="small" />
                                 </div>
                                 <p className="text-gray-500 text-xs mb-2">No criminals found</p>

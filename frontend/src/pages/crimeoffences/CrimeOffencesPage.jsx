@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { CalendarMonth, AccessTime, Add } from '@mui/icons-material';
 import { apiClient } from '../../config/apiConfig';
 import PageHeader from '../../components/common/PageHeader';
@@ -13,6 +13,8 @@ const CrimeOffencesPage = () => {
     const [error, setError] = useState(null);
     const [openCreateModal, setOpenCreateModal] = useState(false);
     const { user } = useAuth();
+
+    const navigate = useNavigate();
 
     const searchOptions = [
         { value: 'crime_type', label: 'Crime Type' },
@@ -164,6 +166,7 @@ const CrimeOffencesPage = () => {
                         styles: 'h-10 bg-blue-800 text-white border-blue-800'
                     }] : [])
                 ]}
+                onBack={() => navigate(-1)}
             />
 
             <div className="container mx-auto p-4">
@@ -195,7 +198,7 @@ const CrimeOffencesPage = () => {
                                 {offences.map((offence) => (
                                     <tr key={offence.offence_id} className="hover:bg-gray-50">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            <Link to={`/crimeoffences/${offence.offence_id}`} className="hover:underline text-blue-600">
+                                            <Link to={`/crimeoffences/${offence.offence_id}`} className="hover:underline text-blue-600 font-medium">
                                                 {offence.offence_id}
                                             </Link>
                                         </td>

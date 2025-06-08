@@ -83,7 +83,7 @@ const CaseComplaintCard = ({ complaint, formatDate, onViewFullComplaint }) => {
 
         <button
           onClick={onViewFullComplaint}
-          className="w-full mt-2 text-blue-600 hover:text-white hover:bg-blue-600 text-sm py-2 px-4 border border-blue-200 rounded-lg flex items-center justify-center transition-colors duration-200"
+          className="w-full mt-2 text-blue-600 hover:cursor-pointer hover:text-white hover:bg-blue-600 text-sm py-2 px-4 border border-blue-200 rounded-lg flex items-center justify-center transition-colors duration-200"
         >
           <Visibility fontSize="small" className="mr-2" />
           View Full Complaint

@@ -3,19 +3,10 @@ import { Add, Person, CalendarToday, Visibility } from '@mui/icons-material';
 import OutlinedButton from '../../buttons/OutlinedButton';
 
 const ReportsTab = ({ caseData, canEdit, formatDate }) => {
-    const actions = {
-        Add: { icon: <Add fontSize='small' />, label: 'Create Report', onClick: () => { }, styles: 'text-blue-600 bg-blue-50' },
-    };
-
     return (
         <div>
             <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold text-gray-800">Reports</h3>
-                {canEdit && (
-                    <OutlinedButton
-                        action={actions.Add}
-                    />
-                )}
             </div>
 
             <div className="space-y-4">

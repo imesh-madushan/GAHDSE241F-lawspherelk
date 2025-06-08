@@ -270,13 +270,13 @@ const SingleOffenceView = () => {
         <div className="bg-gray-50 min-h-screen">
             {/* Header section with breadcrumb */}
             <PageHeader
-                title="Crime Offence Details"
+                title={isEditing ? "Edit Crime Offence" : "Crime Offence"}
                 breadcrumbItems={[
                     { label: 'Dashboard', link: '/dashboard' },
                     { label: 'Crime Offences', link: '/crimeoffences' },
                     { label: offenceId.substring(0, 8) }
                 ]}
-                onBack={() => navigate('/crimeoffences')}
+                onBack={() => navigate(-1)}
                 actions={[
                     ...(canEdit() ? [
                         isEditing ? {

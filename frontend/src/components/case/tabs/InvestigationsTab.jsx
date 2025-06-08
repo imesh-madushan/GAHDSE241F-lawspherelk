@@ -3,21 +3,15 @@ import { Add, CalendarToday, Folder } from '@mui/icons-material';
 import OutlinedButton from '../../buttons/OutlinedButton';
 
 const InvestigationsTab = ({ caseData, canAddInvestigation, formatDate }) => {
-  const actions = {
-    Add: { icon: <Add fontSize='small' />, label: 'Add Investigation', onClick: () => { }, styles: 'text-blue-600 bg-blue-50' },
-  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold text-gray-800">Investigations</h3>
-        {canAddInvestigation && (
-          <OutlinedButton
-            action={actions.Add}
-          />
-        )}
       </div>
 
-      <div className="space-y-4">
+      {caseData.investigations.length > 0 ? (
+            <div className="space-y-4">
         {caseData.investigations.map((investigation, index) => (
           <div key={index} className="rounded-lg bg-white p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex justify-between items-start mb-2">
@@ -42,6 +36,12 @@ const InvestigationsTab = ({ caseData, canAddInvestigation, formatDate }) => {
           </div>
         ))}
       </div>
+      ) : (
+        <div className="text-gray-500 text-center py-6">
+          <p>No investigations found for this case.</p>
+        </div>
+      )}
+  
     </div>
   );
 };

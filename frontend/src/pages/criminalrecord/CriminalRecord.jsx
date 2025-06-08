@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Print, Edit, Save, Cancel, History } from '@mui/icons-material';
+import { Print, Edit, Save, Cancel, History, Gavel, Attachment, Add, DeviceHub } from '@mui/icons-material';
 import PageHeader from '../../components/common/PageHeader';
 import CriminalProfile from '../../components/criminal/CriminalProfile';
 import CriminalTabs from '../../components/criminal/CriminalTabs';
@@ -9,8 +9,13 @@ import EvidenceTab from '../../components/criminal/tabs/EvidenceTab';
 import ForensicTab from '../../components/criminal/tabs/ForensicTab';
 import { apiClient } from '../../config/apiConfig';
 import StatusPopup from '../../components/common/StatusPopup';
+import CreateOffenceModal from '../../components/modals/CreateOffenceModal';
+import CreateEvidenceModal from '../../components/modals/CreateEvidenceModal';
+import OutlinedButton from '../../components/buttons/OutlinedButton';
+import { useAuth } from '../../contexts/AuthContext';
 
 const CriminalRecord = () => {
+    const { user } = useAuth();
     const { criminalId } = useParams();
     const [criminalData, setCriminalData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -20,6 +25,8 @@ const CriminalRecord = () => {
     const [editedCriminal, setEditedCriminal] = useState(null);
     const [popup, setPopup] = useState({ open: false, status: '', message: '', description: '' });
     const [pendingUpdate, setPendingUpdate] = useState(null);
+    const [showCreateOffenceModal, setShowCreateOffenceModal] = useState(false);
+    const [showCreateEvidenceModal, setShowCreateEvidenceModal] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -145,6 +152,24 @@ const CriminalRecord = () => {
         }));
     };
 
+    // Define authorization permissions
+    const canAddOffence = ['Crime OIC', 'OIC'].includes(user.role);
+
+    // Quick action handlers
+    const handleAddOffence = () => {
+        setShowCreateOffenceModal(true);
+    };
+
+    // Define quick actions
+    const quickActions = [
+        ...(canAddOffence ? [{
+            icon: <Gavel fontSize="small" />,
+            label: 'Add Offence',
+            onClick: handleAddOffence,
+            styles: 'w-full bg-amber-600 text-white hover:bg-amber-700 border-amber-600'
+        }] : [])
+    ];
+
     if (loading) {
         return (
             <div className="flex justify-center items-center h-screen">
@@ -172,13 +197,13 @@ const CriminalRecord = () => {
     return (
         <div className="bg-gray-50 min-h-screen">
             <PageHeader
-                title="Criminal Record"
+                title={isEditing ? "Edit Criminal Record" : "Criminal Record"}
                 breadcrumbItems={[
                     { label: 'Dashboard', link: '/dashboard' },
                     { label: 'Criminals', link: '/criminals' },
                     { label: criminalData.name }
                 ]}
-                onBack={() => navigate('/criminals')}
+                onBack={() => navigate(-1)}
                 actions={[
                     {
                         icon: <Print fontSize='small' />,
@@ -212,45 +237,107 @@ const CriminalRecord = () => {
             />
 
             <div className="container mx-auto p-4">
-                <CriminalProfile
-                    criminal={isEditing ? editedCriminal : criminalData}
-                    calculateAge={calculateAge}
-                    formatDate={formatDate}
-                    isEditing={isEditing}
-                    handleInputChange={handleInputChange}
-                />
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    {/* Main Content */}
+                    <div className="lg:col-span-3">
+                        <CriminalProfile
+                            criminal={isEditing ? editedCriminal : criminalData}
+                            calculateAge={calculateAge}
+                            formatDate={formatDate}
+                            isEditing={isEditing}
+                            handleInputChange={handleInputChange}
+                        />
 
-                <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                    <CriminalTabs
-                        activeTab={activeTab}
-                        setActiveTab={setActiveTab}
-                    />
-
-                    <div className="p-6">
-                        {activeTab === 'offences' && (
-                            <OffencesTab
-                                offences={isEditing ? editedCriminal.offences : criminalData.offences}
-                                formatDate={formatDate}
-                                formatTime={formatTime}
-                                isEditing={isEditing}
+                        <div className="bg-white rounded-xl shadow-md overflow-hidden">
+                            <CriminalTabs
+                                activeTab={activeTab}
+                                setActiveTab={setActiveTab}
                             />
-                        )}
 
-                        {activeTab === 'evidence' && (
-                            <EvidenceTab
-                                evidence={isEditing ? editedCriminal.evidence : criminalData.evidence}
-                                formatDate={formatDate}
-                                formatTime={formatTime}
-                                isEditing={isEditing}
-                            />
-                        )}
+                            <div className="p-6">
+                                {activeTab === 'offences' && (
+                                    <OffencesTab
+                                        offences={isEditing ? editedCriminal.offences : criminalData.offences}
+                                        formatDate={formatDate}
+                                        formatTime={formatTime}
+                                        isEditing={isEditing}
+                                    />
+                                )}
 
-                        {activeTab === 'forensic' && (
-                            <ForensicTab />
-                        )}
+                                {activeTab === 'evidence' && (
+                                    <EvidenceTab
+                                        evidence={isEditing ? editedCriminal.evidence : criminalData.evidence}
+                                        formatDate={formatDate}
+                                        formatTime={formatTime}
+                                        isEditing={isEditing}
+                                    />
+                                )}
+
+                                {activeTab === 'forensic' && (
+                                    <ForensicTab />
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Sidebar */}
+                    <div className="lg:col-span-1 space-y-6">
+                        {/* Criminal Summary Card */}
+                        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                            <div className="bg-gradient-to-r from-gray-50 to-red-50 px-6 py-4 border-b border-gray-100">
+                                <h2 className="font-semibold text-gray-800">Criminal Summary</h2>
+                            </div>
+                            <div className="p-6 space-y-4">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-gray-600 text-sm">Total Offences:</span>
+                                    <span className="font-bold text-xl text-red-600">{criminalData.offences?.length || 0}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-gray-600 text-sm">Evidence Items:</span>
+                                    <span className="font-bold text-xl text-blue-600">{criminalData.evidence?.length || 0}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-gray-600 text-sm">Age:</span>
+                                    <span className="font-medium text-lg">{calculateAge(criminalData.dob)} years</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Quick Actions */}
+                        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                            <div className="bg-gradient-to-r from-gray-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
+                                <h2 className="font-semibold text-gray-800 flex items-center">
+                                    <DeviceHub className="h-5 w-5 mr-2 text-blue-600" />
+                                    Quick Actions
+                                </h2>
+                            </div>
+                            <div className="p-6 space-y-3">
+                                {quickActions.length > 0 ? (
+                                    quickActions.map((action, index) => (
+                                        <div key={index} className="w-full">
+                                            <OutlinedButton action={action} />
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-4 text-gray-500">
+                                        <DeviceHub className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                                        <p className="text-sm">No actions available for your role</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            {/* Modals */}
+            <CreateOffenceModal
+                open={showCreateOffenceModal}
+                onClose={() => setShowCreateOffenceModal(false)}
+                canCreate={canAddOffence}
+                context="criminal"
+                contextId={criminalId}
+            />
 
             <StatusPopup
                 open={popup.open}

@@ -384,7 +384,7 @@ const SingleComplaintView = () => {
                     { label: 'Complaints', link: '/complaints' },
                     { label: complaintId.substring(0, 8) }
                 ]}
-                onBack={() => navigate('/complaints')}
+                onBack={() => navigate(-1)}
                 actions={[
                     ...(canEdit ? [
                         isEditing ? {

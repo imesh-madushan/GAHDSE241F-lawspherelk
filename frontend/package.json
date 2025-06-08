@@ -21,9 +21,13 @@
     "axios": "^1.8.4",
     "crypto-js": "^4.2.0",
     "date-fns": "^4.1.0",
+    "file-type": "^18.7.0",
+    "filesize": "^10.1.6",
     "lucide-react": "^0.487.0",
+    "mime-types": "^2.1.35",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-dropzone": "^14.3.8",
     "react-router-dom": "^7.5.0",
     "tailwindcss": "^4.1.3"
   },

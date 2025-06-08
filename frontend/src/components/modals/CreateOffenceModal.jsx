@@ -8,7 +8,7 @@ import CustomCriminalDropdown from '../dropdowns/CustomCriminalDropdown';
 import CustomCaseDropdown from '../dropdowns/CustomCaseDropdown';
 import CreateCriminalModal from '../modals/CreateCriminalModal';
 
-const CreateOffenceModal = ({ open, onClose }) => {
+const CreateOffenceModal = ({ open, onClose, canCreate = false, context = 'general', contextId = null }) => {
     const [creating, setCreating] = useState(false);
     const [form, setForm] = useState({
         crime_type: '',
@@ -27,8 +27,22 @@ const CreateOffenceModal = ({ open, onClose }) => {
 
     // Reset form when modal opens
     useEffect(() => {
-        if (open) resetForm();
-    }, [open]);
+        if (open) {
+            resetForm();
+            // Set default assignments based on context
+            if (context === 'case' && contextId) {
+                setForm(prev => ({
+                    ...prev,
+                    case_id: contextId
+                }));
+            } else if (context === 'criminal' && contextId) {
+                setForm(prev => ({
+                    ...prev,
+                    criminal_id: contextId
+                }));
+            }
+        }
+    }, [open, context, contextId]);
 
     // Fetch criminals and cases on modal open
     useEffect(() => {
@@ -184,6 +198,30 @@ const CreateOffenceModal = ({ open, onClose }) => {
     }, [popup, handleClose]);
 
     if (!open) return null;
+
+    if (!canCreate) {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center py-4 px-4">
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+                <div className="relative bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+                    <div className="mb-4">
+                        <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                            <Close className="text-red-600 text-2xl" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900">Access Denied</h3>
+                        <p className="text-gray-600 mt-2">You don't have permission to create offences.</p>
+                    </div>
+                    <OutlinedButton
+                        action={{
+                            label: 'Close',
+                            onClick: onClose,
+                            styles: 'bg-gray-100 text-gray-700 hover:bg-gray-200 w-full'
+                        }}
+                    />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center py-4 px-4 overflow-hidden">
@@ -343,9 +381,10 @@ const CreateOffenceModal = ({ open, onClose }) => {
                                                 onCriminalSelect={(criminal) => setForm(prev => ({ ...prev, criminal_id: criminal.criminal_id }))}
                                                 onCreateNewCriminal={handleCreateNewCriminal}
                                                 className="w-full"
+                                                isAutoSelected={context === 'criminal' && contextId === form.criminal_id}
+                                                dropdownLocked={context === 'criminal' && contextId === form.criminal_id}
                                             />
                                             {fieldErrors.criminal_id && <p className="text-red-500 text-xs mt-1">{fieldErrors.criminal_id}</p>}
-                                            <p className="text-xs text-gray-500 mt-1">Search by name, NIC, or ID. Click "Create New Criminal" if not found.</p>
                                         </div>
                                     </div>
                                 </div>
@@ -366,9 +405,10 @@ const CreateOffenceModal = ({ open, onClose }) => {
                                                 selectedCaseId={form.case_id}
                                                 onCaseSelect={(caseObj) => setForm(prev => ({ ...prev, case_id: caseObj.case_id }))}
                                                 className="w-full"
+                                                isAutoSelected={context === 'case' && contextId === form.case_id}
+                                                dropdownLocked={context === 'case' && contextId === form.case_id}
                                             />
                                             {fieldErrors.case_id && <p className="text-red-500 text-xs mt-1">{fieldErrors.case_id}</p>}
-                                            <p className="text-xs text-gray-500 mt-1">Search by case topic or case ID to link this offence.</p>
                                         </div>
                                     </div>
                                 </div>

@@ -12,8 +12,16 @@ export const apiClient = axios.create({
 
 // Encrypt all outgoing data
 apiClient.interceptors.request.use((config) => {
+  // Don't encrypt FormData (for file uploads)
+  if (config.data instanceof FormData) {
+    // Remove Content-Type header to let browser set it with boundary
+    delete config.headers['Content-Type'];
+    return config;
+  }
+
   if (config.data) {
     config.data = JSON.stringify({ payload: encryptAES(config.data) });
+    config.headers['Content-Type'] = 'application/json';
   }
   return config;
 });

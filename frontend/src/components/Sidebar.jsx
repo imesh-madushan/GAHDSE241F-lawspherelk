@@ -29,7 +29,7 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
       { id: 'complaints', label: 'Complaints', icon: <Description /> },
       { id: 'cases', label: 'Cases', icon: <Folder /> },
       { id: 'investigations', label: 'Investigations', icon: <Search /> },
-      { id: 'evidence', label: 'Evidence', icon: <Inventory2 /> },
+      { id: 'evidences', label: 'Evidence', icon: <Inventory2 /> },
       { id: 'criminals', label: 'Criminal Records', icon: <Fingerprint /> },
       { id: 'crimeoffences', label: 'Crime Offences', icon: <Description /> },
       { id: 'reports', label: 'Reports', icon: <Summarize /> },
@@ -43,6 +43,7 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
       { id: 'complaints', label: 'Complaints', icon: <Description /> },
       { id: 'cases', label: 'Cases', icon: <Folder /> },
       { id: 'investigations', label: 'Investigations', icon: <Search /> },
+      { id: 'evidences', label: 'Evidence', icon: <Inventory2 /> },
       { id: 'criminals', label: 'Criminal Records', icon: <Fingerprint /> },
       { id: 'crimeoffences', label: 'Crime Offences', icon: <Description /> },
       { id: 'officers', label: 'Officers', icon: <People /> },
@@ -57,7 +58,7 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
       { id: 'investigations', label: 'Investigations', icon: <Search /> },
       { id: 'criminals', label: 'Criminal Records', icon: <Fingerprint /> },
       { id: 'crimeoffences', label: 'Crime Offences', icon: <Description /> },
-      { id: 'evidence', label: 'Evidence', icon: <Inventory2 /> },
+      { id: 'evidences', label: 'Evidence', icon: <Inventory2 /> },
       { id: 'reports', label: 'Reports', icon: <Summarize /> },
       { id: 'settings', label: 'Settings', icon: <Settings /> }
     ],
@@ -65,7 +66,7 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
       { id: 'dashboard', label: 'Dashboard', icon: <Dashboard /> },
       { id: 'cases', label: 'Assigned Cases', icon: <Folder /> },
       { id: 'investigations', label: 'Investigations', icon: <Search /> },
-      { id: 'evidence', label: 'Evidence', icon: <Inventory2 /> },
+      { id: 'evidences', label: 'Evidence', icon: <Inventory2 /> },
       { id: 'reports', label: 'Reports', icon: <Summarize /> },
       { id: 'settings', label: 'Settings', icon: <Settings /> }
     ],
@@ -73,7 +74,7 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
       { id: 'dashboard', label: 'Dashboard', icon: <Dashboard /> },
       { id: 'cases', label: 'Assigned Cases', icon: <Folder /> },
       { id: 'investigations', label: 'Investigations', icon: <Search /> },
-      { id: 'evidence', label: 'Evidence Collection', icon: <Inventory2 /> },
+      { id: 'evidences', label: 'Evidence Collection', icon: <Inventory2 /> },
       { id: 'complaints', label: 'File Complaint', icon: <Description /> },
       { id: 'settings', label: 'Settings', icon: <Settings /> }
     ],
@@ -81,7 +82,7 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
       { id: 'dashboard', label: 'Dashboard', icon: <Dashboard /> },
       { id: 'forensic-requests', label: 'Analysis Requests', icon: <Science /> },
       { id: 'reports', label: 'Forensic Reports', icon: <Summarize /> },
-      { id: 'evidence', label: 'Evidence', icon: <Inventory2 /> },
+      { id: 'evidences', label: 'Evidence', icon: <Inventory2 /> },
       { id: 'team', label: 'Forensic Team', icon: <People /> },
       { id: 'analytics', label: 'Analytics', icon: <BarChart /> },
       { id: 'settings', label: 'Settings', icon: <Settings /> }

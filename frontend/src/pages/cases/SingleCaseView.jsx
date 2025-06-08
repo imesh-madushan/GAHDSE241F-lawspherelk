@@ -23,6 +23,12 @@ import OfficerCard from '../../components/cards/OfficerCard';
 import CustomOfficerDropdown from '../../components/dropdowns/CustomOfficerDropdown';
 import { caseStatusList, complainStatusList } from '../../../data';
 import StatusPopup from '../../components/common/StatusPopup';
+import { capitalizeFirstLetter } from '../../utils/Preprocessors';
+import CreateEvidenceModal from '../../components/modals/CreateEvidenceModal';
+import CreateInvestigationModal from '../../components/modals/CreateInvestigationModal';
+import CreateOffenceModal from '../../components/modals/CreateOffenceModal';
+// import CreateReportModal from '../../components/modals/CreateReportModal';
+import OutlinedButton from '../../components/buttons/OutlinedButton';
 
 const SingleCaseView = () => {
   const { user } = useAuth();
@@ -65,11 +71,75 @@ const SingleCaseView = () => {
   const [allOfficers, setAllOfficers] = useState([]);
   const [popup, setPopup] = useState({ open: false, status: 'success', message: '', description: '', referenceLink: null });
   const [pendingUpdate, setPendingUpdate] = useState(null);
+  const [tabCounts, setTabCounts] = useState({
+    evidence: 0,
+    investigations: 0,
+    offences: 0,
+    reports: 0
+  });
+  const [showCreateEvidenceModal, setShowCreateEvidenceModal] = useState(false);
+  const [showCreateInvestigationModal, setShowCreateInvestigationModal] = useState(false);
+  const [showCreateOffenceModal, setShowCreateOffenceModal] = useState(false);
+  const [showCreateReportModal, setShowCreateReportModal] = useState(false);
 
   const canEdit = user.user_id == caseData.leader_id || user.role === "OIC" || user.role === "Crime OIC";
-  const canChangeLeader = user.role === "Crime OIC";
-  const canAddEvidence = user.user_id == caseData.leader_id || user.role === "Crime OIC" || user.role === "Sub Inspector" || user.role === "Sergeant" || user.role === "Police Constable";
-  const canAddInvestigation = user.user_id == caseData.leader_id || user.role === "Crime OIC";
+  const canChangeLeader = user.role === "OIC" || user.role === "Crime OIC"
+  const canAddEvidence = user.user_id == caseData.leader_id || user.role === "OIC" || user.role === "Crime OIC" || user.role === "Sub Inspector" || user.role === "Sergeant" || user.role === "Police Constable";
+  const canAddInvestigation = user.user_id == caseData.leader_id || user.role === "OIC" || user.role === "Crime OIC";
+  const canAddOffence = user.user_id == caseData.leader_id || user.role === "OIC" || user.role === "Crime OIC" || user.role === "OIC";
+  const canCreateReport = user.user_id == caseData.leader_id || user.role === "OIC" || user.role === "Crime OIC" || user.role === "Sub Inspector" || user.role === "Sergeant";
+
+  // Quick action handlers
+  const handleAddEvidence = () => {
+    setShowCreateEvidenceModal(true);
+  };
+
+  const handleAddInvestigation = () => {
+    setShowCreateInvestigationModal(true);
+  };
+
+  const handleAddOffence = () => {
+    setShowCreateOffenceModal(true);
+  };
+
+  const handleCreateReport = () => {
+    setShowCreateReportModal(true);
+  };
+
+  // Define quick actions
+  const quickActions = [
+    ...(canAddEvidence ? [{
+      icon: <Attachment fontSize="small" />,
+      label: 'Add Evidence',
+      onClick: handleAddEvidence,
+      styles: 'w-full bg-blue-600 text-white hover:bg-blue-700 border-blue-600'
+    }] : []),
+    ...(canAddInvestigation ? [{
+      icon: <FormatListBulleted fontSize="small" />,
+      label: 'New Investigation',
+      onClick: handleAddInvestigation,
+      styles: 'w-full bg-indigo-600 text-white hover:bg-indigo-700 border-indigo-600'
+    }] : []),
+    ...(canAddOffence ? [{
+      icon: <Gavel fontSize="small" />,
+      label: 'File Crime Offence',
+      onClick: handleAddOffence,
+      styles: 'w-full bg-amber-600 text-white hover:bg-amber-700 border-amber-600'
+    }] : []),
+    ...(canCreateReport ? [{
+      icon: <Description fontSize="small" />,
+      label: 'Make New Report',
+      onClick: handleCreateReport,
+      styles: 'w-full bg-green-600 text-white hover:bg-green-700 border-green-600'
+    }] : [])
+  ];
+
+  const dropOfficerRoles = [
+    'OIC',
+    'Crime OIC',
+    'Police Constable',
+    'Forensic Officer'
+  ];
 
   const formatDate = (dateString) => {
     try {
@@ -79,12 +149,6 @@ const SingleCaseView = () => {
     }
   };
 
-  const dropOfficerRoles = [
-    'OIC',
-    'Crime OIC',
-    'Police Constable',
-    'Forensic Officer'
-  ];
 
   // Format time
   const formatTime = (dateString) => {
@@ -311,6 +375,16 @@ const SingleCaseView = () => {
     return Array.from(uniqueOfficers.values());
   };
 
+  // Add this new function to calculate tab counts
+  const calculateTabCounts = (caseData) => {
+    setTabCounts({
+      evidence: caseData.evidence?.length || 0,
+      investigations: caseData.investigations?.length || 0,
+      offences: caseData.offences?.length || 0,
+      reports: caseData.reports?.length || 0
+    });
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
@@ -330,6 +404,9 @@ const SingleCaseView = () => {
 
           setCaseData(formattedCaseData);
           setEditedCase(formattedCaseData);
+
+          // Calculate tab counts
+          calculateTabCounts(formattedCaseData);
 
           // Set complaint data from the separate complaint object
           if (data.caseData.complaint) {
@@ -394,7 +471,7 @@ const SingleCaseView = () => {
           { label: 'Cases', link: '/cases' },
           { label: caseData.case_id.substring(0, 8) }
         ]}
-        onBack={() => window.history.back()}
+        onBack={() => navigate(-1)}
         actions={[
           ...(canEdit ? [
             isEditing ? {
@@ -486,7 +563,7 @@ const SingleCaseView = () => {
                   />
                 ) : (
                   <div className="bg-gray-50 p-5 rounded-lg text-gray-800">
-                    <h3 className="text-xl font-medium">{caseData.topic || "No topic provided"}</h3>
+                    <h3 className="text-xl font-medium">{capitalizeFirstLetter(caseData.topic) || "No topic provided"}</h3>
                   </div>
                 )}
 
@@ -547,7 +624,11 @@ const SingleCaseView = () => {
             </div>
 
             {/* Tab Navigation */}
-            <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
+            <TabNavigation
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              tabCounts={tabCounts}
+            />
 
             {/* Tab Content */}
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -721,37 +802,57 @@ const SingleCaseView = () => {
                   Quick Actions
                 </h2>
               </div>
-              <div className="p-6 space-y-3">
-                <button className="w-full py-2.5 text-sm bg-blue-600 hover:bg-blue-700 transition-colors rounded-lg text-white flex items-center justify-center">
-                  <Description className="mr-2" fontSize="small" />
-                  Create New Report
-                </button>
-
-                {canAddInvestigation && (
-                  <button className="w-full py-2.5 text-sm bg-indigo-600 hover:bg-indigo-700 transition-colors rounded-lg text-white flex items-center justify-center">
-                    <FormatListBulleted className="mr-2" fontSize="small" />
-                    Add Investigation Task
-                  </button>
-                )}
-
-                {canEdit && (
-                  <button className="w-full py-2.5 text-sm bg-amber-600 hover:bg-amber-700 transition-colors rounded-lg text-white flex items-center justify-center">
-                    <Gavel className="mr-2" fontSize="small" />
-                    Register Offence
-                  </button>
-                )}
-
-                {(user.role === "OIC" || user.role === "Crime OIC") && (
-                  <button className="w-full py-2.5 text-sm bg-red-600 hover:bg-red-700 transition-colors rounded-lg text-white flex items-center justify-center">
-                    <Close className="mr-2" fontSize="small" />
-                    Close Case
-                  </button>
+              <div className="items-center p-6 space-y-3">
+                {quickActions.length > 0 ? (
+                  quickActions.map((action, index) => (
+                    <div key={index} className="w-full">
+                      <OutlinedButton action={action} />
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-gray-500">
+                    <DeviceHub className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                    <p className="text-sm">No actions available for your role</p>
+                  </div>
                 )}
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Modals */}
+      <CreateEvidenceModal
+        open={showCreateEvidenceModal}
+        onClose={() => setShowCreateEvidenceModal(false)}
+        canCreate={canAddEvidence}
+        context="case"
+        contextId={caseId}
+      />
+
+      <CreateInvestigationModal
+        open={showCreateInvestigationModal}
+        onClose={() => setShowCreateInvestigationModal(false)}
+        canCreate={canAddInvestigation}
+        context="case"
+        contextId={caseId}
+      />
+
+      <CreateOffenceModal
+        open={showCreateOffenceModal}
+        onClose={() => setShowCreateOffenceModal(false)}
+        canCreate={canAddOffence}
+        context="case"
+        contextId={caseId}
+      />
+
+      {/* <CreateReportModal
+        open={showCreateReportModal}
+        onClose={() => setShowCreateReportModal(false)}
+        canCreate={canCreateReport}
+        context="case"
+        contextId={caseId}
+      /> */}
 
       <StatusPopup
         open={popup.open}

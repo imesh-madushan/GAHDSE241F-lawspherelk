@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { KeyboardArrowDown, Search, FolderOpen, MoreHoriz } from '@mui/icons-material';
 import { apiClient } from '../../config/apiConfig';
+import { caseStatusList } from '../../../data';
 
 const searchOptions = [
     { value: 'topic', label: 'Topic' },
@@ -11,7 +12,9 @@ const CustomCaseDropdown = ({
     filters = {},
     selectedCaseId,
     onCaseSelect,
-    className = ""
+    className = "",
+    isAutoSelected = false,
+    dropdownLocked = false
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchType, setSearchType] = useState('topic');
@@ -48,7 +51,7 @@ const CustomCaseDropdown = ({
         const delayDebounceSearch = setTimeout(async () => {
             setIsLoading(true);
             try {
-                let params = { limit: 25  };
+                let params = { limit: 25 };
                 if (filters.status) params.status = filters.status;
                 if (searchType === 'topic') params.topic = searchTerm;
                 if (searchType === 'case_id') params.case_id = searchTerm;
@@ -65,6 +68,24 @@ const CustomCaseDropdown = ({
         return () => clearTimeout(delayDebounceSearch);
     }, [searchTerm, searchType, isOpen]);
 
+    // New useEffect to fetch selected case details if auto-selected
+    useEffect(() => {
+        const fetchSelectedCase = async () => {
+            if (selectedCaseId && !selectedCase && isAutoSelected) {
+                try {
+                    const { data } = await apiClient.get(`/cases/${selectedCaseId}`);
+                    if (data.caseData) {
+                        setSearchResults(prev => [data.caseData, ...prev]);
+                    }
+                } catch (error) {
+                    console.error('Error fetching selected case:', error);
+                }
+            }
+        };
+
+        fetchSelectedCase();
+    }, [selectedCaseId, selectedCase, isAutoSelected]);
+
     const loadMoreResults = () => {
         setDisplayLimit(prev => prev + 10);
     };
@@ -77,48 +98,84 @@ const CustomCaseDropdown = ({
 
     const displayedCases = searchResults.slice(0, displayLimit);
 
+    // Helper function to get status styles
+    const getStatusStyles = (status) => {
+        const statusItem = caseStatusList.find(item => item.value === status);
+        return statusItem ? statusItem.styles : 'text-gray-500 bg-gray-100 border-gray-200';
+    };
+
     return (
         <div className={`relative ${className}`} ref={dropdownRef}>
             {/* Selected case display */}
             <div
-                onClick={() => setIsOpen(!isOpen)}
-                className={`w-full border rounded-lg p-1.5 flex items-center justify-between cursor-pointer transition-all 
-                    ${isOpen ? 'border-blue-400 ring-2 ring-blue-100 shadow-md' : 'border-gray-200 hover:border-blue-300'}`}
+                onClick={() => !dropdownLocked && setIsOpen(!isOpen)}
+                className={`w-full border rounded-lg p-3 flex items-center justify-between transition-all 
+                    ${!dropdownLocked ? 'cursor-pointer' : 'cursor-not-allowed'} 
+                    ${isOpen ? 'border-blue-400 ring-2 ring-blue-100 shadow-md' : 'border-gray-300 hover:border-blue-300'}
+                    ${isAutoSelected ? 'bg-blue-50 border-blue-300' : 'bg-white'}
+                    ${dropdownLocked ? 'opacity-75' : ''}`}
             >
                 <div className="flex items-center flex-1 min-w-0">
                     {selectedCase ? (
-                        <>
-                            <FolderOpen className="text-blue-700 mr-1.5" style={{ fontSize: '1rem' }} />
-                            <div className="truncate">
-                                <div className="text-gray-900 font-medium truncate text-sm">
-                                    {truncateText(selectedCase.topic)}
-                                </div>
-                                <div className="text-xs text-gray-500 truncate">{selectedCase.case_id}</div>
+                        <div className="flex items-center w-full">
+                            <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg mr-3 flex-shrink-0">
+                                <FolderOpen className="text-blue-700" fontSize="small" />
                             </div>
-                        </>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between">
+                                    <div className="min-w-0 flex-1">
+                                        <div className="text-sm font-semibold text-gray-900 truncate">
+                                            {truncateText(selectedCase.topic, 30)}
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <span className="text-xs text-gray-500 font-medium">#{selectedCase.case_id}</span>
+                                            {selectedCase.case_type && (
+                                                <>
+                                                    <span className="text-xs text-gray-400">•</span>
+                                                    <span className="text-xs text-gray-500">{selectedCase.case_type}</span>
+                                                </>
+                                            )}
+                                            {isAutoSelected && (
+                                                <>
+                                                    <span className="text-xs text-gray-400">•</span>
+                                                    <span className="text-xs text-blue-600 font-medium">Auto-selected</span>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium border flex-shrink-0 ${getStatusStyles(selectedCase.case_status || selectedCase.status)}`}>
+                                        {selectedCase.case_status || selectedCase.status}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
                     ) : (
                         <div className="text-gray-500 flex items-center">
-                            <FolderOpen className="mr-1.5 text-gray-400" style={{ fontSize: '1rem' }} />
-                            <span className="text-sm">Select Case</span>
+                            <div className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-lg mr-3">
+                                <FolderOpen className="text-gray-400" fontSize="small" />
+                            </div>
+                            <span className="text-sm">Select a case...</span>
                         </div>
                     )}
                 </div>
                 <div className="flex items-center ml-2">
-                    <div className={`text-gray-400 transition-transform duration-200 ${isOpen ? 'transform rotate-180' : ''}`}>
-                        <KeyboardArrowDown fontSize="small" />
-                    </div>
+                    {!dropdownLocked && (
+                        <div className={`text-gray-400 transition-transform duration-200 ${isOpen ? 'transform rotate-180' : ''}`}>
+                            <KeyboardArrowDown fontSize="small" />
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* Dropdown menu */}
-            {isOpen && (
-                <div className="absolute mt-1 w-full bg-white rounded-lg shadow-lg z-50 border border-gray-200 overflow-hidden">
-                    <div className="sticky top-0 p-2 border-b border-gray-200 bg-gray-50">
+            {/* Dropdown menu - only show if not locked */}
+            {isOpen && !dropdownLocked && (
+                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-80 overflow-hidden">
+                    <div className="p-3 border-b border-gray-200 bg-gray-50">
                         <div className="flex gap-2 mb-2">
                             <select
                                 value={searchType}
                                 onChange={e => setSearchType(e.target.value)}
-                                className="text-xs px-2 py-1 border border-gray-300 rounded bg-white"
+                                className="text-xs px-2 py-1 border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             >
                                 {searchOptions.map(opt => (
                                     <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -134,13 +191,13 @@ const CustomCaseDropdown = ({
                                     placeholder={`Search by ${searchOptions.find(o => o.value === searchType).label}...`}
                                     value={searchTerm}
                                     onChange={e => setSearchTerm(e.target.value)}
-                                    className="block w-full pl-9 pr-3 py-1.5 text-sm border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="block w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 />
                             </div>
                         </div>
                     </div>
 
-                    <div className="max-h-48 overflow-y-auto py-1">
+                    <div className="max-h-60 overflow-y-auto">
                         {isLoading ? (
                             <div className="flex justify-center items-center py-4">
                                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
@@ -150,15 +207,43 @@ const CustomCaseDropdown = ({
                                 {displayedCases.map(caseObj => (
                                     <div
                                         key={caseObj.case_id}
-                                        className={`px-3 py-1.5 hover:bg-blue-50 cursor-pointer flex items-center transition-colors text-sm ${selectedCaseId === caseObj.case_id ? 'bg-blue-50' : ''}`}
+                                        className={`p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors ${selectedCaseId === caseObj.case_id ? 'bg-blue-50 border-r-2 border-blue-500' : ''}`}
                                         onClick={() => { onCaseSelect(caseObj); setIsOpen(false); }}
                                     >
-                                        <FolderOpen className="text-blue-700 mr-2 flex-shrink-0" fontSize="small" />
-                                        <div className="truncate flex-1">
-                                            <div className="text-gray-900 font-medium truncate">
-                                                {truncateText(caseObj.topic)}
+                                        <div className="flex items-center w-full">
+                                            <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg mr-3 flex-shrink-0">
+                                                <FolderOpen className="text-blue-700" fontSize="small" />
                                             </div>
-                                            <div className="text-xs text-gray-500 truncate">{caseObj.case_id}</div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="text-sm font-semibold text-gray-900 truncate">
+                                                            {truncateText(caseObj.topic, 30)}
+                                                        </div>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <span className="text-xs text-gray-500 font-medium">#{caseObj.case_id}</span>
+                                                            {caseObj.case_type && (
+                                                                <>
+                                                                    <span className="text-xs text-gray-400">•</span>
+                                                                    <span className="text-xs text-gray-500">{caseObj.case_type}</span>
+                                                                </>
+                                                            )}
+                                                            {selectedCaseId === caseObj.case_id && (
+                                                                <>
+                                                                    <span className="text-xs text-gray-400">•</span>
+                                                                    <span className="text-xs text-blue-600 font-medium">Auto-selected</span>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium border flex-shrink-0 ${getStatusStyles(caseObj.case_status || caseObj.status)}`}>
+                                                        {caseObj.case_status || caseObj.status}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            {selectedCaseId === caseObj.case_id && (
+                                                <div className="ml-2 w-2 h-2 bg-blue-600 rounded-full"></div>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
@@ -174,11 +259,14 @@ const CustomCaseDropdown = ({
                                 )}
                             </>
                         ) : (
-                            <div className="flex flex-col items-center justify-center py-4 px-3 text-center">
-                                <div className="flex bg-gray-100 rounded-full p-1.5 mb-2">
+                            <div className="flex flex-col items-center justify-center py-6 px-3 text-center">
+                                <div className="flex bg-gray-100 rounded-full p-3 mb-3">
                                     <FolderOpen className="text-gray-400" fontSize="small" />
                                 </div>
-                                <p className="text-gray-500 text-xs">No cases found</p>
+                                <p className="text-gray-500 text-sm">No cases found</p>
+                                {searchTerm && (
+                                    <p className="text-gray-400 text-xs mt-1">Try adjusting your search terms</p>
+                                )}
                             </div>
                         )}
                     </div>

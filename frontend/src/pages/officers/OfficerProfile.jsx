@@ -259,13 +259,13 @@ const OfficerProfile = () => {
   return (
     <div className="min-h-screen pb-12 bg-gray-50">
       <PageHeader
-        title="Officer Profile"
+        title={isEditing ? "Edit Officer Profile" : "Officer Profile"}
         breadcrumbItems={[
           { label: 'Dashboard', link: '/dashboard' },
           { label: 'Officers', link: '/officers' },
           { label: officerData.name }
         ]}
-        onBack={() => navigate('/officers')}
+        onBack={() => navigate(-1)}
         actions={[
           ...(canToggleAccount ? [{
             label: officerData.account_locked ? 'Activate Account' : 'Disable Account',

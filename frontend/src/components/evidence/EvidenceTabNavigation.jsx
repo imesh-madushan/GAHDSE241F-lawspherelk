@@ -1,13 +1,12 @@
 import React from 'react';
-import { DeviceHub, Attachment, FormatListBulleted, Assignment, Gavel } from '@mui/icons-material';
+import { Search, FolderOpen, Assignment, People } from '@mui/icons-material';
 
-const TabNavigation = ({ activeTab, setActiveTab, tabCounts = {} }) => {
+const EvidenceTabNavigation = ({ activeTab, setActiveTab, tabCounts = {} }) => {
     const tabs = [
-        { id: 'overview', icon: <DeviceHub fontSize="small" />, label: 'Overview' },
-        { id: 'evidence', icon: <Attachment fontSize="small" />, label: 'Evidence' },
-        { id: 'investigations', icon: <FormatListBulleted fontSize="small" />, label: 'Investigations' },
-        { id: 'offences', icon: <Gavel fontSize="small" />, label: 'Offences' },
-        { id: 'reports', icon: <Assignment fontSize="small" />, label: 'Reports' }
+        { id: 'witnesses', icon: <People fontSize="small" />, label: 'Witnesses' },
+        { id: 'investigation', icon: <Search fontSize="small" />, label: 'Investigation' },
+        { id: 'cases', icon: <FolderOpen fontSize="small" />, label: 'Linked Cases' },
+        { id: 'related', icon: <Assignment fontSize="small" />, label: 'Related Evidence' }
     ];
 
     return (
@@ -24,7 +23,7 @@ const TabNavigation = ({ activeTab, setActiveTab, tabCounts = {} }) => {
                     >
                         <span className="mr-2 flex items-center justify-center">{tab.icon}</span>
                         <span className="font-medium">{tab.label}</span>
-                        {tab.id !== 'overview' && tabCounts[tab.id] > 0 && (
+                        {tabCounts[tab.id] > 0 && (
                             <span className={`ml-2 px-2.5 py-1 text-xs font-semibold rounded-full min-w-[22px] h-6 flex items-center justify-center
                                 ${activeTab === tab.id
                                     ? 'bg-blue-200 text-blue-700'
@@ -39,4 +38,4 @@ const TabNavigation = ({ activeTab, setActiveTab, tabCounts = {} }) => {
     );
 };
 
-export default TabNavigation;
+export default EvidenceTabNavigation;

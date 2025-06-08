@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
     Search, CalendarToday, Person, Edit, LocationOn,
     BusinessCenter, Add, Remove, Save, Cancel, History,
-    Group, Description, FolderOpen, Assignment
+    Group, Description, FolderOpen, Assignment, DeviceHub
 } from '@mui/icons-material';
 import { apiClient } from '../../config/apiConfig';
 import { useAuth } from '../../contexts/AuthContext';
@@ -15,6 +15,7 @@ import OutlinedButton from '../../components/buttons/OutlinedButton';
 import StatusPopup from '../../components/common/StatusPopup';
 import ConfirmationPopup from '../../components/common/ConfirmationPopup';
 import CustomOfficerDropdown from '../../components/dropdowns/CustomOfficerDropdown';
+import CreateEvidenceModal from '../../components/modals/CreateEvidenceModal';
 
 const investigationStatusList = [
     { value: 'inprogress', label: 'In Progress', colorVariant: 'blue' },
@@ -35,6 +36,8 @@ const SingleInvestigationView = () => {
     const [availableOfficers, setAvailableOfficers] = useState([]);
     const [selectedOfficerToAdd, setSelectedOfficerToAdd] = useState(null);
     const [showAddOfficer, setShowAddOfficer] = useState(false);
+    const [selectedOfficersForAdd, setSelectedOfficersForAdd] = useState([]);
+    const [openCreateEvidenceModal, setOpenCreateEvidenceModal] = useState(false);
 
     // Format date helper function
     const formatDate = (dateString) => {
@@ -268,6 +271,32 @@ const SingleInvestigationView = () => {
         setPopup({ ...popup, open: false });
     };
 
+    // Evidence creation handler
+    const handleCreateEvidence = () => {
+        setOpenCreateEvidenceModal(true);
+    };
+
+    const handleEvidenceModalClose = () => {
+        setOpenCreateEvidenceModal(false);
+        // Refresh investigation data to show new evidence
+        fetchInvestigationData();
+    };
+
+    // Quick action handlers
+    const handleAddEvidence = () => {
+        setOpenCreateEvidenceModal(true);
+    };
+
+    // Define quick actions
+    const quickActions = [
+        ...(canAddEvidence() ? [{
+            icon: <Assignment fontSize="small" />,
+            label: 'Add Evidence',
+            onClick: handleAddEvidence,
+            styles: 'w-full bg-blue-600 text-white hover:bg-blue-700 border-blue-600'
+        }] : [])
+    ];
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -307,7 +336,7 @@ const SingleInvestigationView = () => {
                     { label: 'Investigations', link: '/investigations' },
                     { label: investigationId.substring(0, 8) }
                 ]}
-                onBack={() => navigate('/investigations')}
+                onBack={() => navigate(-1)}
                 actions={[
                     ...(canEdit() ? [
                         isEditing ? {
@@ -494,24 +523,12 @@ const SingleInvestigationView = () => {
                             </div>
                         </div>
 
-                        {/* Evidence Card */}
+                        {/* Evidence Card - Remove the Add Evidence button */}
                         <div className="bg-white rounded-xl shadow-sm p-6">
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-lg font-semibold text-gray-800 flex items-center">
-                                    <Assignment className="h-5 w-5 mr-2 text-blue-600" />
-                                    Evidence ({investigation.evidence?.length || 0})
-                                </h2>
-                                {canAddEvidence() && (
-                                    <OutlinedButton
-                                        action={{
-                                            icon: <Add fontSize='small' />,
-                                            label: 'Add Evidence',
-                                            onClick: () => navigate(`/evidence/create?investigation_id=${investigationId}`),
-                                            styles: 'bg-blue-600 text-white hover:bg-blue-700 border-blue-600'
-                                        }}
-                                    />
-                                )}
-                            </div>
+                            <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                                <Assignment className="h-5 w-5 mr-2 text-blue-600" />
+                                Evidence ({investigation.evidence?.length || 0})
+                            </h2>
 
                             {investigation.evidence && investigation.evidence.length > 0 ? (
                                 <div className="space-y-3">
@@ -552,10 +569,10 @@ const SingleInvestigationView = () => {
                         </div>
                     </div>
 
-                    {/* Right Column - Officers */}
+                    {/* Right Column - Officers and Quick Actions */}
                     <div className="col-span-1 space-y-6">
                         {/* Investigation Officers Card */}
-                        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                        <div className="bg-white rounded-xl shadow-sm ">
                             <div className="bg-gradient-to-r from-gray-50 to-blue-50 px-6 py-4 border-b border-gray-100">
                                 <div className="flex justify-between items-center">
                                     <h2 className="font-semibold text-gray-800 flex items-center">
@@ -576,7 +593,7 @@ const SingleInvestigationView = () => {
                             <div className="p-6">
                                 {showAddOfficer && canManageOfficers() && (
                                     <div className="mb-4 p-4 rounded-lg border border-blue-200">
-                                        <div className="text-sm font-medium text-gray-700 mb-2">Add Officer to Investigation</div>
+                                        <div className="text-sm font-medium text-gray-700 mb-2">Add More Officers to Investigation</div>
                                         <CustomOfficerDropdown
                                             filters={{
                                                 dropRoles: ['OIC', 'Crime OIC'],
@@ -648,6 +665,35 @@ const SingleInvestigationView = () => {
                                 )}
                             </div>
                         </div>
+
+                        {/* Quick Actions */}
+                        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                            <div className="bg-gradient-to-r from-gray-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
+                                <h2 className="font-semibold text-gray-800 flex items-center">
+                                    <DeviceHub className="h-5 w-5 mr-2 text-blue-600" />
+                                    Quick Actions
+                                </h2>
+                            </div>
+                            <div className="p-6">
+                                {quickActions.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {quickActions.map((action, index) => (
+                                            <div key={index} className="w-full">
+                                                <OutlinedButton action={action} />
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8">
+                                        <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                                            <DeviceHub className="h-8 w-8 text-gray-400" />
+                                        </div>
+                                        <p className="text-sm text-gray-500 font-medium">No actions available</p>
+                                        <p className="text-xs text-gray-400 mt-1">Contact your administrator for access</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -671,6 +717,15 @@ const SingleInvestigationView = () => {
                 variant="danger"
                 onConfirm={() => handleRemoveOfficer(confirmationPopup.data?.user_id)}
                 onCancel={() => setConfirmationPopup({ open: false, type: '', data: null })}
+            />
+
+            {/* Create Evidence Modal */}
+            <CreateEvidenceModal
+                open={openCreateEvidenceModal}
+                onClose={handleEvidenceModalClose}
+                canCreate={canAddEvidence()}
+                context="investigation"
+                contextId={investigationId}
             />
         </div>
     );

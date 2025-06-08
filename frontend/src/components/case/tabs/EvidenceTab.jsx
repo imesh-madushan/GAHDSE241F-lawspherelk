@@ -1,14 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Add, Fingerprint, Description, LocationOn, CalendarMonth, AccessTime } from '@mui/icons-material';
 import { format } from 'date-fns';
 import OutlinedButton from '../../buttons/OutlinedButton';
 import OfficerCard from '../../cards/OfficerCard';
+import CreateEvidenceModal from '../../modals/CreateEvidenceModal';
 
 const EvidenceTab = ({ caseData, canAddEvidence }) => {
-    const actions = {
-        Add: { icon: <Add fontSize='small' />, label: 'Add Evidance', onClick: () => { }, styles: 'text-blue-600 bg-blue-50' },
-    };
-
+    const [openCreateEvidenceModal, setOpenCreateEvidenceModal] = useState(false);
     const formatDate = (dateString) => format(new Date(dateString), 'dd MMM yyyy');
     const formatTime = (dateString) => format(new Date(dateString), 'hh:mm a');
 
@@ -16,11 +14,6 @@ const EvidenceTab = ({ caseData, canAddEvidence }) => {
         <div>
             <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-semibold text-gray-800">Evidence Records</h3>
-                {canAddEvidence && (
-                    <OutlinedButton
-                        action={actions.Add}
-                    />
-                )}
             </div>
 
             {caseData.evidence && caseData.evidence.length > 0 ? (
@@ -89,11 +82,17 @@ const EvidenceTab = ({ caseData, canAddEvidence }) => {
             ) : (
                 <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
                     <p className="text-gray-500">No evidence records found</p>
-                    {canAddEvidence && (
-                        <p className="text-sm text-gray-400 mt-2">Click "Add Evidence" to register new evidence</p>
-                    )}
                 </div>
             )}
+
+            {/* Create Evidence Modal */}
+            <CreateEvidenceModal
+                open={openCreateEvidenceModal}
+                onClose={() => setOpenCreateEvidenceModal(false)}
+                canCreate={canAddEvidence}
+                context="case"
+                contextId={caseData.case_id}
+            />
         </div>
     );
 };
