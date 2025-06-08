@@ -23,7 +23,7 @@ function App() {
     .then(res => console.log(res.data))
     .catch(err => console.log(err.response.data));
 
-  // login();
+   login();
 
   return (
     <Routes>

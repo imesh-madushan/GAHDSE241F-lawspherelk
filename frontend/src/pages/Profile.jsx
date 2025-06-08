@@ -23,6 +23,12 @@ const Profile = () => {
     ]);
   }, []);
 
+  // Helper to get correct photo URL
+  const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+  const photoUrl = user?.photo?.startsWith('/uploads/')
+    ? backendUrl + user.photo
+    : (user?.photo || '/default-profile.png');
+
   if (!user) return <div className="flex justify-center items-center h-full">Loading...</div>;
 
   return (
@@ -30,7 +36,7 @@ const Profile = () => {
       <div className="flex flex-col md:flex-row gap-8">
         {/* Main Profile Card */}
         <div className="flex-1 bg-white rounded-2xl shadow p-8 flex flex-col items-center">
-          <img src={user.photo || '/default-profile.png'} alt="Profile" className="w-32 h-32 rounded-full border-4 border-blue-200 object-cover mb-3" />
+          <img src={photoUrl} alt="Profile" className="w-32 h-32 rounded-full border-4 border-blue-200 object-cover mb-3" />
           <h2 className="text-3xl font-bold text-center mb-1">{user.name}</h2>
           <div className="flex items-center justify-center gap-2 mb-2">
             {/* Removed lens icon and name, only show role */}

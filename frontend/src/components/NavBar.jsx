@@ -16,6 +16,12 @@ const Navbar = ({ expanded }) => {
   const { user } = useAuth();
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showPhotoMenu, setShowPhotoMenu] = useState(false);
+
+  const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+  const photoUrl = user?.photo?.startsWith('/uploads/')
+    ? backendUrl + user.photo
+    : (user?.photo || '/default-profile.png');
 
   return (
     <nav className="bg-blue-900 text-white shadow-lg">
@@ -36,8 +42,8 @@ const Navbar = ({ expanded }) => {
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
                 className="flex items-center bg-blue-100 rounded-full p-2 transition-colors duration-200 hover:cursor-pointer"
               >
-                <div className="h-8 w-8 rounded-full bg-blue-700 flex items-center justify-center">
-                  <Person fontSize="small" />
+                <div className="h-8 w-8 rounded-full bg-blue-700 flex items-center justify-center overflow-hidden">
+                  <img src={photoUrl} alt="Profile" className="h-8 w-8 rounded-full object-cover" />
                 </div>
                 <span className="ml-2 hidden md:inline text-black">{user.name}</span>
                 <ArrowDropDown fontSize="small" className="ml-1 text-black" />

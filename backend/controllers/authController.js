@@ -1,8 +1,39 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const db = require("../config/db");
-
 const { getUserFromCookies } = require("../middlewares/authMiddleware");
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// Multer storage for profile images
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    // Get userId from token
+    const token = req.cookies.authtoken;
+    if (!token) return cb(new Error('No token'), null);
+    let userId;
+    try {
+      userId = jwt.verify(token, process.env.JWT_SECRET).id;
+    } catch {
+      return cb(new Error('Invalid token'), null);
+    }
+    const userDir = path.join(__dirname, '../uploads/profiles', String(userId));
+    fs.mkdirSync(userDir, { recursive: true });
+    cb(null, userDir);
+  },
+  filename: function (req, file, cb) {
+    // Save with original filename for uniqueness, or add timestamp
+    const ext = path.extname(file.originalname);
+    const base = path.basename(file.originalname, ext);
+    const uniqueName = base + '-' + Date.now() + ext;
+    cb(null, uniqueName);
+  }
+});
+
+const upload = multer({ storage });
+
+exports.uploadProfilePhotoMiddleware = upload.single('photo');
 
 // Login
 exports.login = async (req, res) => {
@@ -147,5 +178,36 @@ exports.updateProfile = async (req, res) => {
 exports.logout = async (req, res) => {
     res.clearCookie("token");
     res.status(200).json({ message: "Logged out successfully" });
-}
+};
+
+// Upload profile photo
+exports.uploadProfilePhoto = async (req, res) => {
+  try {
+    const token = req.cookies.authtoken;
+    if (!token) return res.status(401).json({ message: 'No token provided' });
+    const userId = jwt.verify(token, process.env.JWT_SECRET).id;
+
+    // Remove image logic
+    if (req.body.remove) {
+      // Get current photo path from DB
+      const [rows] = await db.query('SELECT photo FROM users WHERE user_id = ?', [userId]);
+      const photoPath = rows[0]?.photo;
+      if (photoPath && photoPath.startsWith('/uploads/')) {
+        const filePath = path.join(__dirname, '..', photoPath);
+        try { fs.unlinkSync(filePath); } catch {}
+      }
+      await db.query('UPDATE users SET photo = NULL WHERE user_id = ?', [userId]);
+      return res.json({ photo: null });
+    }
+
+    if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+    // Save file path in DB
+    const photoPath = `/uploads/profiles/${userId}/${req.file.filename}`;
+    await db.query('UPDATE users SET photo = ? WHERE user_id = ?', [photoPath, userId]);
+    res.json({ photo: photoPath });
+  } catch (err) {
+    console.error('Profile photo upload/remove error:', err);
+    res.status(500).json({ message: 'Profile photo upload/remove failed' });
+  }
+};
 
