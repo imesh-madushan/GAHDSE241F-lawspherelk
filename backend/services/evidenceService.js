@@ -169,21 +169,6 @@ exports.createEvidence = async (evidenceData, createdBy) => {
       });
     }
 
-    if (evidenceData.investigation_id) {
-      // Update evidance table with investigation_id if not already set
-      await connection.query(
-        "UPDATE evidance SET investigation_id = ? WHERE evidence_id = ?",
-        [evidenceData.investigation_id, evidenceId]
-      );
-      auditChanges.push({
-        tableName: "evidance",
-        recordId: evidenceId,
-        fieldName: "investigation_id",
-        value: evidenceData.investigation_id,
-        actionType: "UPDATE",
-      });
-    }
-
     // Handle linking to offence
     if (evidenceData.offence_id) {
       // Link to crimeoffence_evidance table

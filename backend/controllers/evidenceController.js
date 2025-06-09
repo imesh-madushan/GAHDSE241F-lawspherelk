@@ -83,6 +83,7 @@ exports.createEvidence = async (req, res) => {
       linking_type, // 'case' or 'investigation'
       case_id,
       investigation_id,
+      offence_id,
       witnesses = [],
     } = req.body;
 
@@ -105,16 +106,10 @@ exports.createEvidence = async (req, res) => {
       collectedDateTime = now.toISOString().slice(0, 19).replace("T", " ");
     }
 
-    if (linking_type === "case" && !case_id) {
+    if (!case_id) {
       return res
         .status(400)
         .json({ message: "Case ID is required when linking to case" });
-    }
-
-    if (linking_type === "investigation" && !investigation_id) {
-      return res.status(400).json({
-        message: "Investigation ID is required when linking to investigation",
-      });
     }
 
     // Parse witnesses if it's a string
@@ -141,6 +136,7 @@ exports.createEvidence = async (req, res) => {
           linking_type,
           case_id: case_id || null,
           investigation_id: investigation_id || null,
+          offence_id: offence_id || null,
           witnesses: parsedWitnesses.filter((w) => w.nic && w.name), // Only include witnesses with required fields
           attachments, // Pass the actual uploaded files
         },
