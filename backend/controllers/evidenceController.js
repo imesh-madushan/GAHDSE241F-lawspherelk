@@ -1,5 +1,5 @@
-const { getUserFromCookies } = require("../middlewares/authMiddleware");
 const evidenceService = require("../services/evidenceService");
+const { getUserFromCookies } = require("../middlewares/authMiddleware");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
@@ -132,7 +132,7 @@ exports.createEvidence = async (req, res) => {
     }
 
     try {
-      const result = await evidenceService.createEvidence(
+    const result = await evidenceService.createEvidence(
         {
           type,
           location,
@@ -144,8 +144,8 @@ exports.createEvidence = async (req, res) => {
           witnesses: parsedWitnesses.filter((w) => w.nic && w.name), // Only include witnesses with required fields
           attachments, // Pass the actual uploaded files
         },
-        user.user_id
-      );
+      user.user_id
+    );
 
       if (!result) {
         return res.status(400).json({
@@ -154,19 +154,19 @@ exports.createEvidence = async (req, res) => {
         });
       }
 
-      res.status(201).json({
-        success: true,
-        message: "Evidence created successfully",
-        evidence: result,
-      });
-    } catch (error) {
-      console.error("Error creating evidence:", error);
-      res.status(500).json({
-        success: false,
+    res.status(201).json({
+      success: true,
+      message: "Evidence created successfully",
+      evidence: result,
+    });
+  } catch (error) {
+    console.error("Error creating evidence:", error);
+    res.status(500).json({
+      success: false,
         message: "Internal server error",
-        error: error.message,
-      });
-    }
+      error: error.message,
+    });
+  }
   });
 };
 
@@ -218,8 +218,11 @@ exports.getAllEvidence = async (req, res) => {
       total: evidences[0]?.total_count || 0,
     });
   } catch (error) {
-    console.error("Error in getAllEvidence controller:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error("Error fetching evidence:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch evidence",
+    });
   }
 };
 
@@ -282,8 +285,11 @@ exports.searchEvidence = async (req, res) => {
       total: evidences[0]?.total_count || 0,
     });
   } catch (error) {
-    console.error("Error in searchEvidence controller:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error("Error searching evidence:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to search evidence",
+    });
   }
 };
 
@@ -313,17 +319,12 @@ exports.getEvidenceById = async (req, res) => {
     res.status(200).json({
       success: true,
       evidence,
-      canEdit:
-        evidence.officer_id === user.user_id ||
-        user.role === "OIC" ||
-        user.role === "Crime OIC",
     });
   } catch (error) {
-    console.error("Error in getEvidenceById:", error);
+    console.error("Error fetching evidence:", error);
     res.status(500).json({
       success: false,
-      message: "Error retrieving evidence details",
-      error: error.message,
+      message: "Failed to fetch evidence",
     });
   }
 };
@@ -389,7 +390,7 @@ exports.updateEvidence = async (req, res) => {
     console.error("Error updating evidence:", error);
     res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: "Failed to update evidence",
     });
   }
 };

@@ -146,7 +146,7 @@ exports.createEvidence = async (evidenceData, createdBy) => {
     }
 
     // Handle linking
-    if (evidenceData.linking_type === "case" && evidenceData.case_id) {
+    if (evidenceData.case_id) {
       // Link to case
       await connection.query(
         "INSERT INTO case_evidance (case_id, evidence_id) VALUES (?, ?)",
@@ -167,38 +167,41 @@ exports.createEvidence = async (evidenceData, createdBy) => {
         value: evidenceId,
         actionType: "INSERT",
       });
-    } else if (
-      evidenceData.linking_type === "investigation" &&
-      evidenceData.investigation_id
-    ) {
-      // Get the case_id from investigation
-      const [investigationRows] = await connection.query(
-        "SELECT case_id FROM investigation WHERE investigation_id = ?",
-        [evidenceData.investigation_id]
-      );
+    }
 
-      if (investigationRows.length === 0) {
-        throw new Error("Investigation not found");
-      }
-
-      const caseId = investigationRows[0].case_id;
-
-      // Link to case as well (since investigation evidence should also be case evidence)
+    if (evidenceData.investigation_id) {
+      // Update evidance table with investigation_id if not already set
       await connection.query(
-        "INSERT INTO case_evidance (case_id, evidence_id) VALUES (?, ?)",
-        [caseId, evidenceId]
+        "UPDATE evidance SET investigation_id = ? WHERE evidence_id = ?",
+        [evidenceData.investigation_id, evidenceId]
+      );
+      auditChanges.push({
+        tableName: "evidance",
+        recordId: evidenceId,
+        fieldName: "investigation_id",
+        value: evidenceData.investigation_id,
+        actionType: "UPDATE",
+      });
+    }
+
+    // Handle linking to offence
+    if (evidenceData.offence_id) {
+      // Link to crimeoffence_evidance table
+      await connection.query(
+        "INSERT INTO crimeoffence_evidance (offence_id, evidence_id) VALUES (?, ?)",
+        [evidenceData.offence_id, evidenceId]
       );
 
       auditChanges.push({
-        tableName: "case_evidance",
-        recordId: `${caseId}_${evidenceId}`,
-        fieldName: "case_id",
-        value: caseId,
+        tableName: "crimeoffence_evidance",
+        recordId: `${evidenceData.offence_id}_${evidenceId}`,
+        fieldName: "offence_id",
+        value: evidenceData.offence_id,
         actionType: "INSERT",
       });
       auditChanges.push({
-        tableName: "case_evidance",
-        recordId: `${caseId}_${evidenceId}`,
+        tableName: "crimeoffence_evidance",
+        recordId: `${evidenceData.offence_id}_${evidenceId}`,
         fieldName: "evidence_id",
         value: evidenceId,
         actionType: "INSERT",
@@ -380,7 +383,7 @@ exports.searchEvidence = async (filters, userRole, userId) => {
       start_date,
       end_date,
       limit = 50,
-      offset = 0,
+      offset = 12,
       sortBy = "collected_dt",
       sortOrder = "DESC",
     } = filters;

@@ -5,6 +5,7 @@ import OutlinedButton from '../buttons/OutlinedButton';
 import StatusPopup from '../common/StatusPopup';
 import CustomCaseDropdown from '../dropdowns/CustomCaseDropdown';
 import CustomInvestigationDropdown from '../dropdowns/CustomInvestigationDropdown';
+import CustomOffenceDropdown from '../dropdowns/CustomOffenceDropdown';
 import { evidenceTypes, caseStatusList, investigationStatusList } from '../../../data'
 
 const CreateEvidenceModal = ({
@@ -15,7 +16,6 @@ const CreateEvidenceModal = ({
     contextId = null
 }) => {
     const [creatingEvidence, setCreatingEvidence] = useState(false);
-    const [linkingType, setLinkingType] = useState('case'); // 'case' or 'investigation'
     const [newEvidence, setNewEvidence] = useState({
         type: 'Voice Statement',
         location: '',
@@ -42,42 +42,57 @@ const CreateEvidenceModal = ({
         description: "",
         referenceLink: null
     });
-    const [selectedCase, setSelectedCase] = useState(null);
-    const [selectedInvestigation, setSelectedInvestigation] = useState(null);
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [fileError, setFileError] = useState('');
-    const [selectedWitnesses, setSelectedWitnesses] = useState([]);
+    const [isCaseAutoSelected, setIsCaseAutoSelected] = useState(false);
+    const [isInvestigationAutoSelected, setIsInvestigationAutoSelected] = useState(false);
+    const [isOffenceAutoSelected, setIsOffenceAutoSelected] = useState(false);
+    const [dropdownLocked, setDropdownLocked] = useState(false);
 
     // Reset form when modal opens
     useEffect(() => {
         if (open) {
             resetForm();
-            // Set default linking type and ID based on context
             if (context === 'case' && contextId) {
-                setLinkingType('case');
-                setNewEvidence(prev => ({
-                    ...prev,
-                    case_id: contextId,
-                    investigation_id: ''
-                }));
-                // Fetch case details for display
-                fetchCaseDetails(contextId);
+                setNewEvidence(prev => ({ ...prev, case_id: contextId }));
+                setIsCaseAutoSelected(true);
+                setDropdownLocked(true);
             } else if (context === 'investigation' && contextId) {
-                setLinkingType('investigation');
-                setNewEvidence(prev => ({
-                    ...prev,
-                    investigation_id: contextId,
-                    case_id: ''
-                }));
-                // Fetch investigation details for display
-                fetchInvestigationDetails(contextId);
-            } else if (context === 'criminal' && contextId) {
-                // For criminal context, we still need to link to a case or investigation
-                // But we can add the criminal info to witnesses or details
-                setLinkingType('case');
-                // Add criminal ID to evidence details or witnesses if needed
+                // Fetch investigation details to get related case
+                apiClient.get(`/investigations/${contextId}`).then(res => {
+                    const inv = res.data?.investigationData || res.data?.investigation;
+                    if (inv && inv.case_id) {
+                        setNewEvidence(prev => ({
+                            ...prev,
+                            case_id: inv.case_id,
+                            investigation_id: contextId
+                        }));
+                        setIsCaseAutoSelected(true);
+                        setDropdownLocked(true);
+                        setIsInvestigationAutoSelected(true);
+                    }
+                });
+            } else if (context === 'offence' && contextId) {
+                // Fetch offence details to get related case
+                apiClient.get(`/crimeoffences/${contextId}`).then(res => {
+                    const off = res.data?.offence;
+                    if (off && off.case_id) {
+                        setNewEvidence(prev => ({
+                            ...prev,
+                            case_id: off.case_id,
+                            offence_id: contextId
+                        }));
+                        setIsCaseAutoSelected(true);
+                        setDropdownLocked(true);
+                        setIsOffenceAutoSelected(true);
+                    }
+                });
+            } else {
+                // General context: enable case dropdown, others disabled until case selected
+                setDropdownLocked(false); // <-- ensure not locked in general mode
             }
         }
+        // eslint-disable-next-line
     }, [open, context, contextId]);
 
     const resetForm = () => {
@@ -104,47 +119,13 @@ const CreateEvidenceModal = ({
             address: '',
             dob: ''
         }]);
-        setSelectedCase(null);
-        setSelectedInvestigation(null);
         setFieldErrors({});
-        setLinkingType('case');
         setSelectedFiles([]);
         setFileError('');
-        setSelectedWitnesses([]);
-    };
-
-    const fetchCaseDetails = async (caseId) => {
-        try {
-            const response = await apiClient.get(`/cases/${caseId}`);
-            if (response.data?.caseData) {
-                setSelectedCase({
-                    case_id: response.data.caseData.case_id,
-                    topic: response.data.caseData.topic,
-                    case_type: response.data.caseData.case_type,
-                    status: response.data.caseData.status
-                });
-
-            }
-        } catch (error) {
-            console.error('Error fetching case details:', error);
-        }
-    };
-
-    const fetchInvestigationDetails = async (investigationId) => {
-        try {
-            const response = await apiClient.get(`/investigations/${investigationId}`);
-            if (response.data?.investigationData) {
-                setSelectedInvestigation({
-                    investigation_id: response.data.investigationData.investigation_id,
-                    topic: response.data.investigationData.topic,
-                    status: response.data.investigationData.status,
-                    case_id: response.data.investigationData.case_id,
-                    case_topic: response.data.investigationData.case_topic
-                });
-            }
-        } catch (error) {
-            console.error('Error fetching investigation details:', error);
-        }
+        setIsCaseAutoSelected(false);
+        setIsInvestigationAutoSelected(false);
+        setIsOffenceAutoSelected(false);
+        setDropdownLocked(false);
     };
 
     const handleClose = () => {
@@ -163,38 +144,44 @@ const CreateEvidenceModal = ({
         }
     };
 
-    const handleLinkingTypeChange = (type) => {
-        setLinkingType(type);
-        if (type === 'case') {
-            setNewEvidence(prev => ({ ...prev, investigation_id: '' }));
-            setSelectedInvestigation(null);
-        } else {
-            setNewEvidence(prev => ({ ...prev, case_id: '' }));
-            setSelectedCase(null);
-        }
-    };
-
+    // When a case is selected, fetch related investigations/offences and enable their dropdowns
     const handleCaseSelect = (caseObj) => {
-        setSelectedCase(caseObj);
         setNewEvidence(prev => ({
             ...prev,
             case_id: caseObj.case_id,
-            investigation_id: ''
+            investigation_id: '',
+            offence_id: ''
         }));
+
+        setIsCaseAutoSelected(false);
+        setIsInvestigationAutoSelected(false);
+        setIsOffenceAutoSelected(false);
         if (fieldErrors.case_id) {
             setFieldErrors(prev => ({ ...prev, case_id: null }));
         }
     };
 
+    // When an investigation is selected, update state
     const handleInvestigationSelect = (investigationObj) => {
-        setSelectedInvestigation(investigationObj);
         setNewEvidence(prev => ({
             ...prev,
-            investigation_id: investigationObj.investigation_id,
-            case_id: ''
+            investigation_id: investigationObj.investigation_id
         }));
+        setIsInvestigationAutoSelected(false);
         if (fieldErrors.investigation_id) {
             setFieldErrors(prev => ({ ...prev, investigation_id: null }));
+        }
+    };
+
+    // When an offence is selected, update state
+    const handleOffenceSelect = (offenceObj) => {
+        setNewEvidence(prev => ({
+            ...prev,
+            offence_id: offenceObj.offence_id
+        }));
+        setIsOffenceAutoSelected(false);
+        if (fieldErrors.offence_id) {
+            setFieldErrors(prev => ({ ...prev, offence_id: null }));
         }
     };
 
@@ -246,13 +233,6 @@ const CreateEvidenceModal = ({
             errors.collected_time = 'Collection time is required';
         }
 
-        if (linkingType === 'case' && !newEvidence.case_id) {
-            errors.case_id = 'Case selection is required';
-        }
-        if (linkingType === 'investigation' && !newEvidence.investigation_id) {
-            errors.investigation_id = 'Investigation selection is required';
-        }
-
         // Validate witnesses
         witnesses.forEach((witness, index) => {
             if (witness.nic || witness.name || witness.phone || witness.email || witness.address || witness.dob) {
@@ -266,11 +246,6 @@ const CreateEvidenceModal = ({
         return Object.keys(errors).length === 0;
     };
 
-    // Helper to combine date and time to MySQL DATETIME (YYYY-MM-DD HH:MM:SS)
-    const getMySQLDateTime = (date, time) => {
-        if (!date || !time) return '';
-        return `${date} ${time}:00`;
-    };
 
     const handleFileSelect = (event) => {
         const files = Array.from(event.target.files);
@@ -328,6 +303,12 @@ const CreateEvidenceModal = ({
         return '📄';
     };
 
+    // Helper to combine date and time to MySQL DATETIME (YYYY-MM-DD HH:MM:SS)
+    const getMySQLDateTime = (date, time) => {
+        if (!date || !time) return '';
+        return `${date} ${time}:00`;
+    };
+
     const handleSubmitEvidence = async () => {
         if (!validateForm()) return;
 
@@ -338,18 +319,22 @@ const CreateEvidenceModal = ({
             formData.append('location', newEvidence.location);
             formData.append('details', newEvidence.details);
 
-            // Only append collected_dt if it's provided and valid
-            if (newEvidence.collected_dt && newEvidence.collected_dt.trim() !== '') {
-                formData.append('collected_dt', newEvidence.collected_dt);
+            // Merge collected_date and collected_time into collected_dt (MySQL DATETIME)
+            const collected_dt = getMySQLDateTime(newEvidence.collected_date, newEvidence.collected_time);
+            if (collected_dt) {
+                formData.append('collected_dt', collected_dt);
+                console.log('Collected DateTime:', collected_dt);
             }
 
             // Determine linking type and append appropriate fields
             if (newEvidence.investigation_id) {
-                formData.append('linking_type', 'investigation');
                 formData.append('investigation_id', newEvidence.investigation_id);
-            } else if (newEvidence.case_id) {
-                formData.append('linking_type', 'case');
+            }
+            if (newEvidence.case_id) {
                 formData.append('case_id', newEvidence.case_id);
+            }
+            if (newEvidence.offence_id) {
+                formData.append('offence_id', newEvidence.offence_id);
             }
 
             // Add witnesses - send complete witness data as JSON string
@@ -360,6 +345,17 @@ const CreateEvidenceModal = ({
             // Add files
             selectedFiles.forEach((file) => {
                 formData.append('attachments', file);
+            });
+
+            console.log('Submitting evidence with data:', {
+                type: newEvidence.type,
+                location: newEvidence.location,
+                details: newEvidence.details,
+                case_id: newEvidence.case_id,
+                investigation_id: newEvidence.investigation_id,
+                offence_id: newEvidence.offence_id,
+                witnesses: witnesses,
+                files: selectedFiles.map(file => file.name)
             });
 
             const response = await apiClient.post('/evidences/create', formData);
@@ -394,11 +390,6 @@ const CreateEvidenceModal = ({
         }
     }, [popup]);
 
-    // Helper function to get status styles
-    const getStatusStyles = (status, statusList) => {
-        const statusItem = statusList.find(item => item.value === status);
-        return statusItem ? statusItem.styles : 'text-gray-500 bg-gray-100 border-gray-200';
-    };
 
     if (!open) return null;
 
@@ -562,70 +553,54 @@ const CreateEvidenceModal = ({
                                         Link Evidence To
                                     </h3>
 
-                                    {/* Linking Type Selection (only for general context) */}
-                                    {context === 'general' && (
-                                        <div className="mb-4">
-                                            <div className="flex gap-4">
-                                                <label className="flex items-center cursor-pointer">
-                                                    <input
-                                                        type="radio"
-                                                        name="linkingType"
-                                                        value="case"
-                                                        checked={linkingType === 'case'}
-                                                        onChange={() => handleLinkingTypeChange('case')}
-                                                        className="mr-2"
-                                                    />
-                                                    <span className="text-sm font-medium text-gray-700">Case</span>
-                                                </label>
-                                                <label className="flex items-center cursor-pointer">
-                                                    <input
-                                                        type="radio"
-                                                        name="linkingType"
-                                                        value="investigation"
-                                                        checked={linkingType === 'investigation'}
-                                                        onChange={() => handleLinkingTypeChange('investigation')}
-                                                        className="mr-2"
-                                                    />
-                                                    <span className="text-sm font-medium text-gray-700">Investigation</span>
-                                                </label>
-                                            </div>
-                                        </div>
-                                    )}
-
                                     {/* Case Selection */}
-                                    {linkingType === 'case' && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Select Case <span className="text-red-500">*</span>
+                                        </label>
+                                        <CustomCaseDropdown
+                                            filters={{ status: 'inprogress' }}
+                                            selectedCaseId={newEvidence.case_id}
+                                            onCaseSelect={handleCaseSelect}
+                                            className={fieldErrors.case_id ? 'border-red-500' : ''}
+                                            isAutoSelected={isCaseAutoSelected}
+                                            dropdownLocked={dropdownLocked}
+                                        />
+                                        {fieldErrors.case_id && <p className="text-red-500 text-xs mt-1">{fieldErrors.case_id}</p>}
+                                    </div>
+
+                                    {/* Investigation Selection (only show if case is selected) */}
+                                    {newEvidence.case_id && (
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Select Case <span className="text-red-500">*</span>
+                                                Select Investigation (Optional)
                                             </label>
-                                            <CustomCaseDropdown
-                                                filters={{ status: 'inprogress' }}
-                                                selectedCaseId={newEvidence.case_id}
-                                                onCaseSelect={handleCaseSelect}
-                                                className={fieldErrors.case_id ? 'border-red-500' : ''}
-                                                isAutoSelected={context === 'case' && contextId === newEvidence.case_id}
-                                                dropdownLocked={context === 'case' && contextId === newEvidence.case_id}
-                                            />
-                                            {fieldErrors.case_id && <p className="text-red-500 text-xs mt-1">{fieldErrors.case_id}</p>}
-                                        </div>
-                                    )}
-
-                                    {/* Investigation Selection */}
-                                    {linkingType === 'investigation' && (
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Select Investigation <span className="text-red-500">*</span>
-                                            </label>
-
                                             <CustomInvestigationDropdown
-                                                filters={{ status: 'inprogress' }}
+                                                filters={{ case_id: newEvidence.case_id, status: 'inprogress' }}
                                                 selectedInvestigationId={newEvidence.investigation_id}
                                                 onInvestigationSelect={handleInvestigationSelect}
                                                 className={fieldErrors.investigation_id ? 'border-red-500' : ''}
-                                                isAutoSelected={context === 'investigation' && contextId === newEvidence.investigation_id}
+                                                isAutoSelected={isInvestigationAutoSelected}
                                                 dropdownLocked={context === 'investigation' && contextId === newEvidence.investigation_id}
                                             />
                                             {fieldErrors.investigation_id && <p className="text-red-500 text-xs mt-1">{fieldErrors.investigation_id}</p>}
+                                        </div>
+                                    )}
+
+                                    {/* Offence Selection (only show if case is selected) */}
+                                    {newEvidence.case_id && (
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Link to Crime Offence (Optional)
+                                            </label>
+                                            <CustomOffenceDropdown
+                                                filters={{ case_id: newEvidence.case_id }}
+                                                selectedOffenceId={newEvidence.offence_id}
+                                                onOffenceSelect={handleOffenceSelect}
+                                                isAutoSelected={isOffenceAutoSelected}
+                                                dropdownLocked={context === 'offence' && contextId === newEvidence.offence_id}
+                                                className="mb-3"
+                                            />
                                         </div>
                                     )}
                                 </div>

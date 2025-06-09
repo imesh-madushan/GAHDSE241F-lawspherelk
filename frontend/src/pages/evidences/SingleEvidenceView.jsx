@@ -32,7 +32,6 @@ const SingleEvidenceView = () => {
     const [evidence, setEvidence] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [canEdit, setCanEdit] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [updateLoading, setUpdateLoading] = useState(false);
     const [editForm, setEditForm] = useState({
@@ -57,15 +56,19 @@ const SingleEvidenceView = () => {
 
     const navigate = useNavigate();
 
+    // Check if user has edit permissions
+    const canEdit = user.role === 'OIC' || user.role === 'Crime OIC' || user.role === 'Inspector' || user.role === 'Sub Inspector' || user.role === 'Officer' || user.role === 'Sergeant' || user.role === 'Police Constable';
+
     useEffect(() => {
         fetchEvidenceDetails();
     }, [evidenceId]);
+
 
     // Add this new function to calculate tab counts
     const calculateTabCounts = (evidenceData) => {
         setTabCounts({
             witnesses: evidenceData.witnesses?.length || 0,
-            investigation: evidenceData.investigation_records?.length || 0,
+            investigation: evidenceData.investigation_id ? 1 : 0,
             cases: evidenceData.linked_cases?.length || 0,
             related: evidenceData.related_evidence?.length || 0
         });
@@ -76,7 +79,6 @@ const SingleEvidenceView = () => {
             const response = await apiClient.get(`/evidences/${evidenceId}`);
             if (response.data.success) {
                 setEvidence(response.data.evidence);
-                setCanEdit(response.data.canEdit);
                 const evidenceData = response.data.evidence;
                 // Calculate tab counts
                 calculateTabCounts(evidenceData);

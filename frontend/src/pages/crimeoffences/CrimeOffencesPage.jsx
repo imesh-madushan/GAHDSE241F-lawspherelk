@@ -18,6 +18,7 @@ const CrimeOffencesPage = () => {
 
     const searchOptions = [
         { value: 'crime_type', label: 'Crime Type' },
+        { value: 'offence_id', label: 'Offence ID' },
         { value: 'criminal_name', label: 'Criminal Name' },
         { value: 'criminal_id', label: 'Criminal ID' },
         { value: 'fingerprint', label: 'Fingerprint' },
@@ -70,6 +71,9 @@ const CrimeOffencesPage = () => {
 
             if (searchParams.searchTerm && searchParams.searchTerm.trim() !== '') {
                 switch (searchParams.searchType) {
+                    case 'offence_id':
+                        params.offence_id = searchParams.searchTerm.trim();
+                        break;
                     case 'crime_type':
                         params.crime_type = searchParams.searchTerm.trim();
                         break;

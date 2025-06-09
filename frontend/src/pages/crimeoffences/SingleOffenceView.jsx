@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
     Gavel, CalendarToday, Person, Edit, RemoveRedEye, BusinessCenter, LocalOffer,
     Phone, LocationOn, FindInPage, PersonAdd, Folder, Close, Email, Badge,
-    Save, Cancel, History, AccessTime, Warning, Scale, FolderOpen
+    Save, Cancel, History, AccessTime, Warning, Scale, FolderOpen, Assignment, DeviceHub
 } from '@mui/icons-material';
 import { apiClient } from '../../config/apiConfig';
 import { useAuth } from '../../contexts/AuthContext';
@@ -15,6 +15,12 @@ import OutlinedButton from '../../components/buttons/OutlinedButton';
 import { crimeTypes } from '../../../data';
 import StatusPopup from '../../components/common/StatusPopup';
 import { offenceStatusList } from '../../../data';
+import OffenceTabNavigation from '../../components/offence/OffenceTabNavigation';
+import EvidenceTab from '../../components/offence/tabs/EvidenceTab';
+import VictimsTab from '../../components/offence/tabs/VictimsTab';
+import CreateEvidenceModal from '../../components/modals/CreateEvidenceModal';
+import LinkEvidenceModal from '../../components/modals/LinkEvidenceModal';
+import CreateVictimModal from '../../components/modals/CreateVictimModal';
 
 const SingleOffenceView = () => {
     const { offenceId } = useParams();
@@ -27,6 +33,14 @@ const SingleOffenceView = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [editedOffence, setEditedOffence] = useState({});
     const [touched, setTouched] = useState({});
+    const [activeTab, setActiveTab] = useState('evidence');
+    const [tabCounts, setTabCounts] = useState({
+        evidence: 0,
+        victims: 0
+    });
+    const [showCreateEvidenceModal, setShowCreateEvidenceModal] = useState(false);
+    const [showLinkEvidenceModal, setShowLinkEvidenceModal] = useState(false);
+    const [showCreateVictimModal, setShowCreateVictimModal] = useState(false);
 
     // Format date helper function
     const formatDate = (dateString) => {
@@ -54,15 +68,24 @@ const SingleOffenceView = () => {
         return { level: 'Low', color: 'text-green-600', bgColor: 'bg-green-100' };
     };
 
+    // Calculate tab counts
+    const calculateTabCounts = (offenceData) => {
+        setTabCounts({
+            evidence: offenceData.evidence?.length || 0,
+            victims: offenceData.victims?.length || 0
+        });
+    };
+
     useEffect(() => {
         const fetchOffenceData = async () => {
             setLoading(true);
             try {
                 const { data } = await apiClient.get(`/crimeoffences/${offenceId}`);
-
+                console.log("Offence data fetched:", data.offence);
                 if (data.offence) {
                     setOffence(data.offence);
                     setEditedOffence(data.offence);
+                    calculateTabCounts(data.offence);
                 } else {
                     setError("No offence data returned from server");
                 }
@@ -87,6 +110,13 @@ const SingleOffenceView = () => {
         return user?.role === "OIC";
     };
 
+    const canAddEvidence = () => {
+        return user?.role === "OIC" || user?.role === "Crime OIC" || user?.user_id === offence?.case_leader_id;
+    };
+
+    const canAddVictim = () => {
+        return user?.role === "OIC" || user?.role === "Crime OIC" || user?.user_id === offence?.case_leader_id;
+    };
 
     // Edit handlers
     const handleEditToggle = () => {
@@ -234,6 +264,56 @@ const SingleOffenceView = () => {
         setPopup({ ...popup, open: false });
     };
 
+    // Quick actions - only Link Evidence and Add Victim
+    const quickActions = [
+        ...(canAddEvidence() ? [
+            {
+                icon: <FolderOpen fontSize="small" />,
+                label: 'Link Evidence',
+                onClick: () => setShowLinkEvidenceModal(true),
+                styles: 'w-full bg-indigo-600 text-white hover:bg-indigo-700 border-indigo-600'
+            }
+        ] : []),
+        ...(canAddVictim() ? [
+            {
+                icon: <PersonAdd fontSize="small" />,
+                label: 'Add Victim',
+                onClick: () => setShowCreateVictimModal(true),
+                styles: 'w-full bg-red-600 text-white hover:bg-red-700 border-red-600'
+            }
+        ] : [])
+    ];
+
+    // Render tab content
+    const renderTabContent = () => {
+        switch (activeTab) {
+            case 'evidence':
+                return (
+                    <EvidenceTab
+                        offence={offence}
+                        formatDate={formatDate}
+                        canAddEvidence={canAddEvidence()}
+                    />
+                );
+            case 'victims':
+                return (
+                    <VictimsTab
+                        offence={offence}
+                        formatDate={formatDate}
+                        canAddVictim={canAddVictim()}
+                    />
+                );
+            default:
+                return (
+                    <EvidenceTab
+                        offence={offence}
+                        formatDate={formatDate}
+                        canAddEvidence={canAddEvidence()}
+                    />
+                );
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -346,7 +426,7 @@ const SingleOffenceView = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Left Column - Main Content */}
                     <div className="col-span-2 space-y-6">
-                        {/* Crime Details Card */}
+                        {/* Crime Details Card - Always Visible */}
                         <div className="bg-white rounded-xl shadow-sm p-6">
                             <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                                 <Scale className="h-5 w-5 mr-2 text-blue-600" />
@@ -449,49 +529,22 @@ const SingleOffenceView = () => {
                             </div>
                         </div>
 
-                        {/* Linked Case Card */}
-                        {offence.case_id && (
-                            <div className="bg-white rounded-xl shadow-sm p-6">
-                                <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                                    <FolderOpen className="h-5 w-5 mr-2 text-blue-600" />
-                                    Linked Case
-                                </h2>
+                        {/* Tab Navigation */}
+                        <OffenceTabNavigation
+                            activeTab={activeTab}
+                            setActiveTab={setActiveTab}
+                            tabCounts={tabCounts}
+                        />
 
-                                <div className="border border-blue-100 rounded-lg overflow-hidden">
-                                    <div className="bg-blue-50 p-4">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <h4 className="font-medium text-blue-900">Case #{offence.case_id}</h4>
-                                                <p className="text-blue-700 mt-1">{offence.case_topic || "No topic available"}</p>
-                                            </div>
-                                            <Link
-                                                to={`/cases/${offence.case_id}`}
-                                                className="bg-blue-100 text-blue-700 hover:bg-blue-200 p-2 rounded-lg transition-colors"
-                                            >
-                                                <RemoveRedEye className="h-5 w-5" />
-                                            </Link>
-                                        </div>
-                                    </div>
-
-                                    <div className="p-4 bg-white">
-                                        <div className="flex items-center mb-4">
-                                            <span className="text-sm text-gray-500">Status:</span>
-                                            <span className={`ml-2 font-medium ${offence.case_status === 'inprogress' ? 'text-green-700' :
-                                                offence.case_status === 'closed' ? 'text-red-700' : 'text-yellow-700'
-                                                }`}>
-                                                {offence.case_status || "Unknown"}
-                                            </span>
-                                            <div className={`h-3 w-3 rounded-full ml-2 ${offence.case_status === 'inprogress' ? 'bg-green-500' :
-                                                offence.case_status === 'closed' ? 'bg-red-500' : 'bg-yellow-500'
-                                                }`} />
-                                        </div>
-                                    </div>
-                                </div>
+                        {/* Tab Content */}
+                        <div className="bg-white rounded-xl shadow-sm">
+                            <div className="p-6">
+                                {renderTabContent()}
                             </div>
-                        )}
+                        </div>
                     </div>
 
-                    {/* Right Column - Sidebar */}
+                    {/* Right Column - Sidebar (existing criminal info and risk assessment) */}
                     <div className="col-span-1 space-y-6">
                         {/* Criminal Info Card */}
                         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -548,29 +601,32 @@ const SingleOffenceView = () => {
                             )}
                         </div>
 
-                        {/* Risk Assessment Card */}
+                        {/* Quick Actions */}
                         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                            <div className="bg-gradient-to-r from-gray-50 to-blue-50 px-6 py-4 border-b border-gray-100">
+                            <div className="bg-gradient-to-r from-gray-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
                                 <h2 className="font-semibold text-gray-800 flex items-center">
-                                    <Warning className="h-5 w-5 mr-2 text-blue-600" />
-                                    Risk Assessment
+                                    <DeviceHub className="h-5 w-5 mr-2 text-blue-600" />
+                                    Quick Actions
                                 </h2>
                             </div>
-
                             <div className="p-6">
-                                <div className="text-center">
-                                    <div className={`w-20 h-20 rounded-full ${riskData.bgColor} flex items-center justify-center mx-auto mb-3`}>
-                                        <span className={`text-2xl font-bold ${riskData.color}`}>
-                                            {offence.risk_score}
-                                        </span>
+                                {quickActions.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {quickActions.map((action, index) => (
+                                            <div key={index} className="w-full">
+                                                <OutlinedButton action={action} />
+                                            </div>
+                                        ))}
                                     </div>
-                                    <h3 className={`text-lg font-semibold ${riskData.color}`}>
-                                        {riskData.level} Risk
-                                    </h3>
-                                    <p className="text-sm text-gray-600 mt-2">
-                                        Risk score is automatically calculated based on the crime type
-                                    </p>
-                                </div>
+                                ) : (
+                                    <div className="text-center py-8">
+                                        <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                                            <DeviceHub className="h-8 w-8 text-gray-400" />
+                                        </div>
+                                        <p className="text-sm text-gray-500 font-medium">No actions available</p>
+                                        <p className="text-xs text-gray-400 mt-1">Contact your administrator for access</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -585,6 +641,31 @@ const SingleOffenceView = () => {
                 description={popup.description}
                 onClose={handlePopupClose}
                 okLabel={popup.status === "success" ? "OK" : "Close"}
+            />
+
+            {/* Create Evidence Modal */}
+            <CreateEvidenceModal
+                open={showCreateEvidenceModal}
+                onClose={() => setShowCreateEvidenceModal(false)}
+                canCreate={canAddEvidence()}
+                context="offence"
+                contextId={offenceId}
+            />
+
+            {/* Link Evidence Modal */}
+            <LinkEvidenceModal
+                open={showLinkEvidenceModal}
+                onClose={() => setShowLinkEvidenceModal(false)}
+                offenceId={offenceId}
+                caseId={offence?.case_id}
+            />
+
+            {/* Create Victim Modal */}
+            <CreateVictimModal
+                open={showCreateVictimModal}
+                onClose={() => setShowCreateVictimModal(false)}
+                offenceId={offenceId}
+                canCreate={canAddVictim()}
             />
         </div>
     );

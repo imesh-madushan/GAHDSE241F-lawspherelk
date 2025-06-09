@@ -17,7 +17,17 @@ const CustomInvestigationDropdown = ({
     const [investigations, setInvestigations] = useState([]);
     const [loading, setLoading] = useState(false);
     const [selectedInvestigation, setSelectedInvestigation] = useState(null);
+    const [lastCaseId, setLastCaseId] = useState(filters.case_id || '');
     const dropdownRef = useRef(null);
+
+    // Clear selected investigation and search results when case_id changes
+    useEffect(() => {
+        if (filters.case_id !== lastCaseId) {
+            setSelectedInvestigation(null);
+            setInvestigations([]);
+            setLastCaseId(filters.case_id);
+        }
+    }, [filters.case_id, lastCaseId]);
 
     useEffect(() => {
         if (isOpen) {
