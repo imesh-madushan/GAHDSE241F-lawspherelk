@@ -11,7 +11,9 @@ import {
     FolderOpen,
     Search,
     People,
-    History
+    History,
+    AttachFile,
+    Add
 } from '@mui/icons-material';
 import { apiClient } from '../../config/apiConfig';
 import PageHeader from '../../components/common/PageHeader';
@@ -26,6 +28,7 @@ import RelatedEvidenceTab from '../../components/evidence/tabs/RelatedEvidenceTa
 import OfficerCard from '../../components/cards/OfficerCard';
 import { evidenceTypes } from '../../../data';
 import AttachmentsTab from '../../components/evidence/tabs/AttachmentsTab';
+import UploadAttachmentModal from '../../components/modals/UploadAttachmentModal';
 
 const SingleEvidenceView = () => {
     const { evidenceId } = useParams();
@@ -55,6 +58,7 @@ const SingleEvidenceView = () => {
         cases: 0,
         related: 0
     });
+    const [showUploadModal, setShowUploadModal] = useState(false);
 
     const navigate = useNavigate();
 
@@ -72,7 +76,30 @@ const SingleEvidenceView = () => {
         );
     }
 
-    console.log('Evidence ID:', evidence);
+    // Permission checks
+    const canAddAttachments = () => {
+        if (!evidence || !user) return false;
+
+        // Check if user has appropriate role or is the collecting officer
+        return (
+            user.role === 'OIC' ||
+            user.role === 'Crime OIC' ||
+            user.role === 'Forensic Officer' ||
+            user.user_id === evidence.officer_id ||
+            evidence.investigation_officers?.some(o => o.user_id === user.user_id)
+        );
+    };
+
+    // Define quick actions
+    const quickActions = [
+        ...(canAddAttachments() ? [{
+            icon: <AttachFile fontSize="small" />,
+            label: 'Upload Attachment',
+            onClick: () => setShowUploadModal(true),
+            styles: 'bg-blue-600 text-white hover:bg-blue-700 border-blue-600'
+        }] : [])
+    ];
+
     // Add this new function to calculate tab counts
     const calculateTabCounts = (evidenceData) => {
         setTabCounts({
@@ -173,7 +200,6 @@ const SingleEvidenceView = () => {
             };
 
             const response = await apiClient.put('/evidences/update', updateData);
-            console.log(updateData);
             if (response.data.success) {
                 setPopup({
                     open: true,
@@ -438,22 +464,59 @@ const SingleEvidenceView = () => {
                     </div>
                 </div>
 
-                {/* Tab Navigation */}
-                <div className="mb-0">
-                    <EvidenceTabNavigation
-                        activeTab={activeTab}
-                        setActiveTab={setActiveTab}
-                        tabCounts={tabCounts}
-                    />
-                </div>
+                {/* Main Content Area - Adjusted Layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                    {/* Left Column - Tab Content (80% width) */}
+                    <div className="lg:col-span-4 space-y-6">
+                        {/* Tab Navigation */}
+                        <EvidenceTabNavigation
+                            activeTab={activeTab}
+                            setActiveTab={setActiveTab}
+                            tabCounts={tabCounts}
+                        />
 
-                {/* Tab Content */}
-                <div className="bg-white rounded-b-xl shadow-sm border border-gray-200 border-t-0">
-                    <div className="p-6">
-                        {renderTabContent()}
+                        {/* Tab Content */}
+                        <div className="bg-white rounded-xl shadow-sm">
+                            <div className="p-6">
+                                {renderTabContent()}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Column - Sidebar with Quick Actions (20% width) */}
+                    <div className="space-y-4">
+                        {/* Quick Actions Card - Reduced Size */}
+                        {quickActions.length > 0 && (
+                            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-3 border-b border-gray-200">
+                                    <h3 className="font-semibold text-blue-900 text-sm">Quick Actions</h3>
+                                </div>
+                                <div className="p-3 space-y-2">
+                                    {quickActions.map((action, index) => (
+                                        <OutlinedButton key={index} action={{
+                                            ...action,
+                                            styles: action.styles + ' text-xs h-8 px-3'
+                                        }} />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
+
+            {/* Upload Attachment Modal */}
+            {showUploadModal && (
+                <UploadAttachmentModal
+                    open={showUploadModal}
+                    onClose={() => setShowUploadModal(false)}
+                    evidenceId={evidenceId}
+                    onSuccess={() => {
+                        // Refresh evidence data after successful upload
+                        fetchEvidenceDetails();
+                    }}
+                />
+            )}
         </div>
     );
 };

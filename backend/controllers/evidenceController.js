@@ -159,8 +159,6 @@ exports.createEvidence = async (req, res) => {
         }
       }
 
-      console.log("Processed attachments:", processedAttachments);
-
       try {
         const result = await evidenceService.createEvidence(
           {
@@ -467,12 +465,16 @@ exports.uploadAttachment = async (req, res) => {
 
     form.parse(req, async (err, fields, files) => {
       if (err) {
+        console.error("Form parsing error:", err);
         return res.status(400).json({
           success: false,
           message: "Error parsing form data",
           error: err.message,
         });
       }
+
+      console.log("Parsed fields:", fields);
+      console.log("Parsed files:", files);
 
       const evidence_id = Array.isArray(fields.evidence_id)
         ? fields.evidence_id[0]
@@ -485,6 +487,33 @@ exports.uploadAttachment = async (req, res) => {
         });
       }
 
+      // Check if evidence exists
+      const evidence = await evidenceService.getEvidenceById(evidence_id);
+      if (!evidence) {
+        return res.status(404).json({
+          success: false,
+          message: "Evidence not found",
+        });
+      }
+
+      // Check permissions
+      const canAddAttachments =
+        user.role === "OIC" ||
+        user.role === "Crime OIC" ||
+        user.role === "Forensic Officer" ||
+        user.user_id === evidence.officer_id ||
+        evidence.investigation_officers?.some(
+          (o) => o.user_id === user.user_id
+        );
+
+      if (!canAddAttachments) {
+        return res.status(403).json({
+          success: false,
+          message:
+            "You don't have permission to add attachments to this evidence",
+        });
+      }
+
       // Check if file is provided
       if (!files.file) {
         return res.status(400).json({
@@ -494,54 +523,97 @@ exports.uploadAttachment = async (req, res) => {
       }
 
       try {
-        // Create form data for file upload
-        const formData = new FormData();
-        const file = files.file;
-        formData.append("file", fs.createReadStream(file.filepath));
-        formData.append("evidence_id", evidence_id);
+        // Process the file attachments using the same pattern as createEvidence
+        const processedAttachments = [];
 
-        // Upload to file server
-        const fileResponse = await axios.post(
-          `${FILE_SERVER_URL}/upload`,
-          formData,
-          {
-            headers: {
-              ...formData.getHeaders(),
-            },
+        // Handle both single file and multiple files
+        const fileList = Array.isArray(files.file) ? files.file : [files.file];
+
+        for (const file of fileList) {
+          if (file && file.originalFilename) {
+            try {
+              // Create form data for file upload to file server
+              const formData = new FormData();
+
+              // Check which property contains the file path (same as createEvidence)
+              const filePath = file.filepath || file.path || file.newFilename;
+
+              if (!filePath) {
+                console.error("File path not found in uploaded file");
+                continue;
+              }
+
+              // Create a readable stream from the file
+              const fileStream = fs.createReadStream(filePath);
+
+              // Append file and evidence_id to FormData
+              formData.append("file", fileStream, {
+                filename: file.originalFilename || file.name || "attachment",
+                contentType: file.mimetype || "application/octet-stream",
+              });
+              formData.append("evidence_id", evidence_id);
+
+              // Upload to file server
+              const fileResponse = await axios.post(
+                `${FILE_SERVER_URL}/upload`,
+                formData,
+                {
+                  headers: {
+                    ...formData.getHeaders(),
+                  },
+                }
+              );
+
+              if (fileResponse.data.success) {
+                // Add file metadata to processed attachments (same format as createEvidence)
+                processedAttachments.push({
+                  original_name: fileResponse.data.original_name,
+                  file_name: fileResponse.data.original_name,
+                  file_path: `${FILE_SERVER_URL}${fileResponse.data.file_path}`, // Full URL path
+                  file_type: fileResponse.data.file_type,
+                  file_size: fileResponse.data.file_size,
+                });
+              } else {
+                console.error(
+                  "Error uploading file to file server:",
+                  fileResponse.data
+                );
+              }
+            } catch (error) {
+              console.error("Error processing attachment:", error.message);
+            }
           }
-        );
+        }
 
-        if (fileResponse.data.success) {
-          // Save attachment metadata to database
-          const attachmentId = await generateUniqueId("attachments");
-
-          await db.query(
-            `INSERT INTO attachments (attachment_id, evidence_id, file_name, file_path, file_type, file_size, uploaded_dt, uploaded_by) 
-             VALUES (?, ?, ?, ?, ?, ?, NOW(), ?)`,
-            [
-              attachmentId,
-              evidence_id,
-              fileResponse.data.original_name,
-              `${FILE_SERVER_URL}${fileResponse.data.file_path}`, // Full URL
-              fileResponse.data.file_type,
-              fileResponse.data.file_size,
-              user.user_id,
-            ]
-          );
-
-          res.json({
-            success: true,
-            attachment_id: attachmentId,
-            file_url: `${FILE_SERVER_URL}${fileResponse.data.file_path}`,
-            message: "File uploaded successfully",
-          });
-        } else {
-          res.status(400).json({
+        if (processedAttachments.length === 0) {
+          return res.status(400).json({
             success: false,
-            message: "File upload failed",
-            error: fileResponse.data.error,
+            message: "No files were successfully processed",
           });
         }
+
+        // Save attachments to database using the service (same pattern as createEvidence)
+        const createdAttachments = [];
+        for (const attachmentData of processedAttachments) {
+          const attachment = await evidenceService.createAttachment(
+            {
+              evidence_id: evidence_id,
+              file_name: attachmentData.file_name,
+              file_path: attachmentData.file_path,
+              file_type: attachmentData.file_type,
+              file_size: attachmentData.file_size,
+            },
+            user.user_id
+          );
+
+          createdAttachments.push(attachment);
+        }
+
+        res.json({
+          success: true,
+          attachments: createdAttachments,
+          message: `${createdAttachments.length} file(s) uploaded successfully`,
+        });
       } catch (error) {
         console.error("Upload error:", error);
         res.status(500).json({
@@ -566,22 +638,24 @@ exports.getAttachment = async (req, res) => {
   try {
     const { attachmentId } = req.params;
 
-    // Get file path from database
-    const [attachments] = await db.query(
-      "SELECT file_path, file_name, file_type FROM attachments WHERE attachment_id = ?",
-      [attachmentId]
-    );
+    // Get attachment details from database using service
+    const attachment = await evidenceService.getAttachmentById(attachmentId);
 
-    if (attachments.length === 0) {
-      return res.status(404).json({ error: "Attachment not found" });
+    if (!attachment) {
+      return res.status(404).json({
+        success: false,
+        message: "Attachment not found",
+      });
     }
-
-    const attachment = attachments[0];
 
     // Redirect to the file URL
     return res.redirect(attachment.file_path);
   } catch (error) {
     console.error("File serving error:", error);
-    res.status(500).json({ error: "Failed to serve file" });
+    res.status(500).json({
+      success: false,
+      message: "Failed to serve file",
+      error: error.message,
+    });
   }
 };
