@@ -56,12 +56,19 @@ const SingleEvidenceView = () => {
 
     const navigate = useNavigate();
 
-    // Check if user has edit permissions
-    const canEdit = user.role === 'OIC' || user.role === 'Crime OIC' || user.role === 'Inspector' || user.role === 'Sub Inspector' || user.role === 'Officer' || user.role === 'Sergeant' || user.role === 'Police Constable';
-
     useEffect(() => {
         fetchEvidenceDetails();
     }, [evidenceId]);
+
+    // Check if user has edit permissions
+    const canEdit = () => {
+        if (!user || !evidence) return false;
+        return (
+            user.role === 'OIC' ||
+            user.role === 'Crime OIC' ||
+            user.user_id === evidence.officer_id // officer_id is the user_id of the collector
+        );
+    }
 
 
     // Add this new function to calculate tab counts
@@ -277,7 +284,7 @@ const SingleEvidenceView = () => {
                     { label: evidence.evidence_id }
                 ]}
                 actions={[
-                    ...(canEdit ? [{
+                    ...(canEdit() ? [{
                         icon: isEditing ? <Cancel fontSize="small" /> : <Edit fontSize="small" />,
                         label: isEditing ? 'Cancel' : 'Edit Evidence',
                         onClick: handleEditToggle,

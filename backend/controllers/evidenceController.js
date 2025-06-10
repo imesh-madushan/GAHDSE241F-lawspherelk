@@ -1,4 +1,5 @@
 const evidenceService = require("../services/evidenceService");
+const caseService = require("../services/caseService");
 const { getUserFromCookies } = require("../middlewares/authMiddleware");
 const multer = require("multer");
 const path = require("path");
@@ -9,11 +10,7 @@ const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     // Create directory structure: uploads/evidences/:evidenceId
     const evidenceId = req.body.evidence_id || "temp";
-    const uploadPath = path.join(
-      __dirname,
-      "../uploads/evidences",
-      evidenceId
-    );
+    const uploadPath = path.join(__dirname, "../uploads/evidences", evidenceId);
 
     // Create directory if it doesn't exist
     if (!fs.existsSync(uploadPath)) {
@@ -127,7 +124,7 @@ exports.createEvidence = async (req, res) => {
     }
 
     try {
-    const result = await evidenceService.createEvidence(
+      const result = await evidenceService.createEvidence(
         {
           type,
           location,
@@ -140,8 +137,8 @@ exports.createEvidence = async (req, res) => {
           witnesses: parsedWitnesses.filter((w) => w.nic && w.name), // Only include witnesses with required fields
           attachments, // Pass the actual uploaded files
         },
-      user.user_id
-    );
+        user.user_id
+      );
 
       if (!result) {
         return res.status(400).json({
@@ -150,19 +147,19 @@ exports.createEvidence = async (req, res) => {
         });
       }
 
-    res.status(201).json({
-      success: true,
-      message: "Evidence created successfully",
-      evidence: result,
-    });
-  } catch (error) {
-    console.error("Error creating evidence:", error);
-    res.status(500).json({
-      success: false,
+      res.status(201).json({
+        success: true,
+        message: "Evidence created successfully",
+        evidence: result,
+      });
+    } catch (error) {
+      console.error("Error creating evidence:", error);
+      res.status(500).json({
+        success: false,
         message: "Internal server error",
-      error: error.message,
-    });
-  }
+        error: error.message,
+      });
+    }
   });
 };
 
@@ -221,7 +218,6 @@ exports.getAllEvidence = async (req, res) => {
     });
   }
 };
-
 
 // TODO: have to fix search and filtering
 exports.searchEvidence = async (req, res) => {
@@ -340,23 +336,29 @@ exports.updateEvidence = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    // Only OIC and Crime OIC can update evidence
-    if (
-      user.role !== "OIC" &&
-      user.role !== "Crime OIC" &&
-      user.role !== "Inspector" &&
-      user.role !== "Sub Inspector"
-    ) {
-      return res.status(403).json({
-        message:
-          "Forbidden: Only OIC, Crime OIC, Inspector, or Sub Inspector can update evidence",
-      });
-    }
-
     const { evidence_id, type, location, details, collected_dt } = req.body;
 
     if (!evidence_id) {
       return res.status(400).json({ message: "Evidence ID is required" });
+    }
+
+    // Get the officer_id (collected by) for this evidence
+    const collectedByOfficerId = await evidenceService.getCollectedBy(evidence_id);
+
+    if (!collectedByOfficerId) {
+      return res.status(404).json({ message: "Evidence not found" });
+    }
+
+    // Only OIC, Crime OIC, or the officer who collected can update
+    if (
+      user.role !== "OIC" &&
+      user.role !== "Crime OIC" &&
+      user.user_id !== collectedByOfficerId
+    ) {
+      return res.status(403).json({
+        message:
+          "Forbidden: Only OIC, Crime OIC, or the officer who collected this evidence can update it",
+      });
     }
 
     // Only send changed fields to service

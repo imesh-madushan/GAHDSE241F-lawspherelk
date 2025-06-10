@@ -101,21 +101,38 @@ const SingleOffenceView = () => {
         fetchOffenceData();
     }, [offenceId]);
 
-    // Determine permissions
-    const canEdit = () => {
-        return user?.role === "OIC" || user?.role === "Crime OIC" || user?.user_id === offence?.case_leader_id;
+    // Permission helpers (match SingleCaseView style)
+    const isOffenceLocked = offence =>
+        offence?.status === "Convicted" || offence?.status === "Acquitted";
+
+    const isOIC = user?.role === "OIC";
+    const isCrimeOIC = user?.role === "Crime OIC";
+    const isLeader = user?.user_id === offence?.case_leader_id;
+
+    const canEditOffence = () => {
+        if (isOffenceLocked(offence)) return false;
+        return isOIC || isCrimeOIC || isLeader;
     };
 
     const canChangeStatus = () => {
-        return user?.role === "OIC";
+        if (isOffenceLocked(offence)) return false;
+        return isOIC;
     };
 
-    const canAddEvidence = () => {
-        return user?.role === "OIC" || user?.role === "Crime OIC" || user?.user_id === offence?.case_leader_id;
+    const canAddEvidenceToOffence = () => {
+        if (isOffenceLocked(offence)) return false;
+        return isOIC || isCrimeOIC || isLeader;
     };
 
-    const canAddVictim = () => {
-        return user?.role === "OIC" || user?.role === "Crime OIC" || user?.user_id === offence?.case_leader_id;
+    const canAddVictimToOffence = () => {
+        if (isOffenceLocked(offence)) return false;
+        return isOIC || isCrimeOIC || isLeader;
+    };
+
+    // Reports: For closed cases, only OIC can create reports
+    const canCreateReport = () => {
+        console.log("Checking if user can create report for offence:", offence);
+        return (isLeader || isOIC || isCrimeOIC);
     };
 
     // Edit handlers
@@ -264,24 +281,26 @@ const SingleOffenceView = () => {
         setPopup({ ...popup, open: false });
     };
 
-    // Quick actions - only Link Evidence and Add Victim
+    // Quick actions (always show Make New Report if allowed, match SingleCaseView style)
     const quickActions = [
-        ...(canAddEvidence() ? [
-            {
-                icon: <FolderOpen fontSize="small" />,
-                label: 'Link Evidence',
-                onClick: () => setShowLinkEvidenceModal(true),
-                styles: 'w-full bg-indigo-600 text-white hover:bg-indigo-700 border-indigo-600'
-            }
-        ] : []),
-        ...(canAddVictim() ? [
-            {
-                icon: <PersonAdd fontSize="small" />,
-                label: 'Add Victim',
-                onClick: () => setShowCreateVictimModal(true),
-                styles: 'w-full bg-red-600 text-white hover:bg-red-700 border-red-600'
-            }
-        ] : [])
+        ...(canAddEvidenceToOffence() ? [{
+            icon: <FolderOpen fontSize="small" />,
+            label: 'Link Evidence',
+            onClick: () => setShowLinkEvidenceModal(true),
+            styles: 'w-full bg-indigo-600 text-white hover:bg-indigo-700 border-indigo-600'
+        }] : []),
+        ...(canAddVictimToOffence() ? [{
+            icon: <PersonAdd fontSize="small" />,
+            label: 'Add Victim',
+            onClick: () => setShowCreateVictimModal(true),
+            styles: 'w-full bg-red-600 text-white hover:bg-red-700 border-red-600'
+        }] : []),
+        ...(canCreateReport() ? [{
+            icon: <Assignment fontSize="small" />,
+            label: 'Make New Report',
+            onClick: () => navigate(`/reports/create?offenceId=${offenceId}`),
+            styles: 'w-full bg-green-600 text-white hover:bg-green-700 border-green-600'
+        }] : [])
     ];
 
     // Render tab content
@@ -292,7 +311,7 @@ const SingleOffenceView = () => {
                     <EvidenceTab
                         offence={offence}
                         formatDate={formatDate}
-                        canAddEvidence={canAddEvidence()}
+                        canAddEvidence={canAddEvidenceToOffence()}
                     />
                 );
             case 'victims':
@@ -300,7 +319,7 @@ const SingleOffenceView = () => {
                     <VictimsTab
                         offence={offence}
                         formatDate={formatDate}
-                        canAddVictim={canAddVictim()}
+                        canAddVictim={canAddVictimToOffence()}
                     />
                 );
             default:
@@ -308,7 +327,7 @@ const SingleOffenceView = () => {
                     <EvidenceTab
                         offence={offence}
                         formatDate={formatDate}
-                        canAddEvidence={canAddEvidence()}
+                        canAddEvidence={canAddEvidenceToOffence()}
                     />
                 );
         }
@@ -358,7 +377,7 @@ const SingleOffenceView = () => {
                 ]}
                 onBack={() => navigate(-1)}
                 actions={[
-                    ...(canEdit() ? [
+                    ...(canEditOffence() ? [
                         isEditing ? {
                             icon: <Cancel fontSize='small' />,
                             label: 'Cancel',
@@ -544,7 +563,7 @@ const SingleOffenceView = () => {
                         </div>
                     </div>
 
-                    {/* Right Column - Sidebar (existing criminal info and risk assessment) */}
+                    {/* Right Column - Sidebar */}
                     <div className="col-span-1 space-y-6">
                         {/* Criminal Info Card */}
                         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -623,8 +642,16 @@ const SingleOffenceView = () => {
                                         <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
                                             <DeviceHub className="h-8 w-8 text-gray-400" />
                                         </div>
-                                        <p className="text-sm text-gray-500 font-medium">No actions available</p>
-                                        <p className="text-xs text-gray-400 mt-1">Contact your administrator for access</p>
+                                        <p className="text-sm text-gray-500 font-medium">
+                                            {isOffenceLocked(offence)
+                                                ? "Actions are disabled for Convicted/Acquitted offences"
+                                                : "No actions available"}
+                                        </p>
+                                        <p className="text-xs text-gray-400 mt-1">
+                                            {isOffenceLocked(offence)
+                                                ? "This offence cannot be modified"
+                                                : "Contact your administrator for access"}
+                                        </p>
                                     </div>
                                 )}
                             </div>
@@ -647,7 +674,7 @@ const SingleOffenceView = () => {
             <CreateEvidenceModal
                 open={showCreateEvidenceModal}
                 onClose={() => setShowCreateEvidenceModal(false)}
-                canCreate={canAddEvidence()}
+                canCreate={canAddEvidenceToOffence()}
                 context="offence"
                 contextId={offenceId}
             />
@@ -665,7 +692,7 @@ const SingleOffenceView = () => {
                 open={showCreateVictimModal}
                 onClose={() => setShowCreateVictimModal(false)}
                 offenceId={offenceId}
-                canCreate={canAddVictim()}
+                canCreate={canAddVictimToOffence()}
             />
         </div>
     );

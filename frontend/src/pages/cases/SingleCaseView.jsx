@@ -82,12 +82,52 @@ const SingleCaseView = () => {
   const [showCreateOffenceModal, setShowCreateOffenceModal] = useState(false);
   const [showCreateReportModal, setShowCreateReportModal] = useState(false);
 
-  const canEdit = user.user_id == caseData.leader_id || user.role === "OIC" || user.role === "Crime OIC";
-  const canChangeLeader = user.role === "OIC" || user.role === "Crime OIC"
-  const canAddEvidence = user.user_id == caseData.leader_id || user.role === "OIC" || user.role === "Crime OIC" || user.role === "Sub Inspector" || user.role === "Sergeant" || user.role === "Police Constable";
-  const canAddInvestigation = user.user_id == caseData.leader_id || user.role === "OIC" || user.role === "Crime OIC";
-  const canAddOffence = user.user_id == caseData.leader_id || user.role === "OIC" || user.role === "Crime OIC" || user.role === "OIC";
-  const canCreateReport = user.user_id == caseData.leader_id || user.role === "OIC" || user.role === "Crime OIC" || user.role === "Sub Inspector" || user.role === "Sergeant";
+  // Permission checks - If case is closed, ONLY OIC can do anything
+  const isCaseClosed = caseData.status === "closed";
+  const isOIC = user.role === "OIC";
+
+  const canEdit = () => {
+    if (isCaseClosed) return false;
+    return user.user_id == caseData.leader_id || isOIC || user.role === "Crime OIC";
+  };
+
+  const canChangeLeader = () => {
+    if (isCaseClosed) return false;
+    return isOIC || user.role === "Crime OIC";
+  };
+
+  const canAddEvidence = () => {
+    if (isCaseClosed) return false;
+    return (
+      user.user_id == caseData.leader_id ||
+      isOIC ||
+      user.role === "Crime OIC" ||
+      user.role === "Sub Inspector" ||
+      user.role === "Sergeant" ||
+      user.role === "Police Constable"
+    );
+  };
+
+  const canAddInvestigation = () => {
+    if (isCaseClosed) return false;
+    return (user.user_id == caseData.leader_id || isOIC || user.role === "Crime OIC") && caseData.status !== 'closed';
+  };
+
+  const canAddOffence = () => {
+    if (isCaseClosed) return false;
+    return (user.user_id == caseData.leader_id || isOIC || user.role === "Crime OIC") && caseData.status !== 'closed';
+  };
+
+  // Reports: For closed cases, only OIC can create reports
+  const canCreateReport = () => {
+    return (
+      user.user_id == caseData.leader_id ||
+      isOIC ||
+      user.role === "Crime OIC" ||
+      user.role === "Sub Inspector" ||
+      user.role === "Sergeant"
+    );
+  };
 
   // Quick action handlers
   const handleAddEvidence = () => {
@@ -95,10 +135,30 @@ const SingleCaseView = () => {
   };
 
   const handleAddInvestigation = () => {
+    if (caseData.status === 'closed') {
+      setPopup({
+        open: true,
+        status: 'error',
+        message: 'Action Not Allowed',
+        description: 'Cannot start new investigation for a closed case.',
+        referenceLink: null
+      });
+      return;
+    }
     setShowCreateInvestigationModal(true);
   };
 
   const handleAddOffence = () => {
+    if (caseData.status === 'closed') {
+      setPopup({
+        open: true,
+        status: 'error',
+        message: 'Action Not Allowed',
+        description: 'Cannot add new offence to a closed case.',
+        referenceLink: null
+      });
+      return;
+    }
     setShowCreateOffenceModal(true);
   };
 
@@ -108,25 +168,25 @@ const SingleCaseView = () => {
 
   // Define quick actions
   const quickActions = [
-    ...(canAddEvidence ? [{
+    ...(canAddEvidence() ? [{
       icon: <Attachment fontSize="small" />,
       label: 'Add Evidence',
       onClick: handleAddEvidence,
       styles: 'w-full bg-blue-600 text-white hover:bg-blue-700 border-blue-600'
     }] : []),
-    ...(canAddInvestigation ? [{
+    ...(canAddInvestigation() ? [{
       icon: <FormatListBulleted fontSize="small" />,
       label: 'New Investigation',
       onClick: handleAddInvestigation,
       styles: 'w-full bg-indigo-600 text-white hover:bg-indigo-700 border-indigo-600'
     }] : []),
-    ...(canAddOffence ? [{
+    ...(canAddOffence() ? [{
       icon: <Gavel fontSize="small" />,
       label: 'File Crime Offence',
       onClick: handleAddOffence,
       styles: 'w-full bg-amber-600 text-white hover:bg-amber-700 border-amber-600'
     }] : []),
-    ...(canCreateReport ? [{
+    ...(canCreateReport() ? [{
       icon: <Description fontSize="small" />,
       label: 'Make New Report',
       onClick: handleCreateReport,
@@ -473,7 +533,7 @@ const SingleCaseView = () => {
         ]}
         onBack={() => navigate(-1)}
         actions={[
-          ...(canEdit ? [
+          ...(canEdit() ? [
             isEditing ? {
               icon: <Cancel fontSize='small' />,
               label: 'Cancel',
@@ -569,12 +629,12 @@ const SingleCaseView = () => {
 
                 <div className="mt-2">
                   <div className="flex justify-between items-center mb-2">
-                    {isEditing && canChangeLeader && (
+                    {isEditing && canChangeLeader() && (
                       <span className="text-xs text-blue-600 font-medium">Change Leader</span>
                     )}
                   </div>
 
-                  {isEditing && canChangeLeader ? (
+                  {isEditing && canChangeLeader() ? (
                     <CustomOfficerDropdown
                       filters={{
                         dropRoles: dropOfficerRoles,
@@ -728,14 +788,14 @@ const SingleCaseView = () => {
                 {activeTab === 'evidence' && (
                   <EvidenceTab
                     caseData={caseData}
-                    canAddEvidence={canAddEvidence}
+                    canAddEvidence={canAddEvidence()}
                   />
                 )}
 
                 {activeTab === 'investigations' && (
                   <InvestigationsTab
                     caseData={caseData}
-                    canAddInvestigation={canAddInvestigation}
+                    canAddInvestigation={canAddInvestigation()}
                     formatDate={formatDate}
                   />
                 )}
@@ -743,7 +803,7 @@ const SingleCaseView = () => {
                 {activeTab === 'offences' && (
                   <OffencesTab
                     caseData={caseData}
-                    canEdit={canEdit}
+                    canEdit={canEdit()}
                     formatDate={formatDate}
                     formatTime={formatTime}
                     getRiskLevel={getRiskLevel}
@@ -753,7 +813,7 @@ const SingleCaseView = () => {
                 {activeTab === 'reports' && (
                   <ReportsTab
                     caseData={caseData}
-                    canEdit={canEdit}
+                    canEdit={canEdit()}
                     formatDate={formatDate}
                   />
                 )}
@@ -795,28 +855,30 @@ const SingleCaseView = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="bg-gradient-to-r from-gray-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
-                <h2 className="font-semibold text-gray-800 flex items-center">
-                  <DeviceHub className="h-5 w-5 mr-2 text-blue-600" />
-                  Quick Actions
-                </h2>
-              </div>
-              <div className="items-center p-6 space-y-3">
-                {quickActions.length > 0 ? (
-                  quickActions.map((action, index) => (
-                    <div key={index} className="w-full">
-                      <OutlinedButton action={action} />
+            {quickActions.length > 0 && (
+              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div className="bg-gradient-to-r from-gray-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
+                  <h2 className="font-semibold text-gray-800 flex items-center">
+                    <DeviceHub className="h-5 w-5 mr-2 text-blue-600" />
+                    Quick Actions
+                  </h2>
+                </div>
+                <div className="items-center p-6 space-y-3">
+                  {quickActions.length > 0 ? (
+                    quickActions.map((action, index) => (
+                      <div key={index} className="w-full">
+                        <OutlinedButton action={action} />
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-4 text-gray-500">
+                      <DeviceHub className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                      <p className="text-sm">No actions available for your role</p>
                     </div>
-                  ))
-                ) : (
-                  <div className="text-center py-4 text-gray-500">
-                    <DeviceHub className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                    <p className="text-sm">No actions available for your role</p>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -825,7 +887,7 @@ const SingleCaseView = () => {
       <CreateEvidenceModal
         open={showCreateEvidenceModal}
         onClose={() => setShowCreateEvidenceModal(false)}
-        canCreate={canAddEvidence}
+        canCreate={canAddEvidence()}
         context="case"
         contextId={caseId}
       />
@@ -833,7 +895,7 @@ const SingleCaseView = () => {
       <CreateInvestigationModal
         open={showCreateInvestigationModal}
         onClose={() => setShowCreateInvestigationModal(false)}
-        canCreate={canAddInvestigation}
+        canCreate={canAddInvestigation()}
         context="case"
         contextId={caseId}
       />
@@ -841,7 +903,7 @@ const SingleCaseView = () => {
       <CreateOffenceModal
         open={showCreateOffenceModal}
         onClose={() => setShowCreateOffenceModal(false)}
-        canCreate={canAddOffence}
+        canCreate={canAddOffence()}
         context="case"
         contextId={caseId}
       />
@@ -849,7 +911,7 @@ const SingleCaseView = () => {
       {/* <CreateReportModal
         open={showCreateReportModal}
         onClose={() => setShowCreateReportModal(false)}
-        canCreate={canCreateReport}
+        canCreate={canCreateReport()}
         context="case"
         contextId={caseId}
       /> */}

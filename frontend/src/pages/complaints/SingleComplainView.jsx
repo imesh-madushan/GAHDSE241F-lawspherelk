@@ -130,7 +130,15 @@ const SingleComplaintView = () => {
     };
 
     const canViewRelatedCase = () => {
-        return complaint?.case?.status !== "oicnotreviewed";
+        // Hide if complaint is new, or case is oicnotreviewed or oicrejected
+        if (
+            complaint?.status === "new" ||
+            complaint?.case?.status === "oicnotreviewed" ||
+            complaint?.case?.status === "oicrejected"
+        ) {
+            return false;
+        }
+        return true;
     };
 
 

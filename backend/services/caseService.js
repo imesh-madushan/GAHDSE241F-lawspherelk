@@ -30,23 +30,23 @@ exports.getAllCases = async (filters, userRole, userId) => {
 
   //status filter if provided
   if (filters.status) {
-      query += ` AND cases.status = ?`;
-      params.push(filters.status);
+    query += ` AND cases.status = ?`;
+    params.push(filters.status);
   }
-  
+
   // if data is requested by sub inspector, show only the cases they're leading
   if (userRole === "Sub Inspector") {
-      query += ` AND cases.leader_id = ?`;
-      params.push(userId);
+    query += ` AND cases.leader_id = ?`;
+    params.push(userId);
   }
 
   //group by and order by
   query += ` GROUP BY cases.case_id ORDER BY cases.started_dt DESC`;
-  
+
   //limit if provided
   if (filters.limit) {
-      query += ` LIMIT ?`;
-      params.push(filters.limit);
+    query += ` LIMIT ?`;
+    params.push(filters.limit);
   }
 
   const [rows] = await db.query(query, params);
@@ -72,13 +72,13 @@ exports.getCaseById = async (caseId, userRole, userId) => {
                   WHERE c.topic is not null AND c.case_id = ?`;
 
   const params = [caseId];
-  
+
   const [caseRows] = await db.query(caseQuery, params);
-  
+
   if (caseRows.length === 0) {
     return null;
   }
-  
+
   const caseData = caseRows[0];
 
   // Get complaint data separately
@@ -103,9 +103,10 @@ exports.getCaseById = async (caseId, userRole, userId) => {
       complaintData = complaintRows[0];
     }
   }
-  
+
   // Get assigned officers - Enhanced query to include role and profile image
-  const [assignedOfficers] = await db.query(`
+  const [assignedOfficers] = await db.query(
+    `
     SELECT DISTINCT 
       u.user_id, 
       u.name, 
@@ -115,10 +116,13 @@ exports.getCaseById = async (caseId, userRole, userId) => {
     JOIN users u ON io.officer_id = u.user_id
     JOIN investigation i ON io.investigation_id = i.investigation_id
     WHERE i.case_id = ?
-  `, [caseId]);
-  
+  `,
+    [caseId]
+  );
+
   // Get evidence with detailed officer information
-  const [evidence] = await db.query(`
+  const [evidence] = await db.query(
+    `
     SELECT 
       e.evidence_id, 
       e.type, 
@@ -133,10 +137,13 @@ exports.getCaseById = async (caseId, userRole, userId) => {
     JOIN case_evidance ce ON e.evidence_id = ce.evidence_id
     LEFT JOIN users u ON e.officer_id = u.user_id
     WHERE ce.case_id = ?
-  `, [caseId]);
-  
+  `,
+    [caseId]
+  );
+
   // Get investigations
-  const [investigations] = await db.query(`
+  const [investigations] = await db.query(
+    `
     SELECT 
       i.investigation_id,
       i.topic,
@@ -146,10 +153,13 @@ exports.getCaseById = async (caseId, userRole, userId) => {
       i.status
     FROM investigation i
     WHERE i.case_id = ?
-  `, [caseId]);
+  `,
+    [caseId]
+  );
 
   // Get crime offences and calculate total_crimes and total_risk for each criminal (Convicted only)
-  const [offences] = await db.query(`
+  const [offences] = await db.query(
+    `
     SELECT 
       co.offence_id,
       co.status,
@@ -174,10 +184,13 @@ exports.getCaseById = async (caseId, userRole, userId) => {
     FROM crimeoffence co
     LEFT JOIN criminalrecord cr ON co.criminal_id = cr.criminal_id
     WHERE co.case_id = ?
-  `, [caseId]);
-  
+  `,
+    [caseId]
+  );
+
   // Get reports with detailed officer information
-  const [reports] = await db.query(`
+  const [reports] = await db.query(
+    `
     SELECT 
       r.report_id,
       r.report_type,
@@ -193,8 +206,10 @@ exports.getCaseById = async (caseId, userRole, userId) => {
     JOIN report_refrences rr ON r.report_id = rr.report_id
     LEFT JOIN users u ON r.officer_id = u.user_id
     WHERE rr.ref_id = ? AND rr.ref_type = 'case'
-  `, [caseId]);
-  
+  `,
+    [caseId]
+  );
+
   // Return all collected data
   return {
     ...caseData,
@@ -203,7 +218,7 @@ exports.getCaseById = async (caseId, userRole, userId) => {
     investigations,
     offences,
     reports,
-    complaint: complaintData // Add the complaint object separately
+    complaint: complaintData, // Add the complaint object separately
   };
 };
 
@@ -253,20 +268,23 @@ exports.searchCases = async (filters, userRole, userId) => {
   }
 
   // Status filter
-  if (filters.status && filters.status !== 'all') {
+  if (filters.status && filters.status !== "all") {
     query += ` AND cases.status = ?`;
     params.push(filters.status);
   }
 
   // Time period filter
-  if (filters.timePeriod && filters.timePeriod !== 'all') {
-    let dateCondition = '';
-    if (filters.timePeriod === 'last_7_days') {
-      dateCondition = ' AND cases.started_dt >= DATE_SUB(NOW(), INTERVAL 7 DAY)';
-    } else if (filters.timePeriod === 'last_30_days') {
-      dateCondition = ' AND cases.started_dt >= DATE_SUB(NOW(), INTERVAL 30 DAY)';
-    } else if (filters.timePeriod === 'last_90_days') {
-      dateCondition = ' AND cases.started_dt >= DATE_SUB(NOW(), INTERVAL 90 DAY)';
+  if (filters.timePeriod && filters.timePeriod !== "all") {
+    let dateCondition = "";
+    if (filters.timePeriod === "last_7_days") {
+      dateCondition =
+        " AND cases.started_dt >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
+    } else if (filters.timePeriod === "last_30_days") {
+      dateCondition =
+        " AND cases.started_dt >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
+    } else if (filters.timePeriod === "last_90_days") {
+      dateCondition =
+        " AND cases.started_dt >= DATE_SUB(NOW(), INTERVAL 90 DAY)";
     }
     query += dateCondition;
   }
@@ -284,135 +302,202 @@ exports.searchCases = async (filters, userRole, userId) => {
 };
 
 exports.createCase = async (complaintId, topic, leaderId, caseId) => {
-    const now = new Date();
+  const now = new Date();
 
-    // Begin transaction
-    const connection = await db.getConnection();
-    await connection.beginTransaction();
-    
-    try {
-        // Generate batch ID for this operation to track all related changes
-        const batchId = await generateBatchId();
+  // Begin transaction
+  const connection = await db.getConnection();
+  await connection.beginTransaction();
 
-        // Check if the case data is already filled
-        const [existingCase] = await connection.query(
-            "SELECT * FROM cases WHERE case_id = ?",
-            [caseId]
-        );
+  try {
+    // Generate batch ID for this operation to track all related changes
+    const batchId = await generateBatchId();
 
-        // Check if the case topic and leaderId are already in existing case
-        if (existingCase[0].topic != null && existingCase[0].leader_id != null) {
-            throw new Error("This case is already created with the same topic and leader.");
-        }
+    // Check if the case data is already filled
+    const [existingCase] = await connection.query(
+      "SELECT * FROM cases WHERE case_id = ?",
+      [caseId]
+    );
 
-        // Update the existing template of the case
-        await connection.query(
-            `UPDATE cases SET topic = ?, status = ?, started_dt = ?, leader_id = ? 
-            WHERE case_id = ?`,
-            [topic, "inprogress", now, leaderId, caseId]
-        );
-
-        // Update the complaint status
-        await connection.query(
-            "UPDATE complaints SET status = 'viewed' WHERE complain_id = ?",
-            [complaintId]
-        );
-
-        // Log all the updates in audit trail with new values only
-        const auditChanges = [
-            // Case updates - new values only
-            { tableName: 'cases', recordId: caseId, fieldName: 'topic', value: topic, actionType: 'INSERT' },
-            { tableName: 'cases', recordId: caseId, fieldName: 'status', value: 'inprogress', actionType: 'UPDATE' },
-            { tableName: 'cases', recordId: caseId, fieldName: 'started_dt', value: now.toISOString(), actionType: 'INSERT' },
-            { tableName: 'cases', recordId: caseId, fieldName: 'leader_id', value: leaderId, actionType: 'INSERT' },
-
-            // Complaint status update
-            { tableName: 'complaints', recordId: complaintId, fieldName: 'status', value: 'viewed', actionType: 'UPDATE' }
-        ];
-
-        await logAuditTrail({
-            batchId,
-            changes: auditChanges,
-            changedBy: leaderId,
-            connection
-        });
-        
-        await connection.commit();
-        return true;
-    } catch (error) {
-        await connection.rollback();
-        throw error;
-    } finally {
-        connection.release();
+    // Check if the case topic and leaderId are already in existing case
+    if (existingCase[0].topic != null && existingCase[0].leader_id != null) {
+      throw new Error(
+        "This case is already created with the same topic and leader."
+      );
     }
+
+    // Update the existing template of the case
+    await connection.query(
+      `UPDATE cases SET topic = ?, status = ?, started_dt = ?, leader_id = ? 
+            WHERE case_id = ?`,
+      [topic, "inprogress", now, leaderId, caseId]
+    );
+
+    // Update the complaint status
+    await connection.query(
+      "UPDATE complaints SET status = 'viewed' WHERE complain_id = ?",
+      [complaintId]
+    );
+
+    // Log all the updates in audit trail with new values only
+    const auditChanges = [
+      // Case updates - new values only
+      {
+        tableName: "cases",
+        recordId: caseId,
+        fieldName: "topic",
+        value: topic,
+        actionType: "INSERT",
+      },
+      {
+        tableName: "cases",
+        recordId: caseId,
+        fieldName: "status",
+        value: "inprogress",
+        actionType: "UPDATE",
+      },
+      {
+        tableName: "cases",
+        recordId: caseId,
+        fieldName: "started_dt",
+        value: now.toISOString(),
+        actionType: "INSERT",
+      },
+      {
+        tableName: "cases",
+        recordId: caseId,
+        fieldName: "leader_id",
+        value: leaderId,
+        actionType: "INSERT",
+      },
+
+      // Complaint status update
+      {
+        tableName: "complaints",
+        recordId: complaintId,
+        fieldName: "status",
+        value: "viewed",
+        actionType: "UPDATE",
+      },
+    ];
+
+    await logAuditTrail({
+      batchId,
+      changes: auditChanges,
+      changedBy: leaderId,
+      connection,
+    });
+
+    await connection.commit();
+    return true;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 };
 
 exports.updateCase = async (case_id, updateData, updatedBy) => {
-    const connection = await db.getConnection();
-    try {
-        await connection.beginTransaction();
-        const batchId = await generateBatchId();
-        const changes = [];
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+    const batchId = await generateBatchId();
+    const changes = [];
 
-        // Get current case data
-        const [currentRows] = await connection.query("SELECT * FROM cases WHERE case_id = ?", [case_id]);
-        if (!currentRows || currentRows.length === 0) {
-            throw new Error("Case not found");
-        }
-        const current = currentRows[0];
-
-        // Prepare update fields and audit log
-        const fields = [];
-        const values = [];
-        if (updateData.topic !== undefined && updateData.topic !== current.topic) {
-            fields.push("topic = ?");
-            values.push(updateData.topic);
-            changes.push({
-                tableName: 'cases',
-                recordId: case_id,
-                fieldName: 'topic',
-                value: updateData.topic,
-                actionType: 'UPDATE'
-            });
-        }
-        if (updateData.leader_id !== undefined && updateData.leader_id !== current.leader_id) {
-            fields.push("leader_id = ?");
-            values.push(updateData.leader_id);
-            changes.push({
-                tableName: 'cases',
-                recordId: case_id,
-                fieldName: 'leader_id',
-                value: updateData.leader_id,
-                actionType: 'UPDATE'
-            });
-        }
-        // Add more fields as needed
-
-        if (fields.length === 0) {
-            connection.release();
-            return false; // Nothing to update
-        }
-
-        // Update the case
-        await connection.query(
-            `UPDATE cases SET ${fields.join(", ")} WHERE case_id = ?`,
-            [...values, case_id]
-        );
-
-        // Log audit trail
-        await logAuditTrail({
-            batchId,
-            changes,
-            changedBy: updatedBy,
-            connection
-        });
-
-        await connection.commit();
-        return true;
-    } catch (err) {
-        await connection.rollback();
-        throw err;
-    } finally {
-        connection.release();
+    // Get current case data
+    const [currentRows] = await connection.query(
+      "SELECT * FROM cases WHERE case_id = ?",
+      [case_id]
+    );
+    if (!currentRows || currentRows.length === 0) {
+      throw new Error("Case not found");
     }
+    const current = currentRows[0];
+
+    // Prepare update fields and audit log
+    const fields = [];
+    const values = [];
+    if (updateData.topic !== undefined && updateData.topic !== current.topic) {
+      fields.push("topic = ?");
+      values.push(updateData.topic);
+      changes.push({
+        tableName: "cases",
+        recordId: case_id,
+        fieldName: "topic",
+        value: updateData.topic,
+        actionType: "UPDATE",
+      });
+    }
+    if (
+      updateData.leader_id !== undefined &&
+      updateData.leader_id !== current.leader_id
+    ) {
+      fields.push("leader_id = ?");
+      values.push(updateData.leader_id);
+      changes.push({
+        tableName: "cases",
+        recordId: case_id,
+        fieldName: "leader_id",
+        value: updateData.leader_id,
+        actionType: "UPDATE",
+      });
+    }
+    // Add more fields as needed
+
+    if (fields.length === 0) {
+      connection.release();
+      return false; // Nothing to update
+    }
+
+    // Update the case
+    await connection.query(
+      `UPDATE cases SET ${fields.join(", ")} WHERE case_id = ?`,
+      [...values, case_id]
+    );
+
+    // Log audit trail
+    await logAuditTrail({
+      batchId,
+      changes,
+      changedBy: updatedBy,
+      connection,
+    });
+
+    await connection.commit();
+    return true;
+  } catch (err) {
+    await connection.rollback();
+    throw err;
+  } finally {
+    connection.release();
+  }
 };
+
+//get case status by case_id
+exports.getCaseStatus = async (case_id) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT status FROM cases WHERE case_id = ?`,
+      [case_id]
+    );
+    return rows[0].status || null;
+  } catch (error) {
+    console.error("Error fetching case status:", error);
+    throw error;
+  }
+};
+
+//get case leader by case_id
+exports.getCaseLeader = async (case_id) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT leader_id FROM cases WHERE case_id = ?`,
+      [case_id]
+    );
+    return rows[0].leader_id || null;
+  } catch (error) {
+    console.error("Error fetching case leader:", error);
+    throw error;
+  }
+};
+

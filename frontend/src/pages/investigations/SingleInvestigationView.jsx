@@ -96,6 +96,10 @@ const SingleInvestigationView = () => {
     // Permission checks
     const canEdit = () => {
         if (!investigation || !user) return false;
+        if (investigation.status === 'closed') {
+            return false;
+        }
+
         return user.role === 'OIC' ||
             user.role === 'Crime OIC' ||
             user.user_id === investigation.leader_id;
@@ -103,6 +107,8 @@ const SingleInvestigationView = () => {
 
     const canManageOfficers = () => {
         if (!investigation || !user) return false;
+        // Prevent add/remove if investigation is closed
+        if (investigation.status === 'closed') return false;
         return user.role === 'OIC' ||
             user.role === 'Crime OIC' ||
             user.user_id === investigation.leader_id;
@@ -110,6 +116,7 @@ const SingleInvestigationView = () => {
 
     const canAddEvidence = () => {
         if (!investigation || !user) return false;
+        if (investigation.status === 'closed') return false;
         const isWorkingOfficer = investigation.officers?.some(o => o.user_id === user.user_id);
         return user.role === 'OIC' ||
             user.role === 'Crime OIC' ||
@@ -665,17 +672,16 @@ const SingleInvestigationView = () => {
                                 )}
                             </div>
                         </div>
-
                         {/* Quick Actions */}
-                        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                            <div className="bg-gradient-to-r from-gray-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
-                                <h2 className="font-semibold text-gray-800 flex items-center">
-                                    <DeviceHub className="h-5 w-5 mr-2 text-blue-600" />
-                                    Quick Actions
-                                </h2>
-                            </div>
-                            <div className="p-6">
-                                {quickActions.length > 0 ? (
+                        {quickActions.length > 0 && (
+                            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                                <div className="bg-gradient-to-r from-gray-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
+                                    <h2 className="font-semibold text-gray-800 flex items-center">
+                                        <DeviceHub className="h-5 w-5 mr-2 text-blue-600" />
+                                        Quick Actions
+                                    </h2>
+                                </div>
+                                <div className="p-6">
                                     <div className="space-y-3">
                                         {quickActions.map((action, index) => (
                                             <div key={index} className="w-full">
@@ -683,17 +689,9 @@ const SingleInvestigationView = () => {
                                             </div>
                                         ))}
                                     </div>
-                                ) : (
-                                    <div className="text-center py-8">
-                                        <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                                            <DeviceHub className="h-8 w-8 text-gray-400" />
-                                        </div>
-                                        <p className="text-sm text-gray-500 font-medium">No actions available</p>
-                                        <p className="text-xs text-gray-400 mt-1">Contact your administrator for access</p>
-                                    </div>
-                                )}
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
                 </div>
             </div>

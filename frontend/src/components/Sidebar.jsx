@@ -52,6 +52,16 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
       { id: 'recordhistory', label: 'Records History', icon: <History /> },
       { id: 'settings', label: 'Settings', icon: <Settings /> }
     ],
+    'Inspector': [
+      { id: 'dashboard', label: 'Dashboard', icon: <Dashboard /> },
+      { id: 'cases', label: 'Assigned Cases', icon: <Folder /> },
+      { id: 'investigations', label: 'Investigations', icon: <Search /> },
+      { id: 'criminals', label: 'Criminal Records', icon: <Fingerprint /> },
+      { id: 'crimeoffences', label: 'Crime Offences', icon: <Description /> },
+      { id: 'evidences', label: 'Evidence', icon: <Inventory2 /> },
+      { id: 'reports', label: 'Reports', icon: <Summarize /> },
+      { id: 'settings', label: 'Settings', icon: <Settings /> }
+    ],
     'Sub Inspector': [
       { id: 'dashboard', label: 'Dashboard', icon: <Dashboard /> },
       { id: 'cases', label: 'Assigned Cases', icon: <Folder /> },

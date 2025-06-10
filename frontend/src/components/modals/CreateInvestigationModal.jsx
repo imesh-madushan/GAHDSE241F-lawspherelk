@@ -13,7 +13,7 @@ const dropOfficerRoles = [
     'Forensic Officer'
 ];
 
-const CreateInvestigationModal = ({ open, onClose, canCreate = false }) => {
+const CreateInvestigationModal = ({ open, onClose, canCreate = false, context = 'general', contextId = null }) => {
     const [creatingInvestigation, setCreatingInvestigation] = useState(false);
     const [newInvestigation, setNewInvestigation] = useState({
         topic: '',
@@ -31,13 +31,42 @@ const CreateInvestigationModal = ({ open, onClose, canCreate = false }) => {
     });
     const [selectedCase, setSelectedCase] = useState(null);
     const [selectedOfficers, setSelectedOfficers] = useState([]);
+    const [isCaseAutoSelected, setIsCaseAutoSelected] = useState(false);
+    const [dropdownLocked, setDropdownLocked] = useState(false);
 
     // Reset form when modal opens
     useEffect(() => {
         if (open) {
             resetForm();
+            if (context === 'case' && contextId) {
+                // Auto-select the case when creating from SingleCaseView
+                apiClient.get(`/cases/${contextId}`).then(res => {
+                    const caseData = res.data?.caseData;
+                    if (caseData) {
+                        const caseObj = {
+                            case_id: caseData.case_id,
+                            case_topic: caseData.topic,
+                            case_type: caseData.case_type,
+                            case_status: caseData.status
+                        };
+                        setSelectedCase(caseObj);
+                        setNewInvestigation(prev => ({
+                            ...prev,
+                            case_id: caseData.case_id
+                        }));
+                        setIsCaseAutoSelected(true);
+                        setDropdownLocked(true);
+                    }
+                }).catch(error => {
+                    console.error('Error fetching case data:', error);
+                });
+            } else {
+                // General context: enable case dropdown
+                setDropdownLocked(false);
+            }
         }
-    }, [open]);
+        // eslint-disable-next-line
+    }, [open, context, contextId]);
 
     const resetForm = () => {
         setNewInvestigation({
@@ -50,6 +79,8 @@ const CreateInvestigationModal = ({ open, onClose, canCreate = false }) => {
         setSelectedOfficers([]);
         setFieldErrors({});
         setOfficerDropdownError(null);
+        setIsCaseAutoSelected(false);
+        setDropdownLocked(false);
     };
 
     const handleClose = () => {
@@ -74,6 +105,7 @@ const CreateInvestigationModal = ({ open, onClose, canCreate = false }) => {
             ...prev,
             case_id: caseObj.case_id
         }));
+        setIsCaseAutoSelected(false);
         if (fieldErrors.case_id) {
             setFieldErrors(prev => ({ ...prev, case_id: null }));
         }
@@ -305,24 +337,13 @@ const CreateInvestigationModal = ({ open, onClose, canCreate = false }) => {
                                                 selectedCaseId={newInvestigation.case_id}
                                                 onCaseSelect={handleCaseSelect}
                                                 className={fieldErrors.case_id ? 'border-red-500' : ''}
+                                                isAutoSelected={isCaseAutoSelected}
+                                                dropdownLocked={dropdownLocked}
                                             />
                                             {fieldErrors.case_id && <p className="text-red-500 text-xs mt-1">{fieldErrors.case_id}</p>}
                                         </div>
 
-                                        {selectedCase && (
-                                            <div className="bg-white rounded-lg p-3 border border-gray-200">
-                                                <div className="text-sm text-gray-600">
-                                                    <div className="font-medium text-gray-900">{selectedCase.case_status || 'Untitled Case'}</div>
-                                                    <div className="flex justify-between mt-1">
-                                                        <span>Type: {selectedCase.case_type}</span>
-                                                        <span className={`px-2 py-1 rounded-full text-xs ${selectedCase.case_status === 'inprogress' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'
-                                                            }`}>
-                                                            {selectedCase.case_status === 'inprogress' && 'In Progress'}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
+
                                     </div>
                                 </div>
                             </div>

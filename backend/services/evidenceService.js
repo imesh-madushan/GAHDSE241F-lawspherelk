@@ -589,7 +589,7 @@ exports.getEvidenceById = async (evidenceId) => {
       investigationOfficers = officers;
     }
 
-    // Get related evidence from same investigation/case
+    // Get related evidence from same case(s)
     const [relatedEvidence] = await db.query(
       `
             SELECT DISTINCT
@@ -600,22 +600,15 @@ exports.getEvidenceById = async (evidenceId) => {
             FROM evidance e2
             LEFT JOIN users u2 ON e2.officer_id = u2.user_id
             LEFT JOIN case_evidance ce ON e2.evidence_id = ce.evidence_id
-            WHERE (e2.investigation_id = ? OR ce.case_id IN (
-                SELECT DISTINCT c.case_id 
-                FROM cases c
-                LEFT JOIN case_evidance ce2 ON c.case_id = ce2.case_id
-                LEFT JOIN investigation i ON c.case_id = i.case_id
-                WHERE ce2.evidence_id = ? OR i.investigation_id = ?
-            )) AND e2.evidence_id != ?
+            WHERE ce.case_id IN (
+                SELECT DISTINCT ce2.case_id 
+                FROM case_evidance ce2
+                WHERE ce2.evidence_id = ?
+            ) AND e2.evidence_id != ?
             ORDER BY e2.collected_dt DESC
             LIMIT 10
         `,
-      [
-        evidence.investigation_id,
-        evidenceId,
-        evidence.investigation_id,
-        evidenceId,
-      ]
+      [evidenceId, evidenceId]
     );
 
     evidence.linked_cases = linkedCases;
@@ -739,5 +732,40 @@ exports.updateEvidence = async (evidenceId, updateFields, updatedBy) => {
     throw err;
   } finally {
     connection.release();
+  }
+};
+
+exports.getEvidenceCollectedBy = async (evidence_id) => {
+  const connection = await db.getConnection();
+  try {
+    const [rows] = await connection.query(
+      `
+      SELECT u.name as collected_by
+      FROM evidance e
+      LEFT JOIN users u ON e.officer_id = u.user_id
+      WHERE e.evidence_id = ?
+    `,
+      [evidence_id]
+    );
+    return rows[0];
+  } catch (error) {
+    console.error("Error fetching evidence collected by:", error);
+    throw error;
+  } finally {
+    connection.release();
+  }
+};
+
+//get collected officer id
+exports.getCollectedBy = async (evidence_id) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT officer_id FROM evidance WHERE evidence_id = ?`,
+      [evidence_id]
+    );
+    return rows[0].officer_id || null;
+  } catch (error) {
+    console.error("Error fetching collected officer ID:", error);
+    throw error;
   }
 };

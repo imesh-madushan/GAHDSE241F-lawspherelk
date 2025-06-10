@@ -1,6 +1,7 @@
 const { off } = require("../config/db");
 const { getUserFromCookies } = require("../middlewares/authMiddleware");
 const crimeOffenceService = require("../services/crimeOffenceService");
+const caseService = require("../services/caseService");
 
 exports.getAllOffences = async (req, res) => {
   try {
@@ -142,6 +143,19 @@ exports.createOffence = async (req, res) => {
       case_id,
     } = req.body;
 
+    // Check if case exists and is not closed
+    const caseStatus = await caseService.getCaseStatus(case_id);
+    if (!caseStatus) {
+      return res.status(404).json({ message: "Case not found" });
+    }
+    if (caseStatus === "closed") {
+      return res.status(403).json({
+        message: "Cannot create offence for closed case",
+        details:
+          "This case has been closed and no new offences can be created.",
+      });
+    }
+
     // Basic validation
     if (
       !crime_type ||
@@ -232,12 +246,10 @@ exports.updateOffence = async (req, res) => {
       user.role !== "Inspector" &&
       user.role !== "Sub Inspector"
     ) {
-      return res
-        .status(403)
-        .json({
-          message:
-            "Forbidden: Only OIC, Crime OIC, Inspector, or Sub Inspector can update offences",
-        });
+      return res.status(403).json({
+        message:
+          "Forbidden: Only OIC, Crime OIC, Inspector, or Sub Inspector can update offences",
+      });
     }
 
     const {
