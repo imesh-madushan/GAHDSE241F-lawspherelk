@@ -27,6 +27,7 @@ const CriminalRecord = () => {
     const [pendingUpdate, setPendingUpdate] = useState(null);
     const [showCreateOffenceModal, setShowCreateOffenceModal] = useState(false);
     const [showCreateEvidenceModal, setShowCreateEvidenceModal] = useState(false);
+    const [newProfileImage, setNewProfileImage] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -102,30 +103,61 @@ const CriminalRecord = () => {
             setPopup({ open: true, status: 'error', message: 'Date of Birth is required', description: 'DOB cannot be empty.' });
             return;
         }
-        // Only send changed fields
-        const changedFields = { criminal_id: criminalData.criminal_id };
+
+        // Check for changes in regular fields
+        const changedFields = {};
         [
-            'name', 'nic', 'phone', 'address', 'dob', 'fingerprint_hash', 'photo'
+            'name', 'nic', 'phone', 'address', 'dob', 'fingerprint_hash'
         ].forEach(field => {
             if (editedCriminal[field] !== criminalData[field]) {
                 changedFields[field] = editedCriminal[field];
             }
         });
-        if (Object.keys(changedFields).length === 1) {
+
+        // Check if there are any changes (including new profile image)
+        const hasChanges = Object.keys(changedFields).length > 0 || newProfileImage;
+
+        if (!hasChanges) {
+            setPopup({ open: true, status: 'info', message: 'No changes detected', description: 'No modifications were made to update.' });
             setIsEditing(false);
             return;
         }
+
         try {
-            const response = await apiClient.put('/criminals/update', changedFields);
+            // Create FormData for file upload (same pattern as CreateCriminalModal)
+            const formData = new FormData();
+
+            // Add criminal_id
+            formData.append('criminal_id', criminalData.criminal_id);
+
+            // Add changed fields
+            Object.keys(changedFields).forEach(key => {
+                formData.append(key, changedFields[key]);
+            });
+
+            // Add profile image if exists
+            if (newProfileImage) {
+                formData.append('profileImage', newProfileImage);
+            }
+
+            const response = await apiClient.put('/criminals/update', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
             if (response.data && response.data.success) {
-                setPopup({ open: true, status: 'success', message: 'Criminal record updated successfully', description: '' });
+                setPopup({ open: true, status: 'success', message: 'Criminal record updated successfully', description: 'All changes have been saved.' });
+                setPendingUpdate(editedCriminal);
+                setIsEditing(false);
+                setNewProfileImage(null);
+                // Refresh data to get updated photo URL
+                fetchCriminalData();
             } else {
                 setPopup({ open: true, status: 'error', message: 'Update failed', description: response.data?.message || 'Failed to update criminal record.' });
             }
-            setPendingUpdate(editedCriminal);
-            setIsEditing(false);
         } catch (err) {
-            setPopup({ open: true, status: 'error', message: 'Update failed', description: err?.response?.data?.message || 'An error occurred.' });
+            setPopup({ open: true, status: 'error', message: 'Update failed', description: err?.response?.data?.message || 'An error occurred while updating the record.' });
         }
     };
 
@@ -139,17 +171,25 @@ const CriminalRecord = () => {
         }
     };
 
-    const handleCancelEdit = () => {
-        setEditedCriminal(criminalData);
-        setIsEditing(false);
-    };
-
     const handleInputChange = (e) => {
         const { name, value } = e.target;
+
+        // Handle profile image upload
+        if (name === 'newProfileImage') {
+            setNewProfileImage(value);
+            return;
+        }
+
         setEditedCriminal(prev => ({
             ...prev,
             [name]: value
         }));
+    };
+
+    const handleCancelEdit = () => {
+        setEditedCriminal(criminalData);
+        setNewProfileImage(null);
+        setIsEditing(false);
     };
 
     // Define authorization permissions

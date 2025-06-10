@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import {
     Person,
     Fingerprint,
@@ -16,15 +16,37 @@ import {
 
 const CriminalProfile = ({ criminal, calculateAge, formatDate, isEditing, handleInputChange }) => {
     const fileInputRef = useRef(null);
+    const [profilePreview, setProfilePreview] = useState(criminal.photo || '');
+
+    // Update preview if criminal photo changes
+    useEffect(() => {
+        setProfilePreview(criminal.photo || '');
+    }, [criminal.photo]);
 
     const handleImageUpload = (event) => {
         const file = event.target.files[0];
         if (file) {
+            // Only accept images
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file (JPEG, PNG, etc.)');
+                return;
+            }
+
+            // Check file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Image size must be less than 5MB');
+                return;
+            }
+
+            // Create local preview
             const imageUrl = URL.createObjectURL(file);
+            setProfilePreview(imageUrl);
+
+            // Store file for later submission (same pattern as CreateCriminalModal)
             handleInputChange({
                 target: {
-                    name: 'photo',
-                    value: imageUrl
+                    name: 'newProfileImage',
+                    value: file
                 }
             });
         }
@@ -42,9 +64,9 @@ const CriminalProfile = ({ criminal, calculateAge, formatDate, isEditing, handle
                 <div className="bg-white rounded-xl shadow-md overflow-hidden">
                     <div className="bg-gradient-to-r from-gray-700 to-gray-900 p-6 flex flex-col items-center">
                         <div className="relative">
-                            {criminal.photo ? (
+                            {profilePreview ? (
                                 <img
-                                    src={criminal.photo}
+                                    src={profilePreview}
                                     alt={criminal.name}
                                     className="w-32 h-32 object-cover rounded-full border-4 border-white shadow-xl"
                                 />

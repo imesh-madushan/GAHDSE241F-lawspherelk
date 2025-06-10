@@ -473,9 +473,6 @@ exports.uploadAttachment = async (req, res) => {
         });
       }
 
-      console.log("Parsed fields:", fields);
-      console.log("Parsed files:", files);
-
       const evidence_id = Array.isArray(fields.evidence_id)
         ? fields.evidence_id[0]
         : fields.evidence_id;

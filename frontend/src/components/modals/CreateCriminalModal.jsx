@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import { Add, Close, Send, Person, Badge, Phone, LocationOn, CalendarToday, Fingerprint, CameraAlt } from '@mui/icons-material';
+import React, { useState, useCallback, useRef } from 'react';
+import { Add, Close, Send, Person, Badge, Phone, LocationOn, CalendarToday, Fingerprint, CameraAlt, CloudUpload } from '@mui/icons-material';
 import { apiClient } from '../../config/apiConfig';
 import OutlinedButton from '../buttons/OutlinedButton';
 import StatusPopup from '../common/StatusPopup';
@@ -12,9 +12,11 @@ const CreateCriminalModal = ({ open, onClose, onCriminalCreated }) => {
         phone: '',
         address: '',
         dob: '',
-        fingerprint_hash: '',
-        photo: ''
+        fingerprint_hash: ''
     });
+    const [profileImage, setProfileImage] = useState(null);
+    const [profilePreview, setProfilePreview] = useState('');
+    const fileInputRef = useRef(null);
     const [fieldErrors, setFieldErrors] = useState({});
     const [popup, setPopup] = useState({ open: false, status: "success", message: "", description: "", referenceLink: null });
 
@@ -30,9 +32,10 @@ const CreateCriminalModal = ({ open, onClose, onCriminalCreated }) => {
             phone: '',
             address: '',
             dob: '',
-            fingerprint_hash: '',
-            photo: ''
+            fingerprint_hash: ''
         });
+        setProfileImage(null);
+        setProfilePreview('');
         setFieldErrors({});
     };
 
@@ -49,6 +52,33 @@ const CreateCriminalModal = ({ open, onClose, onCriminalCreated }) => {
         }));
         if (fieldErrors[name]) {
             setFieldErrors(prev => ({ ...prev, [name]: null }));
+        }
+    };
+
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            // Only accept images
+            if (!file.type.startsWith('image/')) {
+                setFieldErrors(prev => ({
+                    ...prev,
+                    profileImage: 'Please select an image file (JPEG, PNG, etc.)'
+                }));
+                return;
+            }
+
+            // Check file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                setFieldErrors(prev => ({
+                    ...prev,
+                    profileImage: 'Image size must be less than 5MB'
+                }));
+                return;
+            }
+
+            setProfileImage(file);
+            setProfilePreview(URL.createObjectURL(file));
+            setFieldErrors(prev => ({ ...prev, profileImage: null }));
         }
     };
 
@@ -100,7 +130,25 @@ const CreateCriminalModal = ({ open, onClose, onCriminalCreated }) => {
         if (!validateForm()) return;
         setCreating(true);
         try {
-            const { data } = await apiClient.post('/criminals/create', form);
+            // Create FormData object for file upload - same as CreateEvidenceModal
+            const formData = new FormData();
+
+            // Add all form fields - same pattern as evidence
+            Object.keys(form).forEach(key => {
+                formData.append(key, form[key]);
+            });
+
+            // Add profile image if exists - same field name pattern as evidence files
+            if (profileImage) {
+                formData.append('profileImage', profileImage);
+            }
+
+            const { data } = await apiClient.post('/criminals/create', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
             if (data.criminal) {
                 setPopup({
                     open: true,
@@ -183,6 +231,62 @@ const CreateCriminalModal = ({ open, onClose, onCriminalCreated }) => {
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {/* Left Column - Personal Information */}
                             <div className="space-y-6">
+                                {/* Profile Image Upload */}
+                                <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                                    <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center">
+                                        <CameraAlt className="mr-2 text-blue-600" />
+                                        Profile Image
+                                    </h3>
+
+                                    <div className="flex flex-col items-center">
+                                        <div
+                                            className="w-32 h-32 border-2 border-dashed border-gray-300 rounded-full flex items-center justify-center bg-white overflow-hidden mb-4 relative hover:border-blue-500 transition-colors cursor-pointer"
+                                            onClick={() => fileInputRef.current?.click()}
+                                        >
+                                            {profilePreview ? (
+                                                <img
+                                                    src={profilePreview}
+                                                    alt="Profile preview"
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className="text-center p-4">
+                                                    <CloudUpload className="text-gray-400 text-3xl mb-2" />
+                                                    <p className="text-xs text-gray-500">Click to upload</p>
+                                                </div>
+                                            )}
+
+                                            <input
+                                                type="file"
+                                                ref={fileInputRef}
+                                                accept="image/*"
+                                                onChange={handleImageChange}
+                                                className="hidden"
+                                            />
+                                        </div>
+
+                                        {profilePreview && (
+                                            <button
+                                                onClick={() => {
+                                                    setProfileImage(null);
+                                                    setProfilePreview('');
+                                                }}
+                                                className="text-xs text-red-500 hover:text-red-700 mb-2"
+                                            >
+                                                Remove image
+                                            </button>
+                                        )}
+
+                                        <p className="text-xs text-gray-500 text-center">
+                                            Upload a clear photo. JPG or PNG format, max 5MB.
+                                        </p>
+
+                                        {fieldErrors.profileImage && (
+                                            <p className="text-red-500 text-xs mt-1">{fieldErrors.profileImage}</p>
+                                        )}
+                                    </div>
+                                </div>
+
                                 <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
                                     <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center">
                                         <Person className="mr-2 text-blue-600" />
@@ -298,21 +402,6 @@ const CreateCriminalModal = ({ open, onClose, onCriminalCreated }) => {
                                                 value={form.fingerprint_hash}
                                                 onChange={handleChange}
                                                 placeholder="Optional fingerprint hash"
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                <CameraAlt className="w-4 h-4 inline mr-1" />
-                                                Photo URL
-                                            </label>
-                                            <input
-                                                type="url"
-                                                name="photo"
-                                                value={form.photo}
-                                                onChange={handleChange}
-                                                placeholder="Optional photo URL"
                                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                             />
                                         </div>
