@@ -323,7 +323,6 @@ const CreateEvidenceModal = ({
             const collected_dt = getMySQLDateTime(newEvidence.collected_date, newEvidence.collected_time);
             if (collected_dt) {
                 formData.append('collected_dt', collected_dt);
-                console.log('Collected DateTime:', collected_dt);
             }
 
             // Determine linking type and append appropriate fields

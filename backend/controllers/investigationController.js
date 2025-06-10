@@ -286,7 +286,7 @@ exports.updateInvestigation = async (req, res) => {
         message: "Forbidden: Cannot edit closed investigation",
       });
     }
-
+    console.log("End Date:", end_dt);
     // Only send changed fields to service
     const updateFields = {};
     if (topic !== undefined) updateFields.topic = topic;

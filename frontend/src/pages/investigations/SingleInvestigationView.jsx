@@ -8,6 +8,7 @@ import {
 import { apiClient } from '../../config/apiConfig';
 import { useAuth } from '../../contexts/AuthContext';
 import { format } from 'date-fns';
+import { toMySqlDatetime } from '../../utils/Preprocessors';
 import PageHeader from '../../components/common/PageHeader';
 import OfficerCard from '../../components/cards/OfficerCard';
 import StatusBadge from '../../components/badges/StatusBadge';
@@ -170,7 +171,7 @@ const SingleInvestigationView = () => {
         if (editedInvestigation.status !== investigation.status) {
             payload.status = editedInvestigation.status;
             if (editedInvestigation.status === 'closed') {
-                payload.end_dt = new Date().toISOString();
+                payload.end_dt = toMySqlDatetime(new Date());
             }
         }
 

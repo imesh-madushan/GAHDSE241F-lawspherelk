@@ -25,6 +25,7 @@ import LinkedCasesTab from '../../components/evidence/tabs/LinkedCasesTab';
 import RelatedEvidenceTab from '../../components/evidence/tabs/RelatedEvidenceTab';
 import OfficerCard from '../../components/cards/OfficerCard';
 import { evidenceTypes } from '../../../data';
+import AttachmentsTab from '../../components/evidence/tabs/AttachmentsTab';
 
 const SingleEvidenceView = () => {
     const { evidenceId } = useParams();
@@ -46,8 +47,9 @@ const SingleEvidenceView = () => {
         message: '',
         description: ''
     });
-    const [activeTab, setActiveTab] = useState('witnesses');
+    const [activeTab, setActiveTab] = useState('attachments');
     const [tabCounts, setTabCounts] = useState({
+        attachments: 0,
         witnesses: 0,
         investigation: 0,
         cases: 0,
@@ -70,10 +72,11 @@ const SingleEvidenceView = () => {
         );
     }
 
-
+    console.log('Evidence ID:', evidence);
     // Add this new function to calculate tab counts
     const calculateTabCounts = (evidenceData) => {
         setTabCounts({
+            attachments: evidenceData.attachments?.length || 0,
             witnesses: evidenceData.witnesses?.length || 0,
             investigation: evidenceData.investigation_id ? 1 : 0,
             cases: evidenceData.linked_cases?.length || 0,
@@ -170,7 +173,7 @@ const SingleEvidenceView = () => {
             };
 
             const response = await apiClient.put('/evidences/update', updateData);
-
+            console.log(updateData);
             if (response.data.success) {
                 setPopup({
                     open: true,
@@ -219,6 +222,13 @@ const SingleEvidenceView = () => {
 
     const renderTabContent = () => {
         switch (activeTab) {
+            case 'attachments':
+                return (
+                    <AttachmentsTab
+                        evidence={evidence}
+                        formatDateTime={formatDateTime}
+                    />
+                );
             case 'witnesses':
                 return (
                     <WitnessesTab
@@ -246,7 +256,7 @@ const SingleEvidenceView = () => {
                     />
                 );
             default:
-                return <WitnessesTab evidence={evidence} formatDate={formatDate} />;
+                return <AttachmentsTab evidence={evidence} formatDateTime={formatDateTime} />;
         }
     };
 

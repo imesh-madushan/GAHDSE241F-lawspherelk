@@ -9,7 +9,8 @@ exports.createEvidence = async (evidenceData, createdBy) => {
   try {
     await connection.beginTransaction();
 
-    const evidenceId = await generateUniqueId("evidance");
+    const evidenceId =
+      evidenceData.evidence_id || (await generateUniqueId("evidance"));
 
     // Insert evidence record
     await connection.query(
@@ -79,69 +80,94 @@ exports.createEvidence = async (evidenceData, createdBy) => {
       });
     }
 
-    // Handle attachments
-    if (evidenceData.attachments && evidenceData.attachments.length > 0) {
+    // Handle attachments - ensure all required fields are provided
+    if (
+      evidenceData.attachments &&
+      Array.isArray(evidenceData.attachments) &&
+      evidenceData.attachments.length > 0
+    ) {
+      console.log(
+        "Processing attachments in service:",
+        evidenceData.attachments.length
+      );
+
       for (const attachment of evidenceData.attachments) {
-        const attachmentId = await generateUniqueId("attachments");
+        // Double check that all required fields are present
+        if (
+          attachment &&
+          attachment.file_name &&
+          attachment.file_path &&
+          attachment.file_type &&
+          attachment.file_size !== undefined
+        ) {
+          const attachmentId = await generateUniqueId("attachments");
 
-        // Insert attachment record
-        await connection.query(
-          `INSERT INTO attachments (attachment_id, evidence_id, file_name, file_path, file_type, file_size, uploaded_dt, uploaded_by) 
-                     VALUES (?, ?, ?, ?, ?, ?, NOW(), ?)`,
-          [
-            attachmentId,
-            evidenceId,
-            attachment.originalname,
-            attachment.path,
-            attachment.mimetype,
-            attachment.size,
-            createdBy,
-          ]
-        );
+          console.log("Inserting attachment:", attachment.file_name);
 
-        // Audit log for attachments
-        auditChanges.push({
-          tableName: "attachments",
-          recordId: attachmentId,
-          fieldName: "file_name",
-          value: attachment.originalname,
-          actionType: "INSERT",
-        });
-        auditChanges.push({
-          tableName: "attachments",
-          recordId: attachmentId,
-          fieldName: "file_path",
-          value: attachment.path,
-          actionType: "INSERT",
-        });
-        auditChanges.push({
-          tableName: "attachments",
-          recordId: attachmentId,
-          fieldName: "file_type",
-          value: attachment.mimetype,
-          actionType: "INSERT",
-        });
-        auditChanges.push({
-          tableName: "attachments",
-          recordId: attachmentId,
-          fieldName: "file_size",
-          value: attachment.size.toString(),
-          actionType: "INSERT",
-        });
-        auditChanges.push({
-          tableName: "attachments",
-          recordId: attachmentId,
-          fieldName: "evidence_id",
-          value: evidenceId,
-          actionType: "INSERT",
-        });
-        auditChanges.push({
-          tableName: "attachments",
-          recordId: attachmentId,
-          fieldName: "uploaded_by",
-          value: createdBy,
-          actionType: "INSERT",
-        });
+          // Insert attachment record with URL path
+          await connection.query(
+            `INSERT INTO attachments (attachment_id, evidence_id, file_name, file_path, file_type, file_size, uploaded_dt, uploaded_by) 
+              VALUES (?, ?, ?, ?, ?, ?, NOW(), ?)`,
+            [
+              attachmentId,
+              evidenceId,
+              attachment.file_name,
+              attachment.file_path, // This should be a proper URL now
+              attachment.file_type,
+              attachment.file_size,
+              createdBy,
+            ]
+          );
+
+          // Add audit logs for the attachment
+          auditChanges.push({
+            tableName: "attachments",
+            recordId: attachmentId,
+            fieldName: "file_name",
+            value: attachment.file_name,
+            actionType: "INSERT",
+          });
+          auditChanges.push({
+            tableName: "attachments",
+            recordId: attachmentId,
+            fieldName: "file_path",
+            value: attachment.file_path,
+            actionType: "INSERT",
+          });
+          auditChanges.push({
+            tableName: "attachments",
+            recordId: attachmentId,
+            fieldName: "file_type",
+            value: attachment.file_type,
+            actionType: "INSERT",
+          });
+          auditChanges.push({
+            tableName: "attachments",
+            recordId: attachmentId,
+            fieldName: "file_size",
+            value: attachment.file_size.toString(),
+            actionType: "INSERT",
+          });
+          auditChanges.push({
+            tableName: "attachments",
+            recordId: attachmentId,
+            fieldName: "evidence_id",
+            value: evidenceId,
+            actionType: "INSERT",
+          });
+          auditChanges.push({
+            tableName: "attachments",
+            recordId: attachmentId,
+            fieldName: "uploaded_by",
+            value: createdBy,
+            actionType: "INSERT",
+          });
+        } else {
+          console.warn(
+            "Skipping attachment due to missing required fields:",
+            attachment
+          );
+        }
       }
     }
 
@@ -196,71 +222,74 @@ exports.createEvidence = async (evidenceData, createdBy) => {
     // Handle witnesses
     if (evidenceData.witnesses && evidenceData.witnesses.length > 0) {
       for (const witness of evidenceData.witnesses) {
-        await connection.query(
-          `INSERT INTO evidance_witnesses (evidence_id, nic, name, phone, email, address, dob) 
+        // Only insert witnesses with at least NIC and name
+        if (witness.nic && witness.name) {
+          await connection.query(
+            `INSERT INTO evidance_witnesses (evidence_id, nic, name, phone, email, address, dob) 
                      VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          [
-            evidenceId,
-            witness.nic,
-            witness.name,
-            witness.phone || null,
-            witness.email || null,
-            witness.address || null,
-            witness.dob || null,
-          ]
-        );
+            [
+              evidenceId,
+              witness.nic,
+              witness.name,
+              witness.phone || null,
+              witness.email || null,
+              witness.address || null,
+              witness.dob || null,
+            ]
+          );
 
-        // Audit log for witnesses
-        auditChanges.push({
-          tableName: "evidance_witnesses",
-          recordId: `${evidenceId}_${witness.nic}`,
-          fieldName: "nic",
-          value: witness.nic,
-          actionType: "INSERT",
-        });
-        auditChanges.push({
-          tableName: "evidance_witnesses",
-          recordId: `${evidenceId}_${witness.nic}`,
-          fieldName: "name",
-          value: witness.name,
-          actionType: "INSERT",
-        });
+          // Audit log for witnesses
+          auditChanges.push({
+            tableName: "evidance_witnesses",
+            recordId: `${evidenceId}_${witness.nic}`,
+            fieldName: "nic",
+            value: witness.nic,
+            actionType: "INSERT",
+          });
+          auditChanges.push({
+            tableName: "evidance_witnesses",
+            recordId: `${evidenceId}_${witness.nic}`,
+            fieldName: "name",
+            value: witness.name,
+            actionType: "INSERT",
+          });
 
-        if (witness.phone) {
-          auditChanges.push({
-            tableName: "evidance_witnesses",
-            recordId: `${evidenceId}_${witness.nic}`,
-            fieldName: "phone",
-            value: witness.phone,
-            actionType: "INSERT",
-          });
-        }
-        if (witness.email) {
-          auditChanges.push({
-            tableName: "evidance_witnesses",
-            recordId: `${evidenceId}_${witness.nic}`,
-            fieldName: "email",
-            value: witness.email,
-            actionType: "INSERT",
-          });
-        }
-        if (witness.address) {
-          auditChanges.push({
-            tableName: "evidance_witnesses",
-            recordId: `${evidenceId}_${witness.nic}`,
-            fieldName: "address",
-            value: witness.address,
-            actionType: "INSERT",
-          });
-        }
-        if (witness.dob) {
-          auditChanges.push({
-            tableName: "evidance_witnesses",
-            recordId: `${evidenceId}_${witness.nic}`,
-            fieldName: "dob",
-            value: witness.dob,
-            actionType: "INSERT",
-          });
+          if (witness.phone) {
+            auditChanges.push({
+              tableName: "evidance_witnesses",
+              recordId: `${evidenceId}_${witness.nic}`,
+              fieldName: "phone",
+              value: witness.phone,
+              actionType: "INSERT",
+            });
+          }
+          if (witness.email) {
+            auditChanges.push({
+              tableName: "evidance_witnesses",
+              recordId: `${evidenceId}_${witness.nic}`,
+              fieldName: "email",
+              value: witness.email,
+              actionType: "INSERT",
+            });
+          }
+          if (witness.address) {
+            auditChanges.push({
+              tableName: "evidance_witnesses",
+              recordId: `${evidenceId}_${witness.nic}`,
+              fieldName: "address",
+              value: witness.address,
+              actionType: "INSERT",
+            });
+          }
+          if (witness.dob) {
+            auditChanges.push({
+              tableName: "evidance_witnesses",
+              recordId: `${evidenceId}_${witness.nic}`,
+              fieldName: "dob",
+              value: witness.dob,
+              actionType: "INSERT",
+            });
+          }
         }
       }
     }
@@ -416,7 +445,6 @@ exports.searchEvidence = async (filters, userRole, userId) => {
     const params = [];
     const countParams = [];
 
-
     if (type) {
       query += " AND e.type LIKE ?";
       countQuery += " AND e.type LIKE ?";
@@ -443,7 +471,8 @@ exports.searchEvidence = async (filters, userRole, userId) => {
     }
     if (investigation_id) {
       query += " AND (e.investigation_id = ? OR e.investigation_id LIKE ?)";
-      countQuery += " AND (e.investigation_id = ? OR e.investigation_id LIKE ?)";
+      countQuery +=
+        " AND (e.investigation_id = ? OR e.investigation_id LIKE ?)";
       params.push(investigation_id, `%${investigation_id}%`);
       countParams.push(investigation_id, `%${investigation_id}%`);
     }
@@ -471,8 +500,7 @@ exports.searchEvidence = async (filters, userRole, userId) => {
     } else if (linking_type === "investigation") {
       query += " AND e.investigation_id IS NOT NULL";
       countQuery += " AND e.investigation_id IS NOT NULL";
-    }
-    else if (linking_type === "offence") {
+    } else if (linking_type === "offence") {
       query += " AND coe.offence_id IS NOT NULL";
       countQuery += " AND coe.offence_id IS NOT NULL";
     }

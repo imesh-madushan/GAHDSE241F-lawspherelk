@@ -1,8 +1,9 @@
 import React from 'react';
-import { Search, FolderOpen, Assignment, People } from '@mui/icons-material';
+import { AttachFile, Search, FolderOpen, Assignment, People } from '@mui/icons-material';
 
 const EvidenceTabNavigation = ({ activeTab, setActiveTab, tabCounts = {} }) => {
     const tabs = [
+        { id: 'attachments', icon: <AttachFile fontSize="small" />, label: 'Attachments' },
         { id: 'witnesses', icon: <People fontSize="small" />, label: 'Witnesses' },
         { id: 'investigation', icon: <Search fontSize="small" />, label: 'Investigation' },
         { id: 'cases', icon: <FolderOpen fontSize="small" />, label: 'Linked Cases' },

@@ -1,67 +1,18 @@
 const evidenceService = require("../services/evidenceService");
 const caseService = require("../services/caseService");
 const { getUserFromCookies } = require("../middlewares/authMiddleware");
-const multer = require("multer");
-const path = require("path");
+const axios = require("axios");
+const formidable = require("formidable");
+const FormData = require("form-data");
 const fs = require("fs");
+const db = require("../config/db");
+const { generateUniqueId } = require("../utils/genarateIDs");
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    // Create directory structure: uploads/evidences/:evidenceId
-    const evidenceId = req.body.evidence_id || "temp";
-    const uploadPath = path.join(__dirname, "../uploads/evidences", evidenceId);
-
-    // Create directory if it doesn't exist
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true });
-    }
-    cb(null, uploadPath);
-  },
-  filename: function (req, file, cb) {
-    // Generate unique filename
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  },
-});
-
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 50 * 1024 * 1024, // 50MB limit
-  },
-  fileFilter: function (req, file, cb) {
-    // Allow images, videos, audio, documents
-    const allowedTypes =
-      /jpeg|jpg|png|gif|mp4|avi|mov|mp3|wav|pdf|doc|docx|txt/;
-    const extname = allowedTypes.test(
-      path.extname(file.originalname).toLowerCase()
-    );
-    const mimetype = allowedTypes.test(file.mimetype);
-
-    if (mimetype && extname) {
-      return cb(null, true);
-    } else {
-      cb(
-        new Error(
-          "Only images, videos, audio files, and documents are allowed!"
-        )
-      );
-    }
-  },
-});
+// Configuration for file server
+const FILE_SERVER_URL = "http://localhost:5001"; // Change this to your file server URL
 
 exports.createEvidence = async (req, res) => {
-  // Handle file uploads
-  upload.array("attachments", 10)(req, res, async (uploadErr) => {
-    if (uploadErr) {
-      return res.status(400).json({
-        success: false,
-        message: "File upload error",
-        error: uploadErr.message,
-      });
-    }
-
+  try {
     const token = req.cookies.authtoken;
     if (!token) {
       return res.status(401).json({ message: "No token provided" });
@@ -72,95 +23,191 @@ exports.createEvidence = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const {
-      type,
-      location,
-      details,
-      collected_dt,
-      linking_type, // 'case' or 'investigation'
-      case_id,
-      investigation_id,
-      offence_id,
-      witnesses = [],
-    } = req.body;
+    // Use formidable to parse form data with files
+    const form = new formidable.IncomingForm({
+      multiples: true,
+      keepExtensions: true,
+      maxFileSize: 50 * 1024 * 1024, // 50MB
+    });
 
-    // Get uploaded files from multer
-    const attachments = req.files || [];
-
-    if (!type || !details) {
-      return res
-        .status(400)
-        .json({ message: "Evidence type and details are required" });
-    }
-
-    // Convert ISO string to MySQL datetime format
-    let collectedDateTime;
-    if (collected_dt && collected_dt !== "undefined") {
-      const date = new Date(collected_dt);
-      collectedDateTime = date.toISOString().slice(0, 19).replace("T", " ");
-    } else {
-      const now = new Date();
-      collectedDateTime = now.toISOString().slice(0, 19).replace("T", " ");
-    }
-
-    if (!case_id) {
-      return res
-        .status(400)
-        .json({ message: "Case ID is required when linking to case" });
-    }
-
-    // Parse witnesses if it's a string
-    let parsedWitnesses = [];
-    if (witnesses) {
-      try {
-        parsedWitnesses =
-          typeof witnesses === "string" ? JSON.parse(witnesses) : witnesses;
-        if (!Array.isArray(parsedWitnesses)) {
-          parsedWitnesses = [];
-        }
-      } catch (e) {
-        parsedWitnesses = [];
-      }
-    }
-
-    try {
-      const result = await evidenceService.createEvidence(
-        {
-          type,
-          location,
-          details,
-          collectedDateTime,
-          linking_type,
-          case_id: case_id || null,
-          investigation_id: investigation_id || null,
-          offence_id: offence_id || null,
-          witnesses: parsedWitnesses.filter((w) => w.nic && w.name), // Only include witnesses with required fields
-          attachments, // Pass the actual uploaded files
-        },
-        user.user_id
-      );
-
-      if (!result) {
+    form.parse(req, async (err, fields, files) => {
+      if (err) {
+        console.error("Form parsing error:", err);
         return res.status(400).json({
           success: false,
-          message: "Failed to create evidence",
+          message: "Error parsing form data",
+          error: err.message,
         });
       }
 
-      res.status(201).json({
-        success: true,
-        message: "Evidence created successfully",
-        evidence: result,
-      });
-    } catch (error) {
-      console.error("Error creating evidence:", error);
-      res.status(500).json({
-        success: false,
-        message: "Internal server error",
-        error: error.message,
-      });
-    }
-  });
+      // Extract fields from the form data - Get the first value if it's an array
+      const type = Array.isArray(fields.type) ? fields.type[0] : fields.type;
+      const location = Array.isArray(fields.location)
+        ? fields.location[0]
+        : fields.location;
+      const details = Array.isArray(fields.details)
+        ? fields.details[0]
+        : fields.details;
+      const collected_dt = Array.isArray(fields.collected_dt)
+        ? fields.collected_dt[0]
+        : fields.collected_dt;
+      const linking_type = Array.isArray(fields.linking_type)
+        ? fields.linking_type[0]
+        : fields.linking_type;
+      const case_id = Array.isArray(fields.case_id)
+        ? fields.case_id[0]
+        : fields.case_id;
+      const investigation_id = Array.isArray(fields.investigation_id)
+        ? fields.investigation_id[0]
+        : fields.investigation_id;
+      const offence_id = Array.isArray(fields.offence_id)
+        ? fields.offence_id[0]
+        : fields.offence_id;
+
+      // Parse witnesses from string if available
+      let witnesses = [];
+      if (fields.witnesses) {
+        const witnessesData = Array.isArray(fields.witnesses)
+          ? fields.witnesses[0]
+          : fields.witnesses;
+        try {
+          witnesses = JSON.parse(witnessesData);
+          if (!Array.isArray(witnesses)) {
+            witnesses = [];
+          }
+        } catch (e) {
+          console.error("Error parsing witnesses:", e);
+        }
+      }
+
+      // Validate required fields
+      if (!type || !details) {
+        return res.status(400).json({
+          success: false,
+          message: "Evidence type and details are required",
+          received: { type, details },
+        });
+      }
+
+      // Convert ISO string to MySQL datetime format
+      let collectedDateTime;
+      if (collected_dt && collected_dt !== "undefined") {
+        const date = new Date(collected_dt);
+        collectedDateTime = date.toISOString().slice(0, 19).replace("T", " ");
+      } else {
+        const now = new Date();
+        collectedDateTime = now.toISOString().slice(0, 19).replace("T", " ");
+      }
+
+      if (!case_id) {
+        return res.status(400).json({
+          success: false,
+          message: "Case ID is required when linking to case",
+        });
+      }
+
+      // First create the evidence record to get an evidence_id
+      const evidenceId = await generateUniqueId("evidance");
+
+      // Now process and upload attachments if any
+      const processedAttachments = [];
+
+      if (files && files.attachments) {
+        // Handle both single file and multiple files
+        const fileList = Array.isArray(files.attachments)
+          ? files.attachments
+          : [files.attachments];
+
+        for (const file of fileList) {
+          if (file && file.originalFilename) {
+            try {
+              // Create form data for file upload
+              const formData = new FormData();
+              formData.append("file", fs.createReadStream(file.filepath));
+              formData.append("evidence_id", evidenceId);
+
+              // Upload to file server
+              const fileResponse = await axios.post(
+                `${FILE_SERVER_URL}/upload`,
+                formData,
+                {
+                  headers: {
+                    ...formData.getHeaders(),
+                  },
+                }
+              );
+
+              if (fileResponse.data.success) {
+                // Add file metadata to processed attachments
+                processedAttachments.push({
+                  original_name: fileResponse.data.original_name,
+                  file_name: fileResponse.data.original_name,
+                  file_path: `${FILE_SERVER_URL}${fileResponse.data.file_path}`, // Full URL path
+                  file_type: fileResponse.data.file_type,
+                  file_size: fileResponse.data.file_size,
+                });
+              } else {
+                console.error(
+                  "Error uploading file to file server:",
+                  fileResponse.data
+                );
+              }
+            } catch (error) {
+              console.error("Error processing attachment:", error.message);
+            }
+          }
+        }
+      }
+
+      console.log("Processed attachments:", processedAttachments);
+
+      try {
+        const result = await evidenceService.createEvidence(
+          {
+            evidence_id: evidenceId,
+            type,
+            location,
+            details,
+            collectedDateTime,
+            linking_type,
+            case_id: case_id || null,
+            investigation_id: investigation_id || null,
+            offence_id: offence_id || null,
+            witnesses: witnesses.filter((w) => w.nic && w.name),
+            attachments: processedAttachments, // Pass processed attachments
+          },
+          user.user_id
+        );
+
+        if (!result) {
+          return res.status(400).json({
+            success: false,
+            message: "Failed to create evidence",
+          });
+        }
+
+        res.status(201).json({
+          success: true,
+          message: "Evidence created successfully",
+          evidence: result,
+        });
+      } catch (error) {
+        console.error("Error creating evidence:", error);
+        res.status(500).json({
+          success: false,
+          message: "Internal server error",
+          error: error.message,
+        });
+      }
+    });
+  } catch (error) {
+    console.error("Error in createEvidence:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
 };
 
 exports.getAllEvidence = async (req, res) => {
@@ -343,7 +390,9 @@ exports.updateEvidence = async (req, res) => {
     }
 
     // Get the officer_id (collected by) for this evidence
-    const collectedByOfficerId = await evidenceService.getCollectedBy(evidence_id);
+    const collectedByOfficerId = await evidenceService.getCollectedBy(
+      evidence_id
+    );
 
     if (!collectedByOfficerId) {
       return res.status(404).json({ message: "Evidence not found" });
@@ -393,5 +442,146 @@ exports.updateEvidence = async (req, res) => {
       success: false,
       message: "Failed to update evidence",
     });
+  }
+};
+
+// Add new endpoint for file upload
+exports.uploadAttachment = async (req, res) => {
+  try {
+    const token = req.cookies.authtoken;
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    const user = await getUserFromCookies(token);
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // Use formidable to parse form data with files
+    const form = new formidable.IncomingForm({
+      multiples: true,
+      keepExtensions: true,
+      maxFileSize: 50 * 1024 * 1024, // 50MB
+    });
+
+    form.parse(req, async (err, fields, files) => {
+      if (err) {
+        return res.status(400).json({
+          success: false,
+          message: "Error parsing form data",
+          error: err.message,
+        });
+      }
+
+      const evidence_id = Array.isArray(fields.evidence_id)
+        ? fields.evidence_id[0]
+        : fields.evidence_id;
+
+      if (!evidence_id) {
+        return res.status(400).json({
+          success: false,
+          message: "Evidence ID is required",
+        });
+      }
+
+      // Check if file is provided
+      if (!files.file) {
+        return res.status(400).json({
+          success: false,
+          message: "No file provided",
+        });
+      }
+
+      try {
+        // Create form data for file upload
+        const formData = new FormData();
+        const file = files.file;
+        formData.append("file", fs.createReadStream(file.filepath));
+        formData.append("evidence_id", evidence_id);
+
+        // Upload to file server
+        const fileResponse = await axios.post(
+          `${FILE_SERVER_URL}/upload`,
+          formData,
+          {
+            headers: {
+              ...formData.getHeaders(),
+            },
+          }
+        );
+
+        if (fileResponse.data.success) {
+          // Save attachment metadata to database
+          const attachmentId = await generateUniqueId("attachments");
+
+          await db.query(
+            `INSERT INTO attachments (attachment_id, evidence_id, file_name, file_path, file_type, file_size, uploaded_dt, uploaded_by) 
+             VALUES (?, ?, ?, ?, ?, ?, NOW(), ?)`,
+            [
+              attachmentId,
+              evidence_id,
+              fileResponse.data.original_name,
+              `${FILE_SERVER_URL}${fileResponse.data.file_path}`, // Full URL
+              fileResponse.data.file_type,
+              fileResponse.data.file_size,
+              user.user_id,
+            ]
+          );
+
+          res.json({
+            success: true,
+            attachment_id: attachmentId,
+            file_url: `${FILE_SERVER_URL}${fileResponse.data.file_path}`,
+            message: "File uploaded successfully",
+          });
+        } else {
+          res.status(400).json({
+            success: false,
+            message: "File upload failed",
+            error: fileResponse.data.error,
+          });
+        }
+      } catch (error) {
+        console.error("Upload error:", error);
+        res.status(500).json({
+          success: false,
+          message: "File server error",
+          error: error.message,
+        });
+      }
+    });
+  } catch (error) {
+    console.error("Upload error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+// Add endpoint to serve files through main server (proxy to file server)
+exports.getAttachment = async (req, res) => {
+  try {
+    const { attachmentId } = req.params;
+
+    // Get file path from database
+    const [attachments] = await db.query(
+      "SELECT file_path, file_name, file_type FROM attachments WHERE attachment_id = ?",
+      [attachmentId]
+    );
+
+    if (attachments.length === 0) {
+      return res.status(404).json({ error: "Attachment not found" });
+    }
+
+    const attachment = attachments[0];
+
+    // Redirect to the file URL
+    return res.redirect(attachment.file_path);
+  } catch (error) {
+    console.error("File serving error:", error);
+    res.status(500).json({ error: "Failed to serve file" });
   }
 };
