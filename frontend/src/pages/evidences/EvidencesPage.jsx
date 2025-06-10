@@ -23,6 +23,7 @@ const EvidencesPage = () => {
         { value: 'location', label: 'Location' },
         { value: 'case_id', label: 'Case ID' },
         { value: 'investigation_id', label: 'Investigation ID' },
+        { value: 'offence_id', label: 'Offence ID' },
         { value: 'officer_name', label: 'Collected By' }
     ];
 
@@ -51,7 +52,8 @@ const EvidencesPage = () => {
             options: [
                 { value: 'all', label: 'All' },
                 { value: 'case', label: 'Case Only', colorVariant: 'blue' },
-                { value: 'investigation', label: 'Investigation', colorVariant: 'green' }
+                { value: 'investigation', label: 'Investigation', colorVariant: 'green' },
+                { value: 'offence', label: 'Offence', colorVariant: 'red' }
             ]
         }
     ];
@@ -94,6 +96,9 @@ const EvidencesPage = () => {
                     case 'investigation_id':
                         params.investigation_id = searchParams.searchTerm.trim();
                         break;
+                    case 'offence_id':
+                        params.offence_id = searchParams.searchTerm.trim();
+                        break;
                     case 'officer_name':
                         params.officer_name = searchParams.searchTerm.trim();
                         break;
@@ -106,7 +111,7 @@ const EvidencesPage = () => {
             if (searchParams.linking_type && searchParams.linking_type !== 'all') {
                 params.linking_type = searchParams.linking_type;
             }
-
+            
             const response = await apiClient.get(endpoint, { params });
             setEvidences(response.data.evidences || []);
             setLoading(false);

@@ -362,13 +362,14 @@ exports.searchEvidence = async (filters, userRole, userId) => {
       location,
       case_id,
       investigation_id,
+      offence_id,
       officer_name,
       evidence_type,
       linking_type,
       start_date,
       end_date,
       limit = 50,
-      offset = 12,
+      offset = 0,
       sortBy = "collected_dt",
       sortOrder = "DESC",
     } = filters;
@@ -379,6 +380,7 @@ exports.searchEvidence = async (filters, userRole, userId) => {
             FROM evidance e
             LEFT JOIN investigation i ON e.investigation_id = i.investigation_id
             LEFT JOIN case_evidance ce ON ce.evidence_id = e.evidence_id
+            LEFT JOIN crimeoffence_evidance coe ON coe.evidence_id = e.evidence_id
             LEFT JOIN cases c ON (i.case_id = c.case_id OR ce.case_id = c.case_id)
             LEFT JOIN users u ON e.officer_id = u.user_id
             WHERE 1=1
@@ -400,11 +402,12 @@ exports.searchEvidence = async (filters, userRole, userId) => {
                 COALESCE(i.case_id, ce.case_id) as case_id,
                 c.topic as case_topic,
                 c.status as case_status,
-                COUNT(w.nic) as witness_count
+                COUNT(DISTINCT w.nic) as witness_count
             FROM evidance e
             LEFT JOIN users u ON e.officer_id = u.user_id
             LEFT JOIN investigation i ON e.investigation_id = i.investigation_id
             LEFT JOIN case_evidance ce ON ce.evidence_id = e.evidence_id
+            LEFT JOIN crimeoffence_evidance coe ON coe.evidence_id = e.evidence_id
             LEFT JOIN cases c ON (i.case_id = c.case_id OR ce.case_id = c.case_id)
             LEFT JOIN evidance_witnesses w ON e.evidence_id = w.evidence_id
             WHERE 1=1
@@ -413,6 +416,7 @@ exports.searchEvidence = async (filters, userRole, userId) => {
     const params = [];
     const countParams = [];
 
+
     if (type) {
       query += " AND e.type LIKE ?";
       countQuery += " AND e.type LIKE ?";
@@ -420,10 +424,10 @@ exports.searchEvidence = async (filters, userRole, userId) => {
       countParams.push(`%${type}%`);
     }
     if (evidence_id) {
-      query += " AND e.evidence_id = ?";
-      countQuery += " AND e.evidence_id = ?";
-      params.push(evidence_id);
-      countParams.push(evidence_id);
+      query += " AND e.evidence_id LIKE ?";
+      countQuery += " AND e.evidence_id LIKE ?";
+      params.push(`%${evidence_id}%`);
+      countParams.push(`%${evidence_id}%`);
     }
     if (location) {
       query += " AND e.location LIKE ?";
@@ -432,16 +436,22 @@ exports.searchEvidence = async (filters, userRole, userId) => {
       countParams.push(`%${location}%`);
     }
     if (case_id) {
-      query += " AND c.case_id = ?";
-      countQuery += " AND c.case_id = ?";
-      params.push(case_id);
-      countParams.push(case_id);
+      query += " AND (c.case_id = ? OR c.case_id LIKE ?)";
+      countQuery += " AND (c.case_id = ? OR c.case_id LIKE ?)";
+      params.push(case_id, `%${case_id}%`);
+      countParams.push(case_id, `%${case_id}%`);
     }
     if (investigation_id) {
-      query += " AND e.investigation_id = ?";
-      countQuery += " AND e.investigation_id = ?";
-      params.push(investigation_id);
-      countParams.push(investigation_id);
+      query += " AND (e.investigation_id = ? OR e.investigation_id LIKE ?)";
+      countQuery += " AND (e.investigation_id = ? OR e.investigation_id LIKE ?)";
+      params.push(investigation_id, `%${investigation_id}%`);
+      countParams.push(investigation_id, `%${investigation_id}%`);
+    }
+    if (offence_id) {
+      query += " AND (coe.offence_id = ? OR coe.offence_id LIKE ?)";
+      countQuery += " AND (coe.offence_id = ? OR coe.offence_id LIKE ?)";
+      params.push(offence_id, `%${offence_id}%`);
+      countParams.push(offence_id, `%${offence_id}%`);
     }
     if (officer_name) {
       query += " AND u.name LIKE ?";
@@ -456,13 +466,15 @@ exports.searchEvidence = async (filters, userRole, userId) => {
       countParams.push(evidence_type);
     }
     if (linking_type === "case") {
-      query +=
-        " AND e.investigation_id IS NULL AND EXISTS(SELECT 1 FROM case_evidance ce2 WHERE ce2.evidence_id = e.evidence_id)";
-      countQuery +=
-        " AND e.investigation_id IS NULL AND EXISTS(SELECT 1 FROM case_evidance ce2 WHERE ce2.evidence_id = e.evidence_id)";
+      query += " AND ce.case_id IS NOT NULL";
+      countQuery += " AND ce.case_id IS NOT NULL";
     } else if (linking_type === "investigation") {
       query += " AND e.investigation_id IS NOT NULL";
       countQuery += " AND e.investigation_id IS NOT NULL";
+    }
+    else if (linking_type === "offence") {
+      query += " AND coe.offence_id IS NOT NULL";
+      countQuery += " AND coe.offence_id IS NOT NULL";
     }
     if (start_date) {
       query += " AND DATE(e.collected_dt) >= ?";
@@ -485,7 +497,6 @@ exports.searchEvidence = async (filters, userRole, userId) => {
 
     const [evidences] = await db.query(query, params);
     evidences.forEach((e) => (e.total_count = total_count));
-
     return evidences;
   } catch (error) {
     console.error("Error searching evidence:", error);

@@ -222,6 +222,8 @@ exports.getAllEvidence = async (req, res) => {
   }
 };
 
+
+// TODO: have to fix search and filtering
 exports.searchEvidence = async (req, res) => {
   try {
     const filters = {
@@ -233,6 +235,7 @@ exports.searchEvidence = async (req, res) => {
       officer_name: req.query.officer_name,
       evidence_type: req.query.evidence_type,
       linking_type: req.query.linking_type,
+      offence_id: req.query.offence_id,
       start_date: req.query.start_date,
       end_date: req.query.end_date,
     };
