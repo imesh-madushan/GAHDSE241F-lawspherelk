@@ -3,6 +3,7 @@ import Dashboard from './pages/homepages/Dashboard'
 import Layout from './pages/Layout';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { apiClient } from './config/apiConfig';
+import Profile from './pages/Profile';
 import Login from './pages/login';
 import SingleCaseView from './pages/cases/SingleCaseView';
 import SingleComplainView from './pages/complaints/SingleComplainView';
@@ -69,6 +70,7 @@ function App() {
         </ProtectedRoute>
       }>
         <Route path="dashboard" element={<Dashboard />} />
+        <Route path="profile" element={<Profile />} />
         <Route path="cases" element={<CasesPage />} />
         <Route path="cases/:caseId" element={<SingleCaseView />} />
         <Route path="complaints" element={<ComplaintsPage />} />
