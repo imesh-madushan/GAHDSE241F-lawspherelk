@@ -70,7 +70,6 @@ exports.validateCookies = async (req, res) => {
 
     try {
         const user = await getUserFromCookies(token);
-
         if (!user) {
             return res.status(401).json({ message: "Invalid token" });
         }
@@ -85,7 +84,16 @@ exports.validateCookies = async (req, res) => {
 
 // Logout
 exports.logout = async (req, res) => {
-    res.clearCookie("token");
-    res.status(200).json({ message: "Logged out successfully" });
-}
+    try {
+        res.clearCookie("authtoken", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
+        });
+        res.status(200).json({ message: "Logged out successfully" });
+    } catch (error) {
+        console.error("Error during logout:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
 

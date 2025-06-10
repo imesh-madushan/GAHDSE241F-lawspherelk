@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback } from "react";
-import { Warning, Close } from "@mui/icons-material";
+import { Warning, Close, Error, Info, CheckCircle } from "@mui/icons-material";
 
 const ConfirmationPopup = ({
     open,
@@ -9,7 +9,7 @@ const ConfirmationPopup = ({
     cancelLabel = "Cancel",
     onConfirm,
     onCancel,
-    variant = "warning" // "warning" | "danger" | "info"
+    variant = "warning" // "warning" | "danger" | "info" | "success"
 }) => {
     const handleCancel = useCallback(() => {
         if (onCancel) onCancel();
@@ -29,60 +29,108 @@ const ConfirmationPopup = ({
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [open, handleCancel, handleConfirm]);
 
-    if (!open) return null;
-
-    const variantStyles = {
-        warning: {
-            icon: <Warning className="text-yellow-500 mb-2" style={{ fontSize: 48 }} />,
-            confirmButton: "bg-yellow-600 hover:bg-yellow-700 text-white",
-            border: "border-yellow-200"
-        },
-        danger: {
-            icon: <Warning className="text-red-500 mb-2" style={{ fontSize: 48 }} />,
-            confirmButton: "bg-red-600 hover:bg-red-700 text-white",
-            border: "border-red-200"
-        },
-        info: {
-            icon: <Warning className="text-blue-500 mb-2" style={{ fontSize: 48 }} />,
-            confirmButton: "bg-blue-600 hover:bg-blue-700 text-white",
-            border: "border-blue-200"
+    const getVariantConfig = () => {
+        switch (variant) {
+            case "danger":
+                return {
+                    icon: <Error className="text-red-500" style={{ fontSize: 48 }} />,
+                    iconBg: "bg-red-100",
+                    confirmButton: "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white",
+                    titleColor: "text-red-900",
+                    backdrop: "bg-red-50/80"
+                };
+            case "success":
+                return {
+                    icon: <CheckCircle className="text-green-500" style={{ fontSize: 48 }} />,
+                    iconBg: "bg-green-100",
+                    confirmButton: "bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white",
+                    titleColor: "text-green-900",
+                    backdrop: "bg-green-50/80"
+                };
+            case "info":
+                return {
+                    icon: <Info className="text-blue-500" style={{ fontSize: 48 }} />,
+                    iconBg: "bg-blue-100",
+                    confirmButton: "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white",
+                    titleColor: "text-blue-900",
+                    backdrop: "bg-blue-50/80"
+                };
+            default: // warning
+                return {
+                    icon: <Warning className="text-amber-500" style={{ fontSize: 48 }} />,
+                    iconBg: "bg-amber-100",
+                    confirmButton: "bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white",
+                    titleColor: "text-amber-900",
+                    backdrop: "bg-amber-50/80"
+                };
         }
     };
 
-    const currentStyle = variantStyles[variant] || variantStyles.warning;
+    if (!open) return null;
+
+    const config = getVariantConfig();
 
     return (
-        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/40">
-            <div className={`bg-white rounded-xl shadow-lg px-8 py-6 flex flex-col items-center max-w-sm w-full mx-4 ${currentStyle.border} border`}>
-                {currentStyle.icon}
+        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 py-6">
+            {/* Enhanced Backdrop */}
+            <div
+                className={`absolute inset-0 ${config.backdrop} backdrop-blur-sm transition-opacity duration-300`}
+                onClick={handleCancel}
+            />
 
-                <div className="text-lg font-semibold mb-2 text-gray-800 text-center">
-                    {title}
-                </div>
+            {/* Modal Container */}
+            <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-200 max-w-md w-full mx-4 overflow-hidden transform transition-all duration-300 scale-100">
+                {/* Close Button */}
+                <button
+                    onClick={handleCancel}
+                    className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition-colors duration-200 z-10"
+                >
+                    <Close className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+                </button>
 
-                <div className="mb-6 text-center text-sm text-gray-600">
-                    {message}
-                </div>
+                {/* Content */}
+                <div className="p-8 text-center">
+                    {/* Icon */}
+                    <div className={`w-20 h-20 ${config.iconBg} rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg`}>
+                        {config.icon}
+                    </div>
 
-                <div className="flex gap-3 w-full">
-                    <button
-                        className="flex-1 px-4 py-2 rounded-lg font-medium transition border border-gray-300 text-gray-700 hover:bg-gray-50 hover:cursor-pointer"
-                        onClick={handleCancel}
-                    >
-                        {cancelLabel}
-                    </button>
+                    {/* Title */}
+                    <h2 className={`text-2xl font-bold ${config.titleColor} mb-4`}>
+                        {title}
+                    </h2>
 
-                    <button
-                        className={`flex-1 px-4 py-2 rounded-lg font-medium transition ${currentStyle.confirmButton} hover:cursor-pointer`}
-                        onClick={handleConfirm}
-                        autoFocus
-                    >
-                        {confirmLabel}
-                    </button>
-                </div>
+                    {/* Message */}
+                    <p className="text-gray-600 text-base leading-relaxed mb-8">
+                        {message}
+                    </p>
 
-                <div className="text-xs text-gray-400 mt-2">
-                    (Press Enter to confirm, Esc to cancel)
+                    {/* Action Buttons */}
+                    <div className="flex gap-4">
+                        <button
+                            onClick={handleCancel}
+                            className="flex-1 px-6 py-3 rounded-xl font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-300 transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2"
+                        >
+                            {cancelLabel}
+                        </button>
+
+                        <button
+                            onClick={handleConfirm}
+                            className={`flex-1 px-6 py-3 rounded-xl font-semibold ${config.confirmButton} shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2`}
+                            autoFocus
+                        >
+                            {confirmLabel}
+                        </button>
+                    </div>
+
+                    {/* Keyboard Shortcuts Hint */}
+                    <div className="mt-6 text-xs text-gray-400 flex items-center justify-center gap-4">
+                        <span className="bg-gray-100 px-2 py-1 rounded text-gray-600 font-mono">Esc</span>
+                        <span>to cancel</span>
+                        <span>•</span>
+                        <span className="bg-gray-100 px-2 py-1 rounded text-gray-600 font-mono">Enter</span>
+                        <span>to confirm</span>
+                    </div>
                 </div>
             </div>
         </div>
