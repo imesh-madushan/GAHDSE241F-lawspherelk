@@ -1,9 +1,9 @@
 import './App.css'
 import Dashboard from './pages/homepages/Dashboard'
 import Layout from './pages/Layout';
-import { Route, Router, Routes } from 'react-router-dom';
-import ProtectedRoutes from './utils/ProtectedRoutes';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { apiClient } from './config/apiConfig';
+import Login from './pages/login';
 import SingleCaseView from './pages/cases/SingleCaseView';
 import SingleComplainView from './pages/complaints/SingleComplainView';
 import CasesPage from './pages/cases/CasesPage';
@@ -19,51 +19,77 @@ import AllOfficersPage from './pages/officers/AllOfficersPage';
 import SingleInvestigationView from './pages/investigations/SingleInvestigationView';
 import EvidencesPage from './pages/evidences/EvidencesPage';
 import SingleEvidenceView from './pages/evidences/SingleEvidenceView';
+import { useAuth } from './contexts/AuthContext';
+
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  return user ? children : <Navigate to="/login" />;
+};
+
+// Public Route Component (for login page)
+const PublicRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // If user is logged in and tries to access login page, they'll see the "already logged in" message
+  return children;
+};
 
 function App() {
-  // temp login
-  const login = async () => await apiClient.post('/auth/login',
-    {
-      username: 'user1',
-      password: 'abcd1234'
-    }
-  )
-
-  login();
-
   return (
     <Routes>
-      {/* public welcome page */}
-      <Route path="/" element={
-        <>
-          <h1>Welcome to the Application</h1>
-          <p>Please log in to access your dashboard.</p>
-        </>
+      {/* Public Routes */}
+      <Route path="/login" element={
+        <PublicRoute>
+          <Login />
+        </PublicRoute>
       } />
 
-      {/* protected routes */}
-      <Route element={<ProtectedRoutes />}>
-        <Route element={<Layout />}>
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="cases" element={<CasesPage />} />
-          <Route path="cases/:caseId" element={<SingleCaseView />} />
-          <Route path="complaints" element={<ComplaintsPage />} />
-          <Route path="complaints/:complaintId" element={<SingleComplainView />} />
-          <Route path="criminals" element={<CriminalsPage />} />
-          <Route path="criminals/:criminalId" element={<CriminalRecord />} />
-          <Route path="crimeoffences" element={<CrimeOffencesPage />} />
-          <Route path="crimeoffences/:offenceId" element={<SingleOffenceView />} />
-          <Route path="investigations" element={<InvestigationsPage />} />
-          <Route path="investigations/:investigationId" element={<SingleInvestigationView />} />
-          <Route path="evidences" element={<EvidencesPage />} />
-          <Route path="evidences/:evidenceId" element={<SingleEvidenceView />} />
-          <Route path="officers" element={<AllOfficersPage />} />
-          <Route path="officers/:officerId" element={<OfficerProfile />} />
-          <Route path="recordhistory" element={<div>Record History</div>} />
-          <Route path="recordhistory/:table/:id" element={<div>Record History table and id</div>} />
-          <Route path="test" element={<Test />} />
-        </Route>
+      {/* Protected Routes */}
+      <Route path="/*" element={
+        <ProtectedRoute>
+          <Layout />
+        </ProtectedRoute>
+      }>
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="cases" element={<CasesPage />} />
+        <Route path="cases/:caseId" element={<SingleCaseView />} />
+        <Route path="complaints" element={<ComplaintsPage />} />
+        <Route path="complaints/:complaintId" element={<SingleComplainView />} />
+        <Route path="criminals" element={<CriminalsPage />} />
+        <Route path="criminals/:criminalId" element={<CriminalRecord />} />
+        <Route path="crimeoffences" element={<CrimeOffencesPage />} />
+        <Route path="crimeoffences/:offenceId" element={<SingleOffenceView />} />
+        <Route path="investigations" element={<InvestigationsPage />} />
+        <Route path="investigations/:investigationId" element={<SingleInvestigationView />} />
+        <Route path="evidences" element={<EvidencesPage />} />
+        <Route path="evidences/:evidenceId" element={<SingleEvidenceView />} />
+        <Route path="officers" element={<AllOfficersPage />} />
+        <Route path="officers/:officerId" element={<OfficerProfile />} />
+        <Route path="recordhistory" element={<div>Record History</div>} />
+        <Route path="recordhistory/:table/:id" element={<div>Record History table and id</div>} />
+        <Route path="test" element={<Test />} />
       </Route>
+
+      {/* Default redirect */}
+      <Route path="/" element={<Navigate to="/dashboard" />} />
 
       {/* 404 Not Found */}
       <Route path="*" element={
