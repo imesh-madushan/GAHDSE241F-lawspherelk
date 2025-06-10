@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Add } from '@mui/icons-material';
 import SearchInterface from '../../components/searchsection/SearchInterface';
 import OfficerCard from '../../components/officers/OfficerCard';
+import CreateOfficerModal from '../../components/modals/CreateOfficerModal';
 import { apiClient } from '../../config/apiConfig';
 import PageHeader from '../../components/common/PageHeader';
+import { useAuth } from '../../contexts/AuthContext';
 
 const OfficersPage = () => {
     const [officers, setOfficers] = useState([]);
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [openCreateModal, setOpenCreateModal] = useState(false);
+    const { user } = useAuth();
     const navigate = useNavigate();
 
     const searchOptions = [
@@ -88,6 +93,16 @@ const OfficersPage = () => {
         setPage(1);
     };
 
+    const canCreateOfficer = () => {
+        return user && user.role === 'OIC';
+    };
+
+    const handleOfficerModalClose = () => {
+        setOpenCreateModal(false);
+        // Refresh officers data after creation
+        fetchOfficers();
+    };
+
     return (
         <div className="bg-gray-100 min-h-screen">
             <PageHeader
@@ -95,6 +110,14 @@ const OfficersPage = () => {
                 breadcrumbItems={[
                     { label: 'Dashboard', link: '/dashboard' },
                     { label: 'Police Officers' }
+                ]}
+                actions={[
+                    ...(canCreateOfficer() ? [{
+                        icon: <Add fontSize='small' className='bg-white text-blue-800 rounded-full' />,
+                        label: 'Create Officer',
+                        onClick: () => setOpenCreateModal(true),
+                        styles: 'h-10 bg-blue-800 text-white border-blue-800'
+                    }] : [])
                 ]}
                 showBackButton={true}
                 onBack={() => navigate(-1)}
@@ -137,8 +160,14 @@ const OfficersPage = () => {
                     </button>
                 </div>
             </div>
+            {/* Create Officer Modal */}
+            <CreateOfficerModal
+                open={openCreateModal}
+                onClose={handleOfficerModalClose}
+                canCreate={canCreateOfficer()}
+            />
         </div>
     );
 };
 
-export default OfficersPage; 
+export default OfficersPage;

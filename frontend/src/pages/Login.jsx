@@ -72,10 +72,27 @@ const Login = () => {
       }
     } catch (error) {
       console.error('Login error:', error);
-      setError(
-        error.response?.data?.message ||
-        'Login failed. Please check your credentials and try again.'
-      );
+
+      // Handle different error types
+      if (error.response?.status === 403) {
+        // Account locked
+        setError(
+          error.response.data.message ||
+          'Your account has been locked. Please contact the administrator to unlock your account.'
+        );
+      } else if (error.response?.status === 401) {
+        // Invalid credentials
+        setError(
+          error.response.data.message ||
+          'Invalid username or password. Please check your credentials and try again.'
+        );
+      } else {
+        // General error
+        setError(
+          error.response?.data?.message ||
+          'Login failed. Please check your credentials and try again.'
+        );
+      }
     } finally {
       setLoading(false);
     }

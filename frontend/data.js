@@ -124,6 +124,16 @@ export const evidenceTypes = [
     'Confession Recording'
 ]
 
+export const officerRoles = [
+    'OIC',
+    'Crime OIC',
+    'Sub Inspector',
+    'Inspector',
+    'Sergeant',
+    'Police Constable',
+    'Forensic Leader'
+];
+
 export const caseStatusList = [
    { value: 'inprogress', label: 'In Progress', styles: 'text-blue-500 bg-blue-100 border-blue-200' },
    { value: 'closed', label: 'Closed', styles: 'text-red-500 bg-red-100 border-red-200' },

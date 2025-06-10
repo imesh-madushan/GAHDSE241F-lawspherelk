@@ -81,6 +81,19 @@ exports.incrementFailedAttempts = async (username) => {
       "UPDATE login SET faild_attempts = faild_attempts + 1 WHERE username = ?",
       [username]
     );
+
+    // Check if we should lock the account after too many failed attempts
+    const [rows] = await db.query(
+      "SELECT faild_attempts FROM login WHERE username = ?",
+      [username]
+    );
+
+    if (rows.length > 0 && rows[0].faild_attempts >= 5) {
+      // Lock account after 5 failed attempts
+      await db.query("UPDATE login SET account_locked = 1 WHERE username = ?", [
+        username,
+      ]);
+    }
   } catch (error) {
     console.error("Error incrementing failed attempts:", error);
     throw error;
@@ -95,6 +108,20 @@ exports.resetFailedAttempts = async (username) => {
     ]);
   } catch (error) {
     console.error("Error resetting failed attempts:", error);
+    throw error;
+  }
+};
+
+// Add new method to get failed attempts count
+exports.getFailedAttempts = async (username) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT faild_attempts FROM login WHERE username = ?",
+      [username]
+    );
+    return rows.length > 0 ? rows[0].faild_attempts : 0;
+  } catch (error) {
+    console.error("Error getting failed attempts:", error);
     throw error;
   }
 };
