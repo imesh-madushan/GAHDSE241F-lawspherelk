@@ -37,7 +37,6 @@ const Profile = () => {
             <span className="text-gray-600 font-medium">{user.role}</span>
           </div>
           <div className="flex gap-2 mb-4">
-            <span className="bg-blue-700 text-white rounded-full px-4 py-1 text-sm font-semibold">Badge #7845</span>
             <span className="bg-gray-200 text-gray-700 rounded-full px-4 py-1 text-sm font-semibold">ID: {user.user_id}</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mt-2">

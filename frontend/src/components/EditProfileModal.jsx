@@ -46,7 +46,6 @@ const EditProfileModal = ({ user, onClose, onSave, onChangePassword }) => {
             <option value="Forensic Leader">Forensic Leader</option>
           </select>
           <div className="flex gap-2 mb-2">
-            <span className="bg-blue-700 text-white rounded-full px-3 py-1 text-xs font-semibold">Badge #7845</span>
             <span className="bg-gray-200 text-gray-700 rounded-full px-3 py-1 text-xs font-semibold">ID: {user.user_id}</span>
           </div>
         </div>
@@ -65,7 +64,7 @@ const EditProfileModal = ({ user, onClose, onSave, onChangePassword }) => {
               <h3 className="font-semibold mb-2">Security</h3>
               <div className="flex items-center gap-2 mb-2">Failed Login Attempts <span className="ml-auto text-green-600 font-bold">0</span></div>
             </div>
-            <button type="button" className="w-full bg-blue-900 text-white py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-800 mt-2" onClick={e => {e.preventDefault(); onChangePassword && onChangePassword();}}>
+            <button type="button" className="w-full bg-blue-900 text-white py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-800 mt-2" onClick={e => { e.preventDefault(); onChangePassword && onChangePassword(); }}>
               <span className="material-icons"></span> Change Password
             </button>
           </div>

@@ -175,7 +175,6 @@ const Login = () => {
             </div>
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">LawSphere LK</h1>
-          <p className="text-gray-600">Sri Lanka Police Department</p>
           <h2 className="text-xl font-semibold text-gray-800 mt-4">Sign in to your account</h2>
         </div>
 
@@ -270,15 +269,6 @@ const Login = () => {
             <p className="text-xs text-gray-500">
               © 2025 LawSphere LK - Sri Lanka Police Department
             </p>
-          </div>
-        </div>
-
-        {/* Demo Credentials */}
-        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-blue-800 mb-2">Demo Credentials:</h3>
-          <div className="text-xs text-blue-700 space-y-1">
-            <div>Username: <span className="font-mono">user1</span> | Password: <span className="font-mono">password</span></div>
-            <div>Username: <span className="font-mono">user2</span> | Password: <span className="font-mono">password</span></div>
           </div>
         </div>
       </div>

@@ -30,13 +30,13 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
       { id: 'cases', label: 'Cases', icon: <Folder /> },
       { id: 'investigations', label: 'Investigations', icon: <Search /> },
       { id: 'evidences', label: 'Evidence', icon: <Inventory2 /> },
-      { id: 'criminals', label: 'Criminal Records', icon: <Fingerprint /> },
       { id: 'crimeoffences', label: 'Crime Offences', icon: <Description /> },
+      { id: 'criminals', label: 'Criminal Records', icon: <Fingerprint /> },
       { id: 'reports', label: 'Reports', icon: <Summarize /> },
       { id: 'officers', label: 'Officer Management', icon: <People /> },
-      { id: 'analytics', label: 'Analytics', icon: <BarChart /> },
+      // { id: 'analytics', label: 'Analytics', icon: <BarChart /> },
       { id: 'recordhistory', label: 'Records History', icon: <History /> },
-      { id: 'settings', label: 'Settings', icon: <Settings /> }
+      // { id: 'settings', label: 'Settings', icon: <Settings /> }
     ],
     'Crime OIC': [
       { id: 'dashboard', label: 'Dashboard', icon: <Dashboard /> },
@@ -44,33 +44,33 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
       { id: 'cases', label: 'Cases', icon: <Folder /> },
       { id: 'investigations', label: 'Investigations', icon: <Search /> },
       { id: 'evidences', label: 'Evidence', icon: <Inventory2 /> },
-      { id: 'criminals', label: 'Criminal Records', icon: <Fingerprint /> },
       { id: 'crimeoffences', label: 'Crime Offences', icon: <Description /> },
+      { id: 'criminals', label: 'Criminal Records', icon: <Fingerprint /> },
       { id: 'officers', label: 'Officers', icon: <People /> },
       { id: 'reports', label: 'Reports', icon: <Summarize /> },
-      { id: 'analytics', label: 'Analytics', icon: <BarChart /> },
+      // { id: 'analytics', label: 'Analytics', icon: <BarChart /> },
       { id: 'recordhistory', label: 'Records History', icon: <History /> },
-      { id: 'settings', label: 'Settings', icon: <Settings /> }
+      // { id: 'settings', label: 'Settings', icon: <Settings /> }
     ],
     'Inspector': [
       { id: 'dashboard', label: 'Dashboard', icon: <Dashboard /> },
       { id: 'cases', label: 'Assigned Cases', icon: <Folder /> },
       { id: 'investigations', label: 'Investigations', icon: <Search /> },
-      { id: 'criminals', label: 'Criminal Records', icon: <Fingerprint /> },
       { id: 'crimeoffences', label: 'Crime Offences', icon: <Description /> },
+      { id: 'criminals', label: 'Criminal Records', icon: <Fingerprint /> },
       { id: 'evidences', label: 'Evidence', icon: <Inventory2 /> },
       { id: 'reports', label: 'Reports', icon: <Summarize /> },
-      { id: 'settings', label: 'Settings', icon: <Settings /> }
+      // { id: 'settings', label: 'Settings', icon: <Settings /> }
     ],
     'Sub Inspector': [
       { id: 'dashboard', label: 'Dashboard', icon: <Dashboard /> },
       { id: 'cases', label: 'Assigned Cases', icon: <Folder /> },
       { id: 'investigations', label: 'Investigations', icon: <Search /> },
-      { id: 'criminals', label: 'Criminal Records', icon: <Fingerprint /> },
       { id: 'crimeoffences', label: 'Crime Offences', icon: <Description /> },
+      { id: 'criminals', label: 'Criminal Records', icon: <Fingerprint /> },
       { id: 'evidences', label: 'Evidence', icon: <Inventory2 /> },
       { id: 'reports', label: 'Reports', icon: <Summarize /> },
-      { id: 'settings', label: 'Settings', icon: <Settings /> }
+      // { id: 'settings', label: 'Settings', icon: <Settings /> }
     ],
     'Sergeant': [
       { id: 'dashboard', label: 'Dashboard', icon: <Dashboard /> },
@@ -78,7 +78,7 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
       { id: 'investigations', label: 'Investigations', icon: <Search /> },
       { id: 'evidences', label: 'Evidence', icon: <Inventory2 /> },
       { id: 'reports', label: 'Reports', icon: <Summarize /> },
-      { id: 'settings', label: 'Settings', icon: <Settings /> }
+      // { id: 'settings', label: 'Settings', icon: <Settings /> }
     ],
     'Police Constable': [
       { id: 'dashboard', label: 'Dashboard', icon: <Dashboard /> },
@@ -86,7 +86,7 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
       { id: 'investigations', label: 'Investigations', icon: <Search /> },
       { id: 'evidences', label: 'Evidence Collection', icon: <Inventory2 /> },
       { id: 'complaints', label: 'File Complaint', icon: <Description /> },
-      { id: 'settings', label: 'Settings', icon: <Settings /> }
+      // { id: 'settings', label: 'Settings', icon: <Settings /> }
     ],
     'Forensic Leader': [
       { id: 'dashboard', label: 'Dashboard', icon: <Dashboard /> },
@@ -94,8 +94,8 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
       { id: 'reports', label: 'Forensic Reports', icon: <Summarize /> },
       { id: 'evidences', label: 'Evidence', icon: <Inventory2 /> },
       { id: 'team', label: 'Forensic Team', icon: <People /> },
-      { id: 'analytics', label: 'Analytics', icon: <BarChart /> },
-      { id: 'settings', label: 'Settings', icon: <Settings /> }
+      // { id: 'analytics', label: 'Analytics', icon: <BarChart /> },
+      // { id: 'settings', label: 'Settings', icon: <Settings /> }
     ]
   };
 
