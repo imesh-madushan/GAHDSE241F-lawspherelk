@@ -7,12 +7,14 @@ import {
   Person,
   Settings,
   Logout,
-  Menu
+  Menu,
+  AccountBalanceTwoTone
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import NotificationButton from './buttons/NotificationButton';
 import ConfirmationPopup from './common/ConfirmationPopup';
+import sriLankaGovLogo from '../assets/Sri Lanka Government.png';
 
 const Navbar = ({ expanded }) => {
   const { user, logout } = useAuth();
@@ -20,6 +22,8 @@ const Navbar = ({ expanded }) => {
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  console.log('Navbar user:', user);
 
   const handleLogout = async () => {
     try {
@@ -38,76 +42,104 @@ const Navbar = ({ expanded }) => {
     e.preventDefault();
     setShowProfileMenu(false);
     setShowLogoutConfirm(true);
-  };
-
-  const handleProfileClick = (e) => {
+  }; const handleProfileClick = (e) => {
     e.preventDefault();
     setShowProfileMenu(false);
     navigate('/profile');
   };
 
+  const handleSettingsClick = (e) => {
+    e.preventDefault();
+    setShowProfileMenu(false);
+    navigate('/settings');
+  };
+  const getDashboardTitle = () => {
+    if (!user?.role) return 'LawSphere LK';
+    return `Criminal Record Management System`;
+  };
+
   return (
     <>
-      <nav className="bg-blue-900 text-white shadow-lg">
-        <div className="px-4">
-          <div className="flex justify-between items-center py-3">
-            <div className="flex items-center space-x-4 ">
-              {!expanded && (
-                <div className="font-bold text-xl">LawSphere LK</div>
-              )}
-              {/* TODO: Create notification backend */}
-              {/* <NotificationButton count={55} notifications={[]} sideBarExpanded={expanded} /> */}
+      <nav className="bg-gradient-to-r from-blue-950 via-blue-900 to-blue-950 text-white shadow-xl ">
+        <div className="flex justify-between items-center">
+          <div className='flex  items-center space-x-4 '>
+            <div className="relative bg-white rounded-tr-2xl">
+              <img
+                src={sriLankaGovLogo}
+                alt="Sri Lanka Government Logo"
+                className="w-20 h-20 object-contain"
+              />
             </div>
+            
 
-            <div className="flex items-center space-x-4 hover:cursor-pointer ">
-              {/* Role Switcher */}
-              {/* Profile Menu */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  className="flex items-center bg-blue-100 rounded-full p-2 transition-colors duration-200 hover:cursor-pointer"
-                >
-                  <div className="h-8 w-8 rounded-full bg-blue-700 flex items-center justify-center">
-                    <Person fontSize="small" />
-                  </div>
-                  <span className="ml-2 hidden md:inline text-black">{user?.name || 'User'}</span>
-                  <ArrowDropDown fontSize="small" className="ml-1 text-black" />
-                </button>
+            <div className="flex items-center cursor-pointer" onClick={() => navigate('/dashboard')}>
+              <div>
+                <div className="font-bold text-white text-xl tracking-wide">{getDashboardTitle()}</div>
+                <div className="text-xs text-yellow-300 font-medium tracking-wider">SRI LANKA POLICE</div>
+              </div>
+            </div>
+          </div>
 
-                {/* profile menu dropdown */}
-                {showProfileMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white/60 backdrop-blur-md rounded-md shadow-lg py-1 z-50">
-                    <button
-                      onClick={handleProfileClick}
-                      className="w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100 flex items-center"
-                    >
-                      <Person fontSize="small" className="mr-2" />
-                      Profile
-                    </button>
-                    {/* <button
-                      onClick={handleProfileClick}
-                      className="w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100 flex items-center"
-                    >
-                      <Settings fontSize="small" className="mr-2" />
-                      Settings
-                    </button> */}
+
+          <div className="flex items-center space-x-4">
+            {/* TODO: Create notification backend */}
+            <NotificationButton count={55} notifications={[]} sideBarExpanded={expanded} />
+
+            {/* Profile Menu */}
+            <div className="relative">
+              <button
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="flex items-center text-white font-medium rounded-lg transition-colors duration-200 border-0 cursor-pointer "
+              >
+                <div className="h-12 w-12 rounded-full flex items-center justify-center mr-3 border-0">
+                  <img
+                    src={user?.profile_pic || <Person fontSize="small" className="text-white" />}
+                    alt="Profile"
+                    className="h-full w-full rounded-full object-cover"
+                  />
+                </div>
+                <div className="hidden md:flex flex-col items-start">
+                  <span className="text-md text-yellow-300">{user?.role || 'Unknown role'}</span>
+                  <span className="text-sm font-medium">{user?.name || 'Unknown name'}</span>
+                </div>
+                <ArrowDropDown fontSize="small" className="ml-2" />
+              </button>
+
+              {/* profile menu dropdown */}
+              {showProfileMenu && (
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+                  <button
+                    onClick={handleProfileClick}
+                    className="w-full text-left px-5 py-4 text-gray-700 hover:bg-gray-50 flex items-center transition-colors font-medium cursor-pointer text-base"
+                  >
+                    <Person fontSize="small" className="mr-3 text-gray-600" />
+                    My Profile
+                  </button>
+                  <button
+                    onClick={handleSettingsClick}
+                    className="w-full text-left px-5 py-4 text-gray-700 hover:bg-gray-50 flex items-center transition-colors font-medium cursor-pointer text-base"
+                  >
+                    <Settings fontSize="small" className="mr-3 text-gray-600" />
+                    Settings
+                  </button>
+                  <div className="border-t border-gray-200 mt-1">
                     <button
                       onClick={handleLogoutClick}
-                      className="w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100 flex items-center"
+                      className="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 flex items-center transition-colors font-medium cursor-pointer"
                     >
-                      <Logout fontSize="small" className="mr-2" />
-                      Logout
+                      <Logout fontSize="small" className="mr-3" />
+                      Sign Out
                     </button>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
+            </div>
 
-              {/* Mobile menu button */}
-              <div className="md:hidden">
-                <button className="px-2">
-                  <Menu />
-                </button>
-              </div>
+            {/* Mobile menu button */}
+            <div className="md:hidden">
+              <button className="bg-yellow-500 hover:bg-yellow-600 text-blue-900 p-2 rounded-lg transition-colors shadow-lg cursor-pointer">
+                <Menu />
+              </button>
             </div>
           </div>
         </div>

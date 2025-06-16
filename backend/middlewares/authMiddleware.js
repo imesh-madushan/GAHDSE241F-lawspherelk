@@ -26,7 +26,8 @@ async function getUserFromCookies(token) {
         email: userRows[0].email,
         phone: userRows[0].phone,
         address: userRows[0].address,
-        created_dt: userRows[0].created_dt
+        created_dt: userRows[0].created_dt,
+        profile_pic: userRows[0].profile_pic
       };
     }
     catch (err) {

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { CalendarMonth, AccessTime, Add, Assignment, Person, Visibility } from '@mui/icons-material';
 import { apiClient } from '../../config/apiConfig';
-import ComplaintCard from '../../components/ComplaintCard';
-import { Add, FilterList, NewReleases, Visibility } from '@mui/icons-material';
 import Spinner from '../../components/Spinner';
 import PageHeader from '../../components/common/PageHeader';
 import SearchInterface from '../../components/searchsection/SearchInterface';
@@ -26,7 +25,7 @@ const ComplaintsPage = () => {
         { value: 'complain_id', label: 'Complaint ID' },
         { value: 'officer', label: 'Officer Name' },
         { value: 'complainer', label: 'Complainer Name' }
-    ]
+    ];
 
     const filterConfig = [
         {
@@ -35,7 +34,8 @@ const ComplaintsPage = () => {
             options: [
                 { value: 'all', label: 'All' },
                 { value: 'new', label: 'New', colorVariant: 'blue' },
-                { value: 'viewed', label: 'Viewed', colorVariant: 'green' }
+                { value: 'viewed', label: 'Viewed', colorVariant: 'green' },
+                { value: 'closed', label: 'Closed', colorVariant: 'red' }
             ]
         },
         {
@@ -65,6 +65,7 @@ const ComplaintsPage = () => {
             const { data } = await apiClient.get('/complaints/getAllComplaints', { params });
             if (data.complaints) {
                 setComplaints(data.complaints);
+                console.log('Fetched complaints:', data.complaints);
             }
         } catch (error) {
             if (error.response && error.response.status === 404) {
@@ -77,7 +78,6 @@ const ComplaintsPage = () => {
         }
     };
 
-    // Add search handler for complaints
     const handleSearch = async (searchParams) => {
         setLoading(true);
         try {
@@ -107,7 +107,7 @@ const ComplaintsPage = () => {
             // Handle filters
             if (searchParams.status && searchParams.status !== 'all') {
                 params.status = searchParams.status;
-                setSelectedStatus(searchParams.status); // sync filter buttons
+                setSelectedStatus(searchParams.status);
             }
             if (searchParams.timePeriod && searchParams.timePeriod !== 'all') {
                 params.timePeriod = searchParams.timePeriod;
@@ -125,6 +125,52 @@ const ComplaintsPage = () => {
             setError('Failed to fetch complaints. Please try again.');
         }
         setLoading(false);
+    };
+
+    const getStatusStyle = (status) => {
+        switch (status) {
+            case 'new':
+                return 'bg-blue-100 text-blue-800';
+            case 'viewed':
+                return 'bg-green-100 text-green-800';
+            case 'closed':
+                return 'bg-red-100 text-red-800';
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
+    };
+
+    const getStatusLabel = (status) => {
+        switch (status) {
+            case 'new':
+                return 'New';
+            case 'viewed':
+                return 'Viewed';
+            case 'closed':
+                return 'Closed';
+            default:
+                return status;
+        }
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+        });
+    };
+
+    const formatTime = (dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
     };
 
     const handleCreateComplaint = () => {
@@ -171,7 +217,7 @@ const ComplaintsPage = () => {
             />
             <div className="container mx-auto px-4 py-4">
                 {/* Search Section */}
-                <div className="mb-0">
+                <div className="mb-6">
                     <SearchInterface
                         searchOptions={searchOptions}
                         filters={filterConfig}
@@ -179,22 +225,91 @@ const ComplaintsPage = () => {
                     />
                 </div>
 
-
-                {/* Complaints List */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    {complaints.length === 0 ? (
-                        <div className="col-span-2 text-center py-8">
-                            <p className="text-gray-500">No complaints found</p>
-                        </div>
-                    ) : (
-                        complaints.map((complaint) => (
-                            <ComplaintCard
-                                key={complaint.complain_id}
-                                complaint={complaint}
-                            />
-                        ))
-                    )}
+                {/* Data Table */}
+                <div className="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Complaint ID</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Complaint Date</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Officer</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {complaints.map((complaint) => (
+                                    <tr key={complaint.complain_id} className="hover:bg-gray-50">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            <Link to={`/complaints/${complaint.complain_id}`} className="hover:underline text-blue-600 font-medium">
+                                                {complaint.complain_id}
+                                            </Link>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-start">
+                                                <Assignment className="mr-2 text-blue-600 mt-1" fontSize="small" />
+                                                <div className="max-w-xs">
+                                                    <span className="text-sm text-gray-900 line-clamp-2">
+                                                        {complaint.description || 'No description available'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusStyle(complaint.complaint_status)}`}>
+                                                {getStatusLabel(complaint.complaint_status)}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            <div className="flex items-center">
+                                                <CalendarMonth className="mr-1 text-gray-400" style={{ fontSize: '0.9rem' }} />
+                                                <span>{formatDate(complaint.complain_dt)}</span>
+                                                {complaint.complain_dt && (
+                                                    <>
+                                                        <AccessTime className="ml-2 mr-1 text-gray-400" style={{ fontSize: '0.9rem' }} />
+                                                        <span>{formatTime(complaint.complain_dt)}</span>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                            {complaint.officer_name ? (
+                                                <div className="flex items-center">
+                                                    <Person className="mr-1 text-gray-400" fontSize="small" />
+                                                    <div>
+                                                        <Link to={`/officers/${complaint.officer_id}`} className="hover:underline text-blue-600">
+                                                            {complaint.officer_name}
+                                                        </Link>
+                                                        <div className="text-gray-500 text-xs mt-1">{complaint.officer_role}</div>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <span className="text-gray-400 italic">Not assigned</span>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                            <Link
+                                                to={`/complaints/${complaint.complain_id}`}
+                                                className="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors"
+                                            >
+                                                <Visibility fontSize="small" className="mr-1" />
+                                                View Details
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
+
+                {complaints.length === 0 && (
+                    <div className="text-center py-8 text-gray-500 bg-white rounded-2xl shadow-sm">
+                        No complaints found matching your search criteria
+                    </div>
+                )}
             </div>
 
             {/* Create Complaint Modal Component */}

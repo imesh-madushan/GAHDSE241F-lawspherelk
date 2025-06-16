@@ -2,8 +2,8 @@ import './App.css'
 import Dashboard from './pages/homepages/Dashboard'
 import Layout from './pages/Layout';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { apiClient } from './config/apiConfig';
-import Profile from './pages/Profile';
+import ProfilePage from './pages/profile/ProfilePage';
+import SettingsPage from './pages/settings/SettingsPage';
 import Login from './pages/login';
 import SingleCaseView from './pages/cases/SingleCaseView';
 import SingleComplainView from './pages/complaints/SingleComplainView';
@@ -48,8 +48,11 @@ const PublicRoute = ({ children }) => {
       </div>
     );
   }
+  // If user is logged in and tries to access login page, redirect to dashboard
+  if (user) {
+    return <Navigate to="/dashboard" />;
+  }
 
-  // If user is logged in and tries to access login page, they'll see the "already logged in" message
   return children;
 };
 
@@ -68,9 +71,9 @@ function App() {
         <ProtectedRoute>
           <Layout />
         </ProtectedRoute>
-      }>
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="profile" element={<Profile />} />
+      }>        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="profile" element={<ProfilePage />} />
+        <Route path="settings" element={<SettingsPage />} />
         <Route path="cases" element={<CasesPage />} />
         <Route path="cases/:caseId" element={<SingleCaseView />} />
         <Route path="complaints" element={<ComplaintsPage />} />

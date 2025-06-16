@@ -3,12 +3,7 @@ import { Add, Close, Send, Person, Badge, Phone, LocationOn, CalendarToday, Desc
 import { apiClient } from '../../config/apiConfig';
 import OutlinedButton from '../buttons/OutlinedButton';
 import StatusPopup from '../common/StatusPopup';
-
-const complainTypes = [
-    "Theft", "Fraud", "Assault", "Burglary", "Vandalism",
-    "Harassment", "Domestic Violence", "Public Disturbance",
-    "Cybercrime", "Drug Related", "Traffic Violation", "Other"
-];
+import { caseTypes } from '../../../data';
 
 const CreateComplaintModal = ({ open, onClose }) => {
     const [creatingComplaint, setCreatingComplaint] = useState(false);
@@ -253,7 +248,7 @@ const CreateComplaintModal = ({ open, onClose }) => {
                                                 className={`w-full px-4 py-3 border rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.complaintType ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
                                             >
                                                 <option value="">Select complaint type</option>
-                                                {complainTypes.map(type => (
+                                                {caseTypes.map(type => (
                                                     <option key={type} value={type}>{type}</option>
                                                 ))}
                                             </select>
