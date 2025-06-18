@@ -34,11 +34,11 @@ exports.getAllCases = async (filters, userRole, userId) => {
     params.push(filters.status);
   }
 
-  // if data is requested by sub inspector, show only the cases they're leading
-  if (userRole === "Sub Inspector") {
-    query += ` AND cases.leader_id = ?`;
-    params.push(userId);
-  }
+  // // if data is requested by sub inspector, show only the cases they're leading
+  // if (userRole === "Sub Inspector") {
+  //   query += ` AND cases.leader_id = ?`;
+  //   params.push(userId);
+  // }
 
   //group by and order by
   query += ` GROUP BY cases.case_id ORDER BY cases.started_dt DESC`;
