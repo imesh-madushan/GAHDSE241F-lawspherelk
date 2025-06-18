@@ -60,7 +60,7 @@ const Navbar = ({ expanded }) => {
 
   return (
     <>
-      <nav className="bg-gradient-to-r from-blue-950 via-blue-900 to-blue-950 text-white shadow-xl ">
+      <nav className="bg-gradient-to-r from-gray-950 via-slate-900 to-gray-950 text-white shadow-xl ">
         <div className="flex justify-between items-center">
           <div className='flex  items-center space-x-4 '>
             <div className="relative bg-white rounded-tr-2xl">

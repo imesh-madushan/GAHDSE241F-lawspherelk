@@ -54,6 +54,7 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
     ],
     'Inspector': [
       { id: 'dashboard', label: 'Dashboard', icon: <Dashboard /> },
+      { id: 'complaints', label: 'Complaints', icon: <Description /> },
       { id: 'cases', label: 'Assigned Cases', icon: <Folder /> },
       { id: 'investigations', label: 'Investigations', icon: <Search /> },
       { id: 'crimeoffences', label: 'Crime Offences', icon: <Description /> },
@@ -64,6 +65,7 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
     ],
     'Sub Inspector': [
       { id: 'dashboard', label: 'Dashboard', icon: <Dashboard /> },
+      { id: 'complaints', label: 'Complaints', icon: <Description /> },
       { id: 'cases', label: 'Assigned Cases', icon: <Folder /> },
       { id: 'investigations', label: 'Investigations', icon: <Search /> },
       { id: 'crimeoffences', label: 'Crime Offences', icon: <Description /> },
@@ -74,6 +76,7 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
     ],
     'Sergeant': [
       { id: 'dashboard', label: 'Dashboard', icon: <Dashboard /> },
+      { id: 'complaints', label: 'Complaints', icon: <Description /> },
       { id: 'cases', label: 'Assigned Cases', icon: <Folder /> },
       { id: 'investigations', label: 'Investigations', icon: <Search /> },
       { id: 'evidences', label: 'Evidence', icon: <Inventory2 /> },
@@ -82,6 +85,7 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
     ],
     'Police Constable': [
       { id: 'dashboard', label: 'Dashboard', icon: <Dashboard /> },
+      { id: 'complaints', label: 'Complaints', icon: <Description /> },
       { id: 'cases', label: 'Assigned Cases', icon: <Folder /> },
       { id: 'investigations', label: 'Investigations', icon: <Search /> },
       { id: 'evidences', label: 'Evidence Collection', icon: <Inventory2 /> },

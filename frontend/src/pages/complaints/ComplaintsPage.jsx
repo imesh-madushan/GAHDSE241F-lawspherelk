@@ -1,11 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { CalendarMonth, AccessTime, Add, Assignment, Person, Visibility } from '@mui/icons-material';
+import {
+    CalendarMonth,
+    AccessTime,
+    Add,
+    Assignment,
+    Person,
+    NavigateNext,
+    NavigateBefore,
+    MoreVert,
+    KeyboardArrowDown
+} from '@mui/icons-material';
 import { apiClient } from '../../config/apiConfig';
 import Spinner from '../../components/Spinner';
 import PageHeader from '../../components/common/PageHeader';
 import SearchInterface from '../../components/searchsection/SearchInterface';
 import CreateComplaintModal from '../../components/modals/CreateComplaintModal';
+import { useAuth } from '../../contexts/AuthContext';
+import OfficerCard from '../../components/cards/OfficerCard';
 
 const ComplaintsPage = () => {
     const [complaints, setComplaints] = useState([]);
@@ -13,7 +25,13 @@ const ComplaintsPage = () => {
     const [error, setError] = useState(null);
     const [selectedStatus, setSelectedStatus] = useState('all');
     const [openCreateModal, setOpenCreateModal] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [complaintsPerPage, setComplaintsPerPage] = useState(5);
+    const [totalPages, setTotalPages] = useState(1);
+    const [sortField, setSortField] = useState('complain_dt');
+    const [sortOrder, setSortOrder] = useState('desc'); // Default to newest first
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     const breadcrumbItems = [
         { label: 'Dashboard', link: '/dashboard' },
@@ -54,6 +72,11 @@ const ComplaintsPage = () => {
         fetchComplaints();
     }, [selectedStatus]);
 
+    useEffect(() => {
+        setTotalPages(Math.ceil(complaints.length / complaintsPerPage));
+        setCurrentPage(1);
+    }, [complaints, complaintsPerPage]);
+
     const fetchComplaints = async () => {
         setLoading(true);
         try {
@@ -64,8 +87,13 @@ const ComplaintsPage = () => {
 
             const { data } = await apiClient.get('/complaints/getAllComplaints', { params });
             if (data.complaints) {
-                setComplaints(data.complaints);
-                console.log('Fetched complaints:', data.complaints);
+                let filtered = data.complaints;
+                console.log('Fetched complaints:', filtered);
+                // Officer role-based filtering
+                if (user && user.role && user.role !== 'OIC' && user.role !== 'Crime OIC') {
+                    filtered = filtered.filter(c => c.officer_id === user.user_id);
+                }
+                setComplaints(filtered);
             }
         } catch (error) {
             if (error.response && error.response.status === 404) {
@@ -115,7 +143,12 @@ const ComplaintsPage = () => {
 
             const response = await apiClient.get(endpoint, { params });
             if (response.data.complaints) {
-                setComplaints(response.data.complaints);
+                let filtered = response.data.complaints;
+                // Officer role-based filtering
+                if (user && user.role && user.role !== 'OIC' && user.role !== 'Crime OIC') {
+                    filtered = filtered.filter(c => c.officer_id === user.user_id);
+                }
+                setComplaints(filtered);
             } else {
                 setComplaints([]);
             }
@@ -127,16 +160,89 @@ const ComplaintsPage = () => {
         setLoading(false);
     };
 
-    const getStatusStyle = (status) => {
+    // Handle sorting
+    const handleSort = (field) => {
+        if (sortField === field) {
+            setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortField(field);
+            setSortOrder(field === 'complain_dt' ? 'desc' : 'asc'); // Default desc for dates, asc for others
+        }
+    };
+
+    // Sort complaints function
+    const sortComplaints = (complaintsToSort) => {
+        if (!complaintsToSort || complaintsToSort.length === 0) return [];
+
+        return [...complaintsToSort].sort((a, b) => {
+            let aValue, bValue;
+
+            switch (sortField) {
+                case 'complain_dt':
+                    aValue = new Date(a.complain_dt || 0);
+                    bValue = new Date(b.complain_dt || 0);
+                    return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+
+                case 'complain_id':
+                    aValue = a.complain_id || '';
+                    bValue = b.complain_id || '';
+                    break;
+
+                case 'complaint_status':
+                    aValue = a.complaint_status || '';
+                    bValue = b.complaint_status || '';
+                    break;
+
+                default:
+                    aValue = a[sortField] || '';
+                    bValue = b[sortField] || '';
+            }
+
+            // For string comparisons
+            if (sortOrder === 'asc') {
+                return aValue > bValue ? 1 : -1;
+            } else {
+                return aValue < bValue ? 1 : -1;
+            }
+        });
+    };
+
+    // Get current complaints with sorting
+    const getCurrentComplaints = () => {
+        const sortedComplaints = sortComplaints(complaints);
+        const indexOfLastComplaint = currentPage * complaintsPerPage;
+        const indexOfFirstComplaint = indexOfLastComplaint - complaintsPerPage;
+        return sortedComplaints.slice(indexOfFirstComplaint, indexOfLastComplaint);
+    };
+
+    // Get sort icon based on current sort state
+    const getSortIcon = (field) => {
+        if (sortField !== field) {
+            return <KeyboardArrowDown fontSize="small" className="ml-1 text-gray-400" />;
+        }
+
+        return (
+            <KeyboardArrowDown
+                fontSize="small"
+                className={`ml-1 text-black transition-transform ${sortOrder === 'asc' ? 'rotate-180' : ''
+                    }`}
+            />
+        );
+    };
+
+    // Update current complaints to use the new function
+    const currentComplaints = getCurrentComplaints();
+
+    const getStatusDotColor = (status) => {
         switch (status) {
             case 'new':
-                return 'bg-blue-100 text-blue-800';
+                return 'bg-blue-500';
             case 'viewed':
-                return 'bg-green-100 text-green-800';
+                return 'bg-green-500';
             case 'closed':
-                return 'bg-red-100 text-red-800';
+                return 'bg-red-500';
             default:
-                return 'bg-gray-100 text-gray-800';
+                return 'bg-gray-500';
         }
     };
 
@@ -177,6 +283,26 @@ const ComplaintsPage = () => {
         setOpenCreateModal(true);
     };
 
+    // Get current complaints
+    const indexOfLastComplaint = currentPage * complaintsPerPage;
+    const indexOfFirstComplaint = indexOfLastComplaint - complaintsPerPage;
+    const displayedComplaints = complaints.slice(indexOfFirstComplaint, indexOfLastComplaint);
+
+    // Change page
+    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+    const nextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(currentPage + 1);
+        }
+    };
+
+    const prevPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -191,13 +317,16 @@ const ComplaintsPage = () => {
                 <div className="text-red-500 text-xl mb-4">{error}</div>
                 <button
                     onClick={() => window.location.reload()}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className="px-4 py-2 bg-black text-yellow-300 rounded hover:bg-gray-900"
                 >
                     Retry
                 </button>
             </div>
         );
     }
+
+    // Determine if officer column should be shown
+    const showOfficerCol = user && (user.role === 'OIC' || user.role === 'Crime OIC');
 
     return (
         <div className="bg-gray-100 min-h-screen">
@@ -208,10 +337,10 @@ const ComplaintsPage = () => {
                 onBack={() => navigate(-1)}
                 actions={[
                     {
-                        icon: <Add fontSize='small' className='bg-white text-blue-800 rounded-full' />,
-                        label: 'Create New Complaint',
+                        icon: <Add fontSize='small' className='text-white rounded-full' />,
+                        label: 'Create Complaint',
                         onClick: handleCreateComplaint,
-                        styles: 'h-10 bg-blue-800 text-white border-blue-800'
+                        styles: 'h-10 bg-gray-950 text-white border-black rounded-2xl'
                     }
                 ]}
             />
@@ -225,91 +354,280 @@ const ComplaintsPage = () => {
                     />
                 </div>
 
-                {/* Data Table */}
+                {/* Redesigned Data Table */}
                 <div className="bg-white rounded-xl shadow-md overflow-hidden">
+                    {/* Table Header with count and pagination controls */}
+                    <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex flex-wrap items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                            <h3 className="font-semibold text-gray-700">All Complaints</h3>
+                            <span className="bg-gray-700 text-white text-xs px-2 py-0.5 rounded-full">
+                                {complaints.length}
+                            </span>
+                        </div>
+                        <div className="flex items-center space-x-4">
+                            <div className="flex items-center space-x-2 text-sm text-gray-600">
+                                <span>Show</span>
+                                <select
+                                    className="border border-gray-300 rounded px-2 py-1 bg-white"
+                                    value={complaintsPerPage}
+                                    onChange={(e) => setComplaintsPerPage(Number(e.target.value))}
+                                >
+                                    <option value={10}>10</option>
+                                    <option value={25}>25</option>
+                                    <option value={50}>50</option>
+                                    <option value={100}>100</option>
+
+                                </select>
+                                <span>per page</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Table Content */}
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Complaint ID</th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Complaint Date</th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Officer</th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    <th
+                                        scope="col"
+                                        className={
+                                            showOfficerCol
+                                                ? "px-8 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5"
+                                                : "px-10 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4"
+                                        }
+                                    >
+                                        <div
+                                            className="flex items-center cursor-pointer hover:text-gray-700 transition-colors"
+                                            onClick={() => handleSort('complain_id')}
+                                        >
+                                            <span>Complaint ID</span>
+                                            {getSortIcon('complain_id')}
+                                        </div>
+                                    </th>
+                                    <th
+                                        scope="col"
+                                        className={
+                                            showOfficerCol
+                                                ? "px-8 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/5"
+                                                : "px-10 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/5"
+                                        }
+                                    >
+                                        <span>Description</span>
+                                    </th>
+                                    <th
+                                        scope="col"
+                                        className={
+                                            showOfficerCol
+                                                ? "px-8 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6"
+                                                : "px-10 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4"
+                                        }
+                                    >
+                                        <div
+                                            className="flex items-center cursor-pointer hover:text-gray-700 transition-colors"
+                                            onClick={() => handleSort('complaint_status')}
+                                        >
+                                            <span>Status</span>
+                                            {getSortIcon('complaint_status')}
+                                        </div>
+                                    </th>
+                                    <th
+                                        scope="col"
+                                        className={
+                                            showOfficerCol
+                                                ? "px-8 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5"
+                                                : "px-10 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4"
+                                        }
+                                    >
+                                        <div
+                                            className="flex items-center cursor-pointer hover:text-gray-700 transition-colors"
+                                            onClick={() => handleSort('complain_dt')}
+                                        >
+                                            <span>Complaint Date</span>
+                                            {getSortIcon('complain_dt')}
+                                        </div>
+                                    </th>
+                                    {showOfficerCol && (
+                                        <th
+                                            scope="col"
+                                            className="px-8 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4"
+                                        >
+                                            <span>Officer</span>
+                                        </th>
+                                    )}
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                {complaints.map((complaint) => (
-                                    <tr key={complaint.complain_id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            <Link to={`/complaints/${complaint.complain_id}`} className="hover:underline text-blue-600 font-medium">
-                                                {complaint.complain_id}
-                                            </Link>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-start">
-                                                <Assignment className="mr-2 text-blue-600 mt-1" fontSize="small" />
-                                                <div className="max-w-xs">
-                                                    <span className="text-sm text-gray-900 line-clamp-2">
-                                                        {complaint.description || 'No description available'}
+                                {currentComplaints.length > 0 ? (
+                                    currentComplaints.map((complaint) => (
+                                        <tr
+                                            key={complaint.complain_id}
+                                            className="hover:bg-gray-50 transition-colors cursor-pointer"
+                                            onClick={() => navigate(`/complaints/${complaint.complain_id}`)}
+                                        >
+                                            <td className={showOfficerCol ? "px-8 py-6 whitespace-nowrap text-sm font-medium text-gray-900" : "px-10 py-6 whitespace-nowrap text-sm font-medium text-gray-900"}>
+                                                <Link
+                                                    to={`/complaints/${complaint.complain_id}`}
+                                                    className="hover:underline text-gray-900 flex items-center"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <div className="bg-gray-100 p-2 rounded-lg mr-4 text-gray-900 flex-shrink-0">
+                                                        <Assignment fontSize="small" />
+                                                    </div>
+                                                    <span className="font-semibold">{complaint.complain_id}</span>
+                                                </Link>
+                                            </td>
+                                            <td className={showOfficerCol ? "px-8 py-6" : "px-10 py-6"}>
+                                                <div className="max-w-md">
+                                                    <span className="text-sm text-gray-900 line-clamp-2 leading-relaxed">
+                                                        {
+                                                            (() => {
+                                                                const desc = complaint.description || 'No description available';
+                                                                const words = desc.split(' ');
+                                                                return words.length > 50
+                                                                    ? words.slice(0, 50).join(' ') + '...'
+                                                                    : desc;
+                                                            })()
+                                                        }
                                                     </span>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusStyle(complaint.complaint_status)}`}>
-                                                {getStatusLabel(complaint.complaint_status)}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            <div className="flex items-center">
-                                                <CalendarMonth className="mr-1 text-gray-400" style={{ fontSize: '0.9rem' }} />
-                                                <span>{formatDate(complaint.complain_dt)}</span>
-                                                {complaint.complain_dt && (
-                                                    <>
-                                                        <AccessTime className="ml-2 mr-1 text-gray-400" style={{ fontSize: '0.9rem' }} />
-                                                        <span>{formatTime(complaint.complain_dt)}</span>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                            {complaint.officer_name ? (
+                                            </td>
+                                            <td className={showOfficerCol ? "px-8 py-6 whitespace-nowrap" : "px-10 py-6 whitespace-nowrap"}>
                                                 <div className="flex items-center">
-                                                    <Person className="mr-1 text-gray-400" fontSize="small" />
-                                                    <div>
-                                                        <Link to={`/officers/${complaint.officer_id}`} className="hover:underline text-blue-600">
-                                                            {complaint.officer_name}
-                                                        </Link>
-                                                        <div className="text-gray-500 text-xs mt-1">{complaint.officer_role}</div>
+                                                    <span className={`inline-flex items-center text-sm font-medium text-gray-900`}>
+                                                        <span className={`h-2.5 w-2.5 rounded-full mr-3 flex-shrink-0 ${getStatusDotColor(complaint.complaint_status)}`}></span>
+                                                        {getStatusLabel(complaint.complaint_status)}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className={showOfficerCol ? "px-8 py-6 whitespace-nowrap text-sm text-gray-900" : "px-10 py-6 whitespace-nowrap text-sm text-gray-900"}>
+                                                <div className="flex items-center">
+                                                    <div className="flex bg-gray-100 p-2 rounded-lg mr-3 flex-shrink-0">
+                                                        <CalendarMonth className="text-gray-600" style={{ fontSize: '1rem' }} />
+                                                    </div>
+                                                    <div className="flex flex-col space-y-1">
+                                                        <span className="font-medium">{formatDate(complaint.complain_dt)}</span>
+                                                        {complaint.complain_dt && (
+                                                            <span className="text-xs text-gray-500 flex items-center">
+                                                                <AccessTime className="mr-1.5" style={{ fontSize: '0.75rem' }} />
+                                                                {formatTime(complaint.complain_dt)}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </div>
-                                            ) : (
-                                                <span className="text-gray-400 italic">Not assigned</span>
+                                            </td>
+                                            {showOfficerCol && (
+                                                <td className="px-8 py-6 whitespace-nowrap">
+                                                    <div className="flex items-center">
+                                                        {complaint.officer_id === user.user_id ? (
+                                                            <div className="bg-gray-700 text-white rounded-2xl px-4 py-1 inline-flex items-center">
+                                                                <span className="font-semibold text-sm">You</span>
+                                                            </div>
+                                                        ) : complaint.officer_name ? (
+                                                            <div className="w-full max-w-xs">
+                                                                <OfficerCard
+                                                                    officer={{
+                                                                        id: complaint.officer_id,
+                                                                        name: complaint.officer_name,
+                                                                        role: complaint.officer_role,
+                                                                        profilePic: complaint.officer_profile
+                                                                    }}
+                                                                    size="small"
+                                                                    className="border-0 p-0 hover:bg-transparent"
+                                                                />
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-gray-400 italic">Not assigned</span>
+                                                        )}
+                                                    </div>
+                                                </td>
                                             )}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                            <Link
-                                                to={`/complaints/${complaint.complain_id}`}
-                                                className="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors"
-                                            >
-                                                <Visibility fontSize="small" className="mr-1" />
-                                                View Details
-                                            </Link>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={showOfficerCol ? 5 : 4} className={showOfficerCol ? "px-8 py-16 text-center" : "px-10 py-16 text-center"}>
+                                            <div className="flex flex-col items-center justify-center">
+                                                <div className="rounded-full bg-gray-100 p-4 mb-4">
+                                                    <Assignment className="text-gray-400" style={{ fontSize: '2.5rem' }} />
+                                                </div>
+                                                <p className="text-gray-500 text-lg font-medium">No complaints found</p>
+                                                <p className="text-sm text-gray-400 mt-2">Try adjusting your search criteria</p>
+                                            </div>
                                         </td>
                                     </tr>
-                                ))}
+                                )}
                             </tbody>
                         </table>
                     </div>
-                </div>
 
-                {complaints.length === 0 && (
-                    <div className="text-center py-8 text-gray-500 bg-white rounded-2xl shadow-sm">
-                        No complaints found matching your search criteria
-                    </div>
-                )}
+                    {/* Pagination Controls */}
+                    {complaints.length > 0 && (
+                        <div className="px-6 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+                            <div className="flex-1 flex justify-between sm:hidden">
+                                <button
+                                    onClick={prevPage}
+                                    disabled={currentPage === 1}
+                                    className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md bg-white ${currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-50'}`}
+                                >
+                                    Previous
+                                </button>
+                                <button
+                                    onClick={nextPage}
+                                    disabled={currentPage === totalPages}
+                                    className={`ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md bg-white ${currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-50'}`}
+                                >
+                                    Next
+                                </button>
+                            </div>
+                            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                                <div>
+                                    <p className="text-sm text-gray-700">
+                                        Showing <span className="font-medium">{((currentPage - 1) * complaintsPerPage) + 1}</span> to <span className="font-medium">
+                                            {Math.min(currentPage * complaintsPerPage, complaints.length)}
+                                        </span> of{' '}
+                                        <span className="font-medium">{complaints.length}</span> results
+                                    </p>
+                                </div>
+                                <div>
+                                    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                        <button
+                                            onClick={prevPage}
+                                            disabled={currentPage === 1}
+                                            className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-50'}`}
+                                        >
+                                            <span className="sr-only">Previous</span>
+                                            <NavigateBefore fontSize="small" />
+                                        </button>
+
+                                        {/* Page numbers */}
+                                        {[...Array(totalPages).keys()].map(number => (
+                                            <button
+                                                key={number + 1}
+                                                onClick={() => paginate(number + 1)}
+                                                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium
+                                                    ${currentPage === number + 1
+                                                        ? 'z-10 bg-gray-700 border-gray-700 text-white'
+                                                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                                                    }`}
+                                            >
+                                                {number + 1}
+                                            </button>
+                                        ))}
+
+                                        <button
+                                            onClick={nextPage}
+                                            disabled={currentPage === totalPages}
+                                            className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-50'}`}
+                                        >
+                                            <span className="sr-only">Next</span>
+                                            <NavigateNext fontSize="small" />
+                                        </button>
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Create Complaint Modal Component */}

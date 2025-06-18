@@ -46,10 +46,12 @@ const Dashboard = () => {
   const [recentComplaints, setRecentComplaints] = useState([]);
   const [recentCases, setRecentCases] = useState([]);
   const [officers, setOfficers] = useState([]);
+  const [investigations, setInvestigations] = useState([]); // Add investigations state
   const [statsValues, setStatsValues] = useState([]); //to store the stats count
   const [isLoadingComplaints, setIsLoadingComplaints] = useState(true);
   const [isLoadingCases, setIsLoadingCases] = useState(true);
   const [isLoadingOfficers, setIsLoadingOfficers] = useState(true);
+  const [isLoadingInvestigations, setIsLoadingInvestigations] = useState(true); // Add loading state
   const [isLoadingStats, setIsLoadingStats] = useState(true);
 
   // Add error state variables
@@ -251,18 +253,52 @@ const Dashboard = () => {
   };
 
   // Function to calculate role-based stats from real data
-  const calculateRoleBasedStats = useCallback((role, cases, complaints, officers) => {
+  const calculateRoleBasedStats = useCallback((role, cases, complaints, officers, investigations = []) => {
     const now = new Date();
     const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
-    // Filter current month data
-    const thisMonthCases = cases.filter(c => new Date(c.created_at) >= thisMonth);
-    const lastMonthCases = cases.filter(c =>
-      new Date(c.created_at) >= lastMonth && new Date(c.created_at) < thisMonth
+    // Apply role-based filtering here instead of during fetch
+    let relevantCases = cases;
+    let relevantComplaints = complaints;
+
+    // Role-specific filtering
+    switch (role) {
+      case 'OIC':
+      case 'Crime OIC':
+        // OIC and Crime OIC see ongoing cases and new complaints for stats
+        relevantCases = cases.filter(c => c.case_status === 'inprogress');
+        relevantComplaints = complaints.filter(c => c.complaint_status === 'new');
+        break;
+      case 'Inspector':
+        // Inspector sees their assigned ongoing cases
+        relevantCases = cases.filter(c => c.case_status === 'inprogress' && c.leader_id === user.user_id);
+        relevantComplaints = complaints; // All complaints for general stats
+        break;
+      case 'Sub Inspector':
+        // Sub Inspector sees their assigned ongoing cases
+        relevantCases = cases.filter(c => c.case_status === 'inprogress' && c.assigned_officer_id === user.user_id);
+        relevantComplaints = complaints; // All complaints for general stats
+        break;
+      case 'Sergeant':
+      case 'Police Constable':
+        // Lower ranks see all data for general awareness but filter for their specific metrics
+        relevantCases = cases;
+        relevantComplaints = complaints;
+        break;
+      default:
+        // Default: see all data
+        relevantCases = cases;
+        relevantComplaints = complaints;
+    }
+
+    // Filter current month data based on relevant data
+    const thisMonthCases = relevantCases.filter(c => new Date(c.started_dt || c.created_at) >= thisMonth);
+    const lastMonthCases = relevantCases.filter(c =>
+      new Date(c.started_dt || c.created_at) >= lastMonth && new Date(c.started_dt || c.created_at) < thisMonth
     );
-    const thisMonthComplaints = complaints.filter(c => new Date(c.complain_dt) >= thisMonth);
-    const lastMonthComplaints = complaints.filter(c =>
+    const thisMonthComplaints = relevantComplaints.filter(c => new Date(c.complain_dt) >= thisMonth);
+    const lastMonthComplaints = relevantComplaints.filter(c =>
       new Date(c.complain_dt) >= lastMonth && new Date(c.complain_dt) < thisMonth
     );
 
@@ -281,15 +317,14 @@ const Dashboard = () => {
 
     switch (role) {
       case 'OIC': {
-        const activeCases = cases.filter(c => c.case_status === 'inprogress').length;
-        // Pending Reviews: count of complaints with complaint_status === 'new'
-        const pendingReviews = complaints.filter(c => c.complaint_status === 'new').length;
+        const activeCases = relevantCases.length;
+        const pendingReviews = relevantComplaints.length;
         const activeOfficers = officers.filter(o => o.status === 'active' || !o.status).length;
-        const monthlySolved = cases.filter(c => c.case_status === 'closed' && new Date(c.updated_at) >= thisMonth).length;
+        const monthlySolved = cases.filter(c => c.case_status === 'closed' && new Date(c.end_dt) >= thisMonth).length;
 
-        const lastMonthActiveCases = cases.filter(c => c.case_status === 'inprogress' && new Date(c.created_at) < thisMonth).length;
+        const lastMonthActiveCases = cases.filter(c => c.case_status === 'inprogress' && new Date(c.started_dt || c.created_at) < thisMonth).length;
         const lastMonthSolved = cases.filter(c => c.case_status === 'closed' &&
-          new Date(c.updated_at) >= lastMonth && new Date(c.updated_at) < thisMonth).length;
+          new Date(c.end_dt) >= lastMonth && new Date(c.end_dt) < thisMonth).length;
 
         return [
           {
@@ -300,7 +335,7 @@ const Dashboard = () => {
             color: "blue",
           },
           {
-            title: "Complaints to Review",
+            title: "New Complaints",
             value: pendingReviews,
             change: calculateChange(pendingReviews, 0),
             trend: pendingReviews > 0 ? 'up' : 'stable',
@@ -323,17 +358,11 @@ const Dashboard = () => {
         ];
       }
       case 'Crime OIC': {
-        const activeInvestigations = cases.filter(c =>
-          c.case_status === 'inprogress' &&
-          ['Criminal', 'Murder/Homicide', 'Assault and Battery'].includes(c.case_type)
-        ).length;
-        // Pending Reviews: count of complaints with complaint_status === 'new'
-        const pendingReviews = complaints.filter(c => c.complaint_status === 'new').length;
-        const evidenceItems = cases.reduce((total, c) => total + (c.evidence_count || 0), 0);
-        const investigationTeams = Math.ceil(activeInvestigations / 2); // Estimate 2 cases per team
-        const forensicReports = cases.filter(c =>
-          c.case_status === 'closed' && new Date(c.updated_at) >= thisMonth
-        ).length;
+        // Use ALL ongoing investigations from fetched data
+        const activeInvestigations = investigations.filter(inv => inv.status === 'inprogress').length;
+        const pendingReviews = relevantComplaints.length;
+        const evidenceItems = relevantCases.reduce((total, c) => total + (c.evidence_count || 0), 0);
+        const investigationTeams = Math.ceil(activeInvestigations / 2);
 
         return [
           {
@@ -344,7 +373,7 @@ const Dashboard = () => {
             color: "red",
           },
           {
-            title: "Pending Reviews",
+            title: "New Complaints",
             value: pendingReviews,
             change: calculateChange(pendingReviews, 0),
             trend: pendingReviews > 0 ? 'up' : 'stable',
@@ -364,28 +393,20 @@ const Dashboard = () => {
             trend: "stable",
             color: "green",
           },
-          {
-            title: "Forensic Reports",
-            value: forensicReports,
-            change: calculateChange(forensicReports, 0),
-            trend: forensicReports > 0 ? 'up' : 'stable',
-            color: "purple",
-          },
-        ].slice(0, 4); // Only show 4 cards
+        ];
       }
       case 'Inspector': {
-        const inspectorCases = cases.filter(c => c.assigned_officer_id === user?.id).length;
+        const inspectorCases = relevantCases.length;
         const teamOfficers = officers.filter(o =>
           ['Sub Inspector', 'Sergeant', 'Police Constable'].includes(o.role)
         ).length;
-        const evidenceCollected = cases.filter(c =>
-          c.assigned_officer_id === user?.id && c.evidence_count > 0
-        ).reduce((total, c) => total + c.evidence_count, 0);
-        const reportsFiled = thisMonthCases.filter(c => c.assigned_officer_id === user?.id).length;
+        const evidenceCollected = relevantCases.filter(c => c.evidence_count > 0)
+          .reduce((total, c) => total + c.evidence_count, 0);
+        const reportsFiled = thisMonthCases.length;
 
         return [
           {
-            title: "Assigned Cases",
+            title: "My Active Cases",
             value: inspectorCases,
             change: calculateChange(inspectorCases, 0),
             trend: inspectorCases > 0 ? 'up' : 'stable',
@@ -415,18 +436,14 @@ const Dashboard = () => {
         ];
       }
       case 'Sub Inspector': {
-        const myCases = cases.filter(c => c.assigned_officer_id === user?.id).length;
-        const myEvidence = cases.filter(c => c.assigned_officer_id === user?.id)
-          .reduce((total, c) => total + (c.evidence_count || 0), 0);
-        const witnesses = cases.filter(c => c.assigned_officer_id === user?.id)
-          .reduce((total, c) => total + (c.witness_count || 0), 0);
-        const pendingTasks = cases.filter(c =>
-          c.assigned_officer_id === user?.id && c.case_status === 'inprogress'
-        ).length;
+        const myCases = relevantCases.length;
+        const myEvidence = relevantCases.reduce((total, c) => total + (c.evidence_count || 0), 0);
+        const witnesses = relevantCases.reduce((total, c) => total + (c.witness_count || 0), 0);
+        const pendingTasks = relevantCases.length;
 
         return [
           {
-            title: "My Cases",
+            title: "My Active Cases",
             value: myCases,
             change: calculateChange(myCases, 0),
             trend: myCases > 0 ? 'up' : 'stable',
@@ -455,10 +472,79 @@ const Dashboard = () => {
           },
         ];
       }
+      case 'Sergeant':
+      case 'Police Constable': {
+        // Filter investigations where current user is in the team
+        const myInvestigations = investigations.filter(inv =>
+          inv.officers && inv.officers.includes(user.name)
+        );
+        const ongoingInvestigations = myInvestigations.filter(inv => inv.status === 'inprogress').length;
+
+        // Officer-specific complaints filed by this officer this month
+        const myComplaintsThisMonth = complaints.filter(c =>
+          c.officer_id === user.user_id &&
+          new Date(c.complain_dt) >= thisMonth
+        ).length;
+
+        const myComplaintsLastMonth = complaints.filter(c =>
+          c.officer_id === user.user_id &&
+          new Date(c.complain_dt) >= lastMonth &&
+          new Date(c.complain_dt) < thisMonth
+        ).length;
+
+        // Evidence collected by this officer - you'll need to fetch this from evidence API
+        // For now using a placeholder calculation based on cases they're involved in
+        const evidenceCollected = investigations.filter(inv =>
+          inv.officers && inv.officers.includes(user.name)
+        ).reduce((total, inv) => total + (inv.evidence_count || 0), 0);
+
+        const totalReports = thisMonthComplaints.length; // Keep this for general awareness
+
+        return [
+          {
+            title: "My Investigations",
+            value: ongoingInvestigations,
+            change: calculateChange(ongoingInvestigations, 0),
+            trend: ongoingInvestigations > 0 ? 'up' : 'stable',
+            color: "blue",
+          },
+          {
+            title: "My Reports",
+            value: totalReports,
+            change: calculateChange(totalReports, lastMonthComplaints.length),
+            trend: getTrend(totalReports, lastMonthComplaints.length),
+            color: "green",
+          },
+          {
+            title: "Evidence I Collected",
+            value: evidenceCollected,
+            change: `+${Math.floor(evidenceCollected * 0.1)}`,
+            trend: "up",
+            color: "purple",
+          },
+          {
+            title: "Monthly Complaints Filed",
+            value: myComplaintsThisMonth,
+            change: calculateChange(myComplaintsThisMonth, myComplaintsLastMonth),
+            trend: getTrend(myComplaintsThisMonth, myComplaintsLastMonth),
+            color: "orange",
+          },
+        ];
+      }
       default: {
+        // For other roles, also fix the patrol hours
+        const myComplaintsThisMonth = complaints.filter(c =>
+          c.officer_id === user.user_id &&
+          new Date(c.complain_dt) >= thisMonth
+        ).length;
+
+        const myComplaintsLastMonth = complaints.filter(c =>
+          c.officer_id === user.user_id &&
+          new Date(c.complain_dt) >= lastMonth &&
+          new Date(c.complain_dt) < thisMonth
+        ).length;
+
         const totalReports = thisMonthComplaints.length;
-        const patrolHours = 156; // This would come from patrol logs in real system
-        const incidentsHandled = thisMonthComplaints.length;
         const evidenceCollectedPC = cases.reduce((total, c) => total + (c.evidence_count || 0), 0);
 
         return [
@@ -470,24 +556,24 @@ const Dashboard = () => {
             color: "blue",
           },
           {
-            title: "Patrol Hours",
-            value: patrolHours,
-            change: "+8",
+            title: "Evidence I Collected",
+            value: evidenceCollectedPC,
+            change: `+${Math.floor(evidenceCollectedPC * 0.1)}`,
             trend: "up",
             color: "green",
           },
           {
-            title: "Incidents Handled",
-            value: incidentsHandled,
-            change: calculateChange(incidentsHandled, lastMonthComplaints.length),
-            trend: getTrend(incidentsHandled, lastMonthComplaints.length),
+            title: "Complaints I Filed",
+            value: myComplaintsThisMonth,
+            change: calculateChange(myComplaintsThisMonth, myComplaintsLastMonth),
+            trend: getTrend(myComplaintsThisMonth, myComplaintsLastMonth),
             color: "purple",
           },
           {
-            title: "Evidence Collected",
-            value: evidenceCollectedPC,
-            change: `+${Math.floor(evidenceCollectedPC * 0.1)}`,
-            trend: "up",
+            title: "Cases Assisted",
+            value: cases.filter(c => c.assigned_officer_id === user.user_id || c.leader_id === user.user_id).length,
+            change: "0",
+            trend: "stable",
             color: "orange",
           },
         ];
@@ -496,15 +582,41 @@ const Dashboard = () => {
   }, [user]);
 
   // Generate role-based recent activities from real data
-  const generateRecentActivities = useCallback((role, cases, complaints, officers) => {
+  const generateRecentActivities = useCallback((role, cases, complaints, officers, investigations = []) => {
     const now = new Date();
-    const recentCases = cases.filter(c => {
-      const createdDate = new Date(c.created_at);
+
+    // Apply role-based filtering for activities
+    let relevantCases = cases;
+    let relevantComplaints = complaints;
+
+    switch (role) {
+      case 'OIC':
+      case 'Crime OIC':
+        // Show new complaints and recent ongoing cases
+        relevantComplaints = complaints.filter(c => c.complaint_status === 'new');
+        relevantCases = cases.filter(c => c.case_status === 'inprogress');
+        break;
+      case 'Inspector':
+        // Show their assigned cases
+        relevantCases = cases.filter(c => c.leader_id === user.user_id);
+        break;
+      case 'Sub Inspector':
+        // Show their assigned cases
+        relevantCases = cases.filter(c => c.assigned_officer_id === user.user_id);
+        break;
+      default:
+        // Show all data for general roles
+        relevantCases = cases;
+        relevantComplaints = complaints;
+    }
+
+    const recentCases = relevantCases.filter(c => {
+      const createdDate = new Date(c.started_dt || c.created_at);
       const timeDiff = now - createdDate;
       return timeDiff <= 24 * 60 * 60 * 1000; // Last 24 hours
     }).slice(0, 5);
 
-    const recentComplaints = complaints.filter(c => {
+    const recentComplaints = relevantComplaints.filter(c => {
       const createdDate = new Date(c.complain_dt);
       const timeDiff = now - createdDate;
       return timeDiff <= 24 * 60 * 60 * 1000; // Last 24 hours
@@ -514,13 +626,13 @@ const Dashboard = () => {
 
     switch (role) {
       case 'OIC':
-        // Add pending review activities
+        // Add pending review activities for new complaints
         {
-          const pendingCases = cases.filter(c => c.case_status === 'oicnotreviewed');
-          pendingCases.slice(0, 2).forEach(c => {
+          const pendingComplaints = complaints.filter(c => c.complaint_status === 'new');
+          pendingComplaints.slice(0, 2).forEach(c => {
             activities.push({
-              type: "case_review",
-              title: `Case ${c.case_id} requires review`,
+              type: "complaint_review",
+              title: `Complaint ${c.complain_id} requires review`,
               time: "Pending",
               priority: "high",
             });
@@ -531,7 +643,7 @@ const Dashboard = () => {
             activities.push({
               type: "case_created",
               title: `New case ${c.case_id} created`,
-              time: formatTimeAgo(c.created_at),
+              time: formatTimeAgo(c.started_dt || c.created_at),
               priority: "medium",
             });
           });
@@ -539,17 +651,18 @@ const Dashboard = () => {
         }
 
       case 'Crime OIC':
-        // Add crime-related activities
+        // Add crime-related activities for ongoing cases
         {
           const crimeInvestigations = cases.filter(c =>
+            c.case_status === 'inprogress' &&
             ['Criminal', 'Murder/Homicide', 'Assault and Battery'].includes(c.case_type)
           );
           crimeInvestigations.slice(0, 3).forEach(c => {
             activities.push({
               type: "investigation_update",
-              title: `Investigation for ${c.case_type} case updated`,
-              time: formatTimeAgo(c.updated_at || c.created_at),
-              priority: c.case_status === 'inprogress' ? "high" : "medium",
+              title: `Investigation for ${c.case_type} case ongoing`,
+              time: formatTimeAgo(c.started_dt || c.created_at),
+              priority: "high",
             });
           });
           break;
@@ -558,28 +671,54 @@ const Dashboard = () => {
       case 'Inspector':
         // Add assigned case activities
         {
-          const assignedCases = cases.filter(c => c.assigned_officer_id === user?.id);
-          assignedCases.slice(0, 3).forEach(c => {
+          recentCases.slice(0, 3).forEach(c => {
             activities.push({
               type: "case_assigned",
               title: `Case ${c.case_id} requires attention`,
-              time: formatTimeAgo(c.updated_at || c.created_at),
-              priority: c.case_status === 'inprogress' ? "high" : "medium",
+              time: formatTimeAgo(c.started_dt || c.created_at),
+              priority: "high",
             });
           });
           break;
         }
 
       case 'Sub Inspector':
-        // Add evidence and case activities
+        // Add case activities
         {
-          const myCases = cases.filter(c => c.assigned_officer_id === user?.id);
-          myCases.slice(0, 3).forEach(c => {
+          recentCases.slice(0, 3).forEach(c => {
             activities.push({
               type: "case_progress",
               title: `Case ${c.case_id} status updated`,
-              time: formatTimeAgo(c.updated_at || c.created_at),
-              priority: c.case_status === 'inprogress' ? "medium" : "low",
+              time: formatTimeAgo(c.started_dt || c.created_at),
+              priority: "medium",
+            });
+          });
+          break;
+        }
+
+      case 'Sergeant':
+      case 'Police Constable':
+        // Add investigation activities for these roles
+        {
+          const myInvestigations = investigations.filter(inv =>
+            inv.officers && inv.officers.includes(user.name) && inv.status === 'inprogress'
+          );
+          myInvestigations.slice(0, 3).forEach(inv => {
+            activities.push({
+              type: "investigation_assigned",
+              title: `Investigation: ${inv.topic}`,
+              time: formatTimeAgo(inv.start_dt),
+              priority: "medium",
+            });
+          });
+
+          // Add complaint activities
+          recentComplaints.slice(0, 2).forEach(c => {
+            activities.push({
+              type: "complaint_filed",
+              title: `New complaint filed: ${c.case_type}`,
+              time: formatTimeAgo(c.complain_dt),
+              priority: "medium",
             });
           });
           break;
@@ -645,11 +784,11 @@ const Dashboard = () => {
   }, [user]);
 
   const fetchData = useCallback(async () => {
-    // Fetch complaints
+    // Fetch ALL complaints (no filtering here)
     try {
       const { data } = await apiClient.get('/complaints/getAllComplaints');
       if (data.complaints) {
-        setRecentComplaints(data.complaints);
+        setRecentComplaints(data.complaints); // Store ALL complaints
       }
     }
     catch (error) {
@@ -659,12 +798,11 @@ const Dashboard = () => {
       setIsLoadingComplaints(false);
     }
 
-    // Fetch cases
+    // Fetch ALL cases (no filtering here)
     try {
       const { data } = await apiClient.get('/cases/getAllCases');
       if (data.cases) {
-        const cases = data.cases;
-        setRecentCases(cases);
+        setRecentCases(data.cases); // Store ALL cases
       }
     }
     catch (error) {
@@ -676,6 +814,18 @@ const Dashboard = () => {
       }
     } finally {
       setIsLoadingCases(false);
+    }
+
+    // Fetch ALL investigations (for everyone, not role-based)
+    try {
+      const { data } = await apiClient.get('/investigations/getAllInvestigations');
+      if (data.investigations) {
+        setInvestigations(data.investigations); // Store ALL investigations
+      }
+    } catch (error) {
+      console.error('Error fetching investigations:', error);
+    } finally {
+      setIsLoadingInvestigations(false);
     }
 
     // Fetch officers
@@ -690,21 +840,23 @@ const Dashboard = () => {
     } finally {
       setIsLoadingOfficers(false);
     }
-  }, []);
+  }, []); // Remove user?.role dependency since we're fetching all data
 
   // Effect for initial data fetching - only runs once
   useEffect(() => {
     fetchData();
   }, [fetchData]);  // Calculate stats and activities when data is loaded
   useEffect(() => {
-    if (!isLoadingCases && !isLoadingComplaints && !isLoadingOfficers && user?.role) {
+    if (!isLoadingCases && !isLoadingComplaints && !isLoadingOfficers && !isLoadingInvestigations && user?.role) {
       // Calculate role-based stats
-      const stats = calculateRoleBasedStats(user.role, recentCases, recentComplaints, officers);
+      const stats = calculateRoleBasedStats(user.role, recentCases, recentComplaints, officers, investigations);
       setCalculatedStats(stats);
 
       // Generate recent activities
-      const activities = generateRecentActivities(user.role, recentCases, recentComplaints, officers);
-      setRecentActivities(activities);      // Prepare chart data
+      const activities = generateRecentActivities(user.role, recentCases, recentComplaints, officers, investigations);
+      setRecentActivities(activities);
+
+      // Prepare chart data (only for ongoing cases and new complaints)
       if (recentCases.length > 0) {
         setCaseAnalyticsData(prepareCaseTypeChartData(recentCases, caseTypeFilter));
         setCaseStatusData(prepareStatusChartData(recentCases));
@@ -712,7 +864,7 @@ const Dashboard = () => {
 
       // Set loading stats to false when all calculations are done
       setIsLoadingStats(false);
-    } else if (!isLoadingCases && !isLoadingComplaints && !isLoadingOfficers && !user?.role) {
+    } else if (!isLoadingCases && !isLoadingComplaints && !isLoadingOfficers && !isLoadingInvestigations && !user?.role) {
       // If data is loaded but no user role, still stop loading
       setIsLoadingStats(false);
     }
@@ -720,10 +872,12 @@ const Dashboard = () => {
     isLoadingCases,
     isLoadingComplaints,
     isLoadingOfficers,
+    isLoadingInvestigations,
     user,
     recentCases,
     recentComplaints,
     officers,
+    investigations,
     calculateRoleBasedStats,
     generateRecentActivities,
     prepareCaseTypeChartData,
@@ -755,10 +909,10 @@ const Dashboard = () => {
       setComplaintsChartData(prepareComplaintChartData(recentComplaints, complaintTypeFilter, complaintTimePeriod));
     }
   }, [recentComplaints, complaintTimePeriod, complaintTypeFilter, prepareComplaintChartData]);
-  // Process case data when it loads or filter changes
+  // Process case data when it loads or filter changes - use ALL cases for charts
   useEffect(() => {
     if (recentCases.length > 0) {
-      // Update all chart data that depends on cases
+      // Use ALL cases for chart data, not filtered
       setCaseAnalyticsData(prepareCaseTypeChartData(recentCases, caseTypeFilter));
       setCaseStatusData(prepareStatusChartData(recentCases));
     }
@@ -836,6 +990,7 @@ const Dashboard = () => {
               <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
                 <CustomDropdown
                   options={[
+
                     { value: 'daily', label: 'Daily' },
                     { value: 'weekly', label: 'Weekly' },
                     { value: 'monthly', label: 'Monthly' },
@@ -924,6 +1079,7 @@ const Dashboard = () => {
               </div>
               <CustomDropdown
                 options={[
+
                   { value: 'all', label: 'All Case Types' },
                   ...caseTypes.map(type => ({ value: type, label: type }))
                 ]}
