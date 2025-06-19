@@ -1,7 +1,7 @@
 const cors = require("cors");
 require('dotenv').config();
 
-const originURL = process.env.ALLOWED_ORIGINS || 'http://localhost:5173';
+const originURL = process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:5174';
 const allowedOrigins = originURL.split(',').map(origin => origin.trim());
 
 const corsOptions = {

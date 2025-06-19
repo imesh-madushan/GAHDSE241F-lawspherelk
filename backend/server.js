@@ -13,6 +13,7 @@ const criminalRoutes = require("./routes/criminalRoutes");
 const crimeOffenceRoutes = require("./routes/crimeOffenceRoutes");
 const investigationRoutes = require("./routes/investigationRoutes");
 const evidenceRoutes = require("./routes/evidenceRoutes");
+const onlineComplaintRoutes = require("./routes/onlineComplaintRoutes");
 const {
   decryptRequest,
   encryptResponse,
@@ -31,6 +32,7 @@ app.use(encryptResponse);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/complaints", complaintRoutes);
+app.use("/api/complaints/online", onlineComplaintRoutes);
 app.use("/api/cases", caseRoutes);
 app.use("/api/common", commonRoutes);
 app.use("/api/officers", officerRoutes);
