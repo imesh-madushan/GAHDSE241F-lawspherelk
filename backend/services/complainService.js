@@ -309,7 +309,7 @@ exports.createComplaint = async (description, complainer, evidence_details, comp
 
         // Generate batch ID for this operation to track all related changes
         const batchId = await generateBatchId();
-
+    
         const complainId = await generateUniqueId("complaints");
         const evidenceId = await generateUniqueId("evidance");
         const caseId = await generateUniqueId("cases");

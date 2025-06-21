@@ -39,6 +39,7 @@ app.use("/api/crimeoffences", crimeOffenceRoutes);
 app.use("/api/investigations", investigationRoutes);
 app.use("/api/evidences", evidenceRoutes);
 
+
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
