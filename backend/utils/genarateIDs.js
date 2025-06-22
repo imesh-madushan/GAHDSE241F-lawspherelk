@@ -15,6 +15,9 @@ const idPatterns = {
     audit_log:       { prefix: "AUD",  column: "audit_id" },
     attachments:     { prefix: "ATT",  column: "attachment_id" },
     notes:           { prefix: "NOTE",    column: "note_id" },
+    online_complaints: { prefix: "OCMP", column: "complaint_id" },
+    online_complaint_evidence: { prefix: "OEVD", column: "evidence_id" },
+
 };
 
 // Helper to generate a random ID with a prefix and N digits
