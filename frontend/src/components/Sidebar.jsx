@@ -27,6 +27,7 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
     'OIC': [
       { id: 'dashboard', label: 'Dashboard', icon: <Dashboard /> },
       { id: 'complaints', label: 'Complaints', icon: <Description /> },
+      { id: 'onlinecomplaints', label: 'Online Complaints', icon: <Description /> },
       { id: 'cases', label: 'Cases', icon: <Folder /> },
       { id: 'investigations', label: 'Investigations', icon: <Search /> },
       { id: 'evidences', label: 'Evidence', icon: <Inventory2 /> },
@@ -41,6 +42,7 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
     'Crime OIC': [
       { id: 'dashboard', label: 'Dashboard', icon: <Dashboard /> },
       { id: 'complaints', label: 'Complaints', icon: <Description /> },
+      { id: 'onlinecomplaints', label: 'Online Complaints', icon: <Description /> },
       { id: 'cases', label: 'Cases', icon: <Folder /> },
       { id: 'investigations', label: 'Investigations', icon: <Search /> },
       { id: 'evidences', label: 'Evidence', icon: <Inventory2 /> },

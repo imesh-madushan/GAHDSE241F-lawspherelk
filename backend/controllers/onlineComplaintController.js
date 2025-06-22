@@ -4,6 +4,7 @@ const formidable = require("formidable");
 const FormData = require("form-data");
 const fs = require("fs");
 const { generateUniqueId } = require("../utils/genarateIDs");
+const { getUserFromCookies } = require("../middlewares/authMiddleware");
 
 // Configuration for file server
 const FILE_SERVER_URL = "http://localhost:5001"; // Same as evidence system
@@ -11,14 +12,6 @@ const FILE_SERVER_URL = "http://localhost:5001"; // Same as evidence system
 // Create a new online complaint (no authentication required)
 exports.createOnlineComplaint = async (req, res) => {
   try {
-    // Log incoming request for debugging
-    console.log("[INFO] Received body:", req.body);
-    console.log(
-      "[INFO] Received files:",
-      req.files ? req.files.length : 0,
-      "files"
-    );
-
     const complaint_type = req.body.complaint_type?.trim();
     const description = req.body.description?.trim();
     const complainant_full_name = req.body.complainant_full_name?.trim();
@@ -165,26 +158,6 @@ exports.createOnlineComplaintWithFileUpload = async (req, res) => {
       const address = Array.isArray(fields.address)
         ? fields.address[0]
         : fields.address;
-
-      console.log("[INFO] Received body:", {
-        complaint_type,
-        description,
-        complainant_full_name,
-        nic_no,
-        dob,
-        phone_no,
-        email,
-        address,
-      });
-      console.log(
-        "[INFO] Received files:",
-        files.evidence
-          ? Array.isArray(files.evidence)
-            ? files.evidence.length
-            : 1
-          : 0,
-        "files"
-      );
 
       // Validate required fields
       if (
@@ -337,5 +310,235 @@ exports.createOnlineComplaintWithFileUpload = async (req, res) => {
   }
 };
 
-// Add missing package installations note:
-// Make sure to install: npm install formidable form-data axios
+// Get all online complaints (OIC and Crime OIC only)
+exports.getAllOnlineComplaints = async (req, res) => {
+  try {
+    // Check if user has permission
+    const token = req.cookies.authtoken;
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    const user = await getUserFromCookies(token);
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (
+        user.role !== "OIC" &&
+        user.role !== "Crime OIC"
+    ) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Access denied. Only OIC and Crime OIC can view online complaints.",
+      });
+    }
+
+    const { status } = req.query;
+    const result = await onlineComplaintService.getAllOnlineComplaints({
+      status,
+    });
+
+    res.status(200).json({
+      success: true,
+      complaints: result,
+    });
+  } catch (error) {
+    console.error("Error fetching online complaints:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+      error: error.message,
+    });
+  }
+};
+
+// Get single online complaint (OIC and Crime OIC only)
+exports.getOnlineComplaintById = async (req, res) => {
+  try {
+    // Check if user has permission
+     // Check if user has permission
+    const token = req.cookies.authtoken;
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    const user = await getUserFromCookies(token);
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (
+        user.role !== "OIC" &&
+        user.role !== "Crime OIC"
+    ) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Access denied. Only OIC and Crime OIC can view online complaints.",
+      });
+    }
+
+    const { complaintId } = req.params;
+    const result = await onlineComplaintService.getOnlineComplaintWithFiles(
+      complaintId
+    );
+
+    if (!result) {
+      return res.status(404).json({
+        success: false,
+        message: "Online complaint not found.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      complaint: result,
+    });
+  } catch (error) {
+    console.error("Error fetching online complaint:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+      error: error.message,
+    });
+  }
+};
+
+// Search online complaints (OIC and Crime OIC only)
+exports.searchOnlineComplaints = async (req, res) => {
+  try {
+     // Check if user has permission
+    const token = req.cookies.authtoken;
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    const user = await getUserFromCookies(token);
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (
+        user.role !== "OIC" &&
+        user.role !== "Crime OIC"
+    ) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Access denied. Only OIC and Crime OIC can view online complaints.",
+      });
+    }
+
+    const searchParams = req.query;
+    const result = await onlineComplaintService.searchOnlineComplaints(
+      searchParams
+    );
+
+    res.status(200).json({
+      success: true,
+      complaints: result,
+    });
+  } catch (error) {
+    console.error("Error searching online complaints:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+      error: error.message,
+    });
+  }
+};
+
+// Update online complaint (OIC and Crime OIC only)
+exports.updateOnlineComplaint = async (req, res) => {
+  try {
+    // Check if user has permission
+
+    const { complaint_id, description, status } = req.body;
+
+    if (!complaint_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Complaint ID is required.",
+      });
+    }
+
+    const result = await onlineComplaintService.updateOnlineComplaint({
+      complaint_id,
+      description,
+      status,
+      updated_by: req.user.user_id,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Online complaint updated successfully.",
+      result,
+    });
+  } catch (error) {
+    console.error("Error updating online complaint:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+      error: error.message,
+    });
+  }
+};
+
+// Close online complaint (OIC and Crime OIC only)
+exports.closeOnlineComplaint = async (req, res) => {
+  try {
+     // Check if user has permission
+    const token = req.cookies.authtoken;
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    const user = await getUserFromCookies(token);
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (
+        user.role !== "OIC" &&
+        user.role !== "Crime OIC"
+    ) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Access denied. Only OIC and Crime OIC can view online complaints.",
+      });
+    }
+
+    const { complaint_id, case_id } = req.body;
+
+    if (!complaint_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Complaint ID is required.",
+      });
+    }
+
+    const result = await onlineComplaintService.closeOnlineComplaint({
+      complaint_id,
+      case_id,
+      closed_by: req.user.user_id,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Online complaint closed successfully.",
+      result,
+    });
+  } catch (error) {
+    console.error("Error closing online complaint:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+      error: error.message,
+    });
+  }
+};
+
+// ...existing code...

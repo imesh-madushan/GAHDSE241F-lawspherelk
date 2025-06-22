@@ -7,6 +7,8 @@ import SettingsPage from './pages/settings/SettingsPage';
 import Login from './pages/login';
 import SingleCaseView from './pages/cases/SingleCaseView';
 import SingleComplainView from './pages/complaints/SingleComplainView';
+import OnlineComplaintsPage from './pages/onlinecomplaints/OnlineComplaintsPage';
+import SingleOnlineComplaintView from './pages/onlinecomplaints/SingleOnlineComplaintView';
 import CasesPage from './pages/cases/CasesPage';
 import ComplaintsPage from './pages/complaints/ComplaintsPage';
 import CriminalRecord from './pages/criminalrecord/CriminalRecord';
@@ -80,13 +82,14 @@ function App() {
         <Route path="cases" element={<CasesPage />} />
         <Route path="cases/:caseId" element={<SingleCaseView />} />
         <Route path="complaints" element={<ComplaintsPage />} />
-        <Route path="complaints/:complaintId" element={<SingleComplainView />} />
+        <Route path="complaints/:complaintId" element={<SingleComplainView />} />        <Route path="onlinecomplaints" element={<OnlineComplaintsPage />} />
+        <Route path="onlinecomplaints/:complaintId" element={<SingleOnlineComplaintView />} />
         <Route path="criminals" element={<CriminalsPage />} />
         <Route path="criminals/:criminalId" element={<CriminalRecord />} />
         <Route path="crimeoffences" element={<CrimeOffencesPage />} />
         <Route path="crimeoffences/:offenceId" element={<SingleOffenceView />} />
         <Route path="investigations" element={<InvestigationsPage />} />
-        <Route path="investigations/:investigationId" element={<SingleInvestigationView />} />        
+        <Route path="investigations/:investigationId" element={<SingleInvestigationView />} />
         <Route path="evidences" element={<EvidencesPage />} />
         <Route path="evidences/:evidenceId" element={<SingleEvidenceView />} />
         <Route path="notes" element={<NotesPage />} />
