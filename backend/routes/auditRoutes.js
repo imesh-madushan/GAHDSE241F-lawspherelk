@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const { 
+const {
   getAllAuditLogs,
-  searchAuditLogs
+  searchAuditLogs,
 } = require("../controllers/auditController");
 
 // Get all audit logs (optionally filtered by batch ID)
