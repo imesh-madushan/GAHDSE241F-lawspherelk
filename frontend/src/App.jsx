@@ -20,6 +20,7 @@ import AllOfficersPage from './pages/officers/AllOfficersPage';
 import SingleInvestigationView from './pages/investigations/SingleInvestigationView';
 import EvidencesPage from './pages/evidences/EvidencesPage';
 import SingleEvidenceView from './pages/evidences/SingleEvidenceView';
+import NotesPage from './pages/notes/NotesPage';
 import { useAuth } from './contexts/AuthContext';
 
 // Protected Route Component
@@ -83,9 +84,9 @@ function App() {
         <Route path="crimeoffences" element={<CrimeOffencesPage />} />
         <Route path="crimeoffences/:offenceId" element={<SingleOffenceView />} />
         <Route path="investigations" element={<InvestigationsPage />} />
-        <Route path="investigations/:investigationId" element={<SingleInvestigationView />} />
-        <Route path="evidences" element={<EvidencesPage />} />
+        <Route path="investigations/:investigationId" element={<SingleInvestigationView />} />        <Route path="evidences" element={<EvidencesPage />} />
         <Route path="evidences/:evidenceId" element={<SingleEvidenceView />} />
+        <Route path="notes" element={<NotesPage />} />
         <Route path="officers" element={<AllOfficersPage />} />
         <Route path="officers/:officerId" element={<OfficerProfile />} />
         <Route path="recordhistory" element={<div>Record History</div>} />

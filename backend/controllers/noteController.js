@@ -129,6 +129,89 @@ exports.getUnreadNotes = async (req, res) => {
   }
 };
 
+// Get received notes for the logged-in user
+exports.getReceivedNotes = async (req, res) => {
+  try {
+    const token = req.cookies.authtoken;
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    const user = await getUserFromCookies(token);
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // Get received notes
+    const notes = await noteService.getReceivedNotes(user.user_id);
+
+    res.status(200).json({
+      success: true,
+      message: "Received notes fetched successfully",
+      notes,
+    });
+  } catch (error) {
+    console.error("Error fetching received notes:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Get sent notes for the logged-in user
+exports.getSentNotes = async (req, res) => {
+  try {
+    const token = req.cookies.authtoken;
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    const user = await getUserFromCookies(token);
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // Get sent notes
+    const notes = await noteService.getSentNotes(user.user_id);
+
+    res.status(200).json({
+      success: true,
+      message: "Sent notes fetched successfully",
+      notes,
+    });
+  } catch (error) {
+    console.error("Error fetching sent notes:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Search notes
+exports.searchNotes = async (req, res) => {
+  try {
+    const token = req.cookies.authtoken;
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    const user = await getUserFromCookies(token);
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const searchParams = req.query;
+
+    // Search notes
+    const notes = await noteService.searchNotes(searchParams, user.user_id);
+
+    res.status(200).json({
+      success: true,
+      message: "Notes search completed successfully",
+      notes,
+    });
+  } catch (error) {
+    console.error("Error searching notes:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 // Mark a note as read
 exports.markNoteAsRead = async (req, res) => {
   try {

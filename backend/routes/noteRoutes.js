@@ -4,6 +4,9 @@ const {
   createNote,
   getNotesByReference,
   getUnreadNotes,
+  getReceivedNotes,
+  getSentNotes,
+  searchNotes,
   markNoteAsRead,
   deleteNote,
 } = require("../controllers/noteController");
@@ -16,6 +19,15 @@ router.get("/reference/:reference_table/:reference_id", getNotesByReference);
 
 // Get unread notes for the logged-in user
 router.get("/unread", getUnreadNotes);
+
+// Get received notes for the logged-in user
+router.get("/received", getReceivedNotes);
+
+// Get sent notes for the logged-in user
+router.get("/sent", getSentNotes);
+
+// Search notes
+router.get("/search", searchNotes);
 
 // Mark a note as read
 router.put("/read/:note_id", markNoteAsRead);

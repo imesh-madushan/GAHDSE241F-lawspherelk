@@ -145,6 +145,143 @@ exports.getUnreadNotes = async (userId) => {
   }
 };
 
+// Get received notes for a user
+exports.getReceivedNotes = async (userId) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT 
+        n.note_id,
+        n.reference_table,
+        n.reference_id,
+        n.description,
+        n.created_dt,
+        n.read_status,
+        u1.name AS created_by_name,
+        u1.role AS created_by_role,
+        u1.profile_pic AS created_by_profile,
+        u2.name AS receiver_name,
+        u2.role AS receiver_role,
+        u2.profile_pic AS receiver_profile
+      FROM notes n
+      LEFT JOIN users u1 ON n.created_by = u1.user_id
+      LEFT JOIN users u2 ON n.receiver_id = u2.user_id
+      WHERE n.receiver_id = ?
+      ORDER BY n.created_dt DESC`,
+      [userId]
+    );
+
+    return rows;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Get sent notes for a user
+exports.getSentNotes = async (userId) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT 
+        n.note_id,
+        n.reference_table,
+        n.reference_id,
+        n.description,
+        n.created_dt,
+        n.read_status,
+        u1.name AS created_by_name,
+        u1.role AS created_by_role,
+        u1.profile_pic AS created_by_profile,
+        u2.name AS receiver_name,
+        u2.role AS receiver_role,
+        u2.profile_pic AS receiver_profile
+      FROM notes n
+      LEFT JOIN users u1 ON n.created_by = u1.user_id
+      LEFT JOIN users u2 ON n.receiver_id = u2.user_id
+      WHERE n.created_by = ?
+      ORDER BY n.created_dt DESC`,
+      [userId]
+    );
+
+    return rows;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Search notes for a user
+exports.searchNotes = async (searchParams, userId) => {
+  try {
+    let query = `
+      SELECT 
+        n.note_id,
+        n.reference_table,
+        n.reference_id,
+        n.description,
+        n.created_dt,
+        n.read_status,
+        u1.name AS created_by_name,
+        u1.role AS created_by_role,
+        u1.profile_pic AS created_by_profile,
+        u2.name AS receiver_name,
+        u2.role AS receiver_role,
+        u2.profile_pic AS receiver_profile
+      FROM notes n
+      LEFT JOIN users u1 ON n.created_by = u1.user_id
+      LEFT JOIN users u2 ON n.receiver_id = u2.user_id
+      WHERE (n.created_by = ? OR n.receiver_id = ?)
+    `;
+
+    const params = [userId, userId];
+
+    // Add search conditions
+    if (searchParams.description) {
+      query += ` AND n.description LIKE ?`;
+      params.push(`%${searchParams.description}%`);
+    }
+
+    if (searchParams.receiver_id) {
+      query += ` AND n.receiver_id = ?`;
+      params.push(searchParams.receiver_id);
+    }
+
+    if (searchParams.reference_id) {
+      query += ` AND n.reference_id = ?`;
+      params.push(searchParams.reference_id);
+    }
+
+    if (searchParams.reference_table) {
+      query += ` AND n.reference_table = ?`;
+      params.push(searchParams.reference_table);
+    }
+
+    // Filter by note type (received/sent)
+    if (searchParams.note_type) {
+      if (searchParams.note_type === "received") {
+        query += ` AND n.receiver_id = ?`;
+        params.push(userId);
+      } else if (searchParams.note_type === "sent") {
+        query += ` AND n.created_by = ?`;
+        params.push(userId);
+      }
+    }
+
+    // Filter by read status
+    if (searchParams.read_status && searchParams.read_status !== "all") {
+      if (searchParams.read_status === "unread") {
+        query += ` AND n.read_status = FALSE`;
+      } else if (searchParams.read_status === "read") {
+        query += ` AND n.read_status = TRUE`;
+      }
+    }
+
+    query += ` ORDER BY n.created_dt DESC`;
+
+    const [rows] = await db.query(query, params);
+    return rows;
+  } catch (error) {
+    throw error;
+  }
+};
+
 // Mark a note as read
 exports.markNoteAsRead = async (noteId, userId) => {
   const connection = await db.getConnection();
