@@ -3,7 +3,6 @@ import { DeviceHub, Attachment, FormatListBulleted, Assignment, Gavel } from '@m
 
 const TabNavigation = ({ activeTab, setActiveTab, tabCounts = {} }) => {
     const tabs = [
-        { id: 'overview', icon: <DeviceHub fontSize="small" />, label: 'Overview' },
         { id: 'evidence', icon: <Attachment fontSize="small" />, label: 'Evidence' },
         { id: 'investigations', icon: <FormatListBulleted fontSize="small" />, label: 'Investigations' },
         { id: 'offences', icon: <Gavel fontSize="small" />, label: 'Offences' },
@@ -24,14 +23,6 @@ const TabNavigation = ({ activeTab, setActiveTab, tabCounts = {} }) => {
                     >
                         <span className="mr-2 flex items-center justify-center">{tab.icon}</span>
                         <span className="font-medium">{tab.label}</span>
-                        {tab.id !== 'overview' && tabCounts[tab.id] > 0 && (
-                            <span className={`ml-2 px-2.5 py-1 text-xs font-semibold rounded-full min-w-[22px] h-6 flex items-center justify-center
-                                ${activeTab === tab.id
-                                    ? 'bg-blue-200 text-blue-700'
-                                    : 'bg-gray-200 text-gray-600'}`}>
-                                {tabCounts[tab.id]}
-                            </span>
-                        )}
                     </button>
                 ))}
             </div>
