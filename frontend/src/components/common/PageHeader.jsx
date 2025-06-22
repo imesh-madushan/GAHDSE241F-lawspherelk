@@ -17,15 +17,16 @@ const PageHeader = ({
                 {/* Breadcrumb */}
                 <Breadcrumb items={breadcrumbItems} />
 
-                {/* Title section */}
-                <div className="flex justify-between items-center mt-2">
+                {/* Title section */}                <div className="flex justify-between items-center mt-2">
                     <div className="flex items-center">
-                        <button
-                            className="flex mr-3 p-2 rounded-full hover:bg-gray-100 transition-colors"
-                            onClick={onBack}
-                        >
-                            <ArrowBack />
-                        </button>
+                        {onBack && (
+                            <button
+                                className="flex mr-3 p-2 rounded-full hover:bg-gray-100 transition-colors"
+                                onClick={onBack}
+                            >
+                                <ArrowBack />
+                            </button>
+                        )}
                         <h1 className="text-xl font-bold text-gray-800">
                             {title}
                         </h1>

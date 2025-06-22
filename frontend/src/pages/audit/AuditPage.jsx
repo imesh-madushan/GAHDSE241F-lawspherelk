@@ -198,13 +198,10 @@ const AuditPage = () => {
     const breadcrumbItems = [
         { label: 'Dashboard', link: '/dashboard' },
         { label: 'Audit Logs' }
-    ];
-
-    // If details view is active, show the details component
+    ];    // If details view is active, show the details component
     if (detailsView && selectedBatchId) {
         return (
-            <div className="container mx-auto px-4 py-8">
-                <PageHeader
+            <div className="container mx-auto px-4 py-8">                <PageHeader
                     title="Audit Log Details"
                     breadcrumbItems={[
                         ...breadcrumbItems,
@@ -212,7 +209,10 @@ const AuditPage = () => {
                     ]}
                     onBack={handleBackToList}
                 />
-                <AuditLogDetailsView batchId={selectedBatchId} onBack={handleBackToList} />
+                <AuditLogDetailsView 
+                    batchId={selectedBatchId} 
+                    onBack={handleBackToList} 
+                />
             </div>
         );
     }

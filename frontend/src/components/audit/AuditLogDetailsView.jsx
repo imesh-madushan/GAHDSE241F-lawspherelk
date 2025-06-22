@@ -17,7 +17,7 @@ import { format } from 'date-fns';
 import Spinner from '../Spinner';
 import { exportBatchDetailsToCSV } from '../../utils/exportUtils';
 
-const AuditLogDetailsView = ({ batchId }) => {
+const AuditLogDetailsView = ({ batchId, onBack }) => {
     const [auditDetails, setAuditDetails] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -25,8 +25,8 @@ const AuditLogDetailsView = ({ batchId }) => {
     const [filters, setFilters] = useState({
         table: 'all',
         action: 'all',
-    });
-    const [searchTerm, setSearchTerm] = useState('');    const [expandedRecords, setExpandedRecords] = useState({});
+    });    const [searchTerm, setSearchTerm] = useState('');
+    const [expandedRecords, setExpandedRecords] = useState({});
     const [copiedField, setCopiedField] = useState(null);
     
     useEffect(() => {
@@ -216,10 +216,21 @@ const AuditLogDetailsView = ({ batchId }) => {
         );
     }
 
-    return (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    return (        <div className="bg-white rounded-lg shadow-md overflow-hidden">
             {/* Header with basic info */}
-            <div className="p-6 border-b">                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+            <div className="p-6 border-b">
+                <div className="flex items-center mb-4">
+                    <button
+                        onClick={onBack}
+                        className="mr-4 bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-full transition-colors"
+                        aria-label="Go back"
+                    >
+                        <ChevronRight className="transform rotate-180" />
+                    </button>
+                    <h2 className="text-xl font-semibold text-gray-800">Audit Log Details</h2>
+                </div>
+                
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
                     <div className="flex items-center mb-4 md:mb-0">
                         <div className="p-3 bg-blue-100 rounded-full mr-4">
                             <History className="text-blue-600" />

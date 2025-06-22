@@ -11,16 +11,16 @@ const AuditBatchCard = ({ batch, onClick }) => {
             console.log('Date formatting error:', error);
             return 'N/A';
         }
-    };
-
-    const formatTime = (dateString) => {
+    };    const formatTime = (dateString) => {
         try {
             return format(new Date(dateString), 'h:mm a');
         } catch (error) {
             console.log('Time formatting error:', error);
             return 'N/A';
         }
-    };    const timeAgo = (dateString) => {
+    };
+    
+    const timeAgo = (dateString) => {
         try {
             return formatDistanceToNow(new Date(dateString), { addSuffix: true });
         } catch (error) {
