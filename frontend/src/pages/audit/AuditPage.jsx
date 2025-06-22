@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     History,
     Search,
@@ -16,7 +17,6 @@ import { apiClient } from '../../config/apiConfig';
 import PageHeader from '../../components/common/PageHeader';
 import SearchInterface from '../../components/searchsection/SearchInterface';
 import AuditBatchCard from '../../components/audit/AuditBatchCard';
-import AuditLogDetailsView from '../../components/audit/AuditLogDetailsView';
 import Spinner from '../../components/Spinner';
 import { exportAuditLogsToCSV } from '../../utils/exportUtils';
 // Commented out until needed for permission checks
@@ -31,8 +31,7 @@ const AuditPage = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [sortField, setSortField] = useState('changedAt');
     const [sortOrder, setSortOrder] = useState('desc');
-    const [selectedBatchId, setSelectedBatchId] = useState(null);
-    const [detailsView, setDetailsView] = useState(false);
+    const navigate = useNavigate();
     
     // User auth context - can be used for permission checks if needed
     // const { user } = useAuth();
@@ -176,18 +175,9 @@ const AuditPage = () => {
         const indexOfLastLog = currentPage * logsPerPage;
         const indexOfFirstLog = indexOfLastLog - logsPerPage;
         return sortedLogs.slice(indexOfFirstLog, indexOfLastLog);
-    };
-
-    // Handle view details
+    };    // Handle view details
     const handleViewDetails = (batchId) => {
-        setSelectedBatchId(batchId);
-        setDetailsView(true);
-    };
-
-    // Handle back from details view
-    const handleBackToList = () => {
-        setDetailsView(false);
-        setSelectedBatchId(null);
+        navigate(`/audit/${batchId}`);
     };    // Pagination controls
     const handlePageChange = (page) => {
         setCurrentPage(page);
@@ -196,26 +186,8 @@ const AuditPage = () => {
 
     // Breadcrumb items
     const breadcrumbItems = [
-        { label: 'Dashboard', link: '/dashboard' },
-        { label: 'Audit Logs' }
-    ];    // If details view is active, show the details component
-    if (detailsView && selectedBatchId) {
-        return (
-            <div className="container mx-auto px-4 py-8">                <PageHeader
-                    title="Audit Log Details"
-                    breadcrumbItems={[
-                        ...breadcrumbItems,
-                        { label: 'Details' }
-                    ]}
-                    onBack={handleBackToList}
-                />
-                <AuditLogDetailsView 
-                    batchId={selectedBatchId} 
-                    onBack={handleBackToList} 
-                />
-            </div>
-        );
-    }
+        { label: 'Dashboard', link: '/dashboard' },        { label: 'Audit Logs' }
+    ];
 
     return (
         <div className="container mx-auto px-4 py-8">
