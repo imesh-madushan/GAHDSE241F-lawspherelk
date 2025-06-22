@@ -19,13 +19,12 @@ const EvidenceTab = ({ offence, formatDate, canAddEvidence }) => {
                     {evidence.map((item) => (
                         <div
                             key={item.evidence_id}
-                            className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors bg-white"
+                            className="border border-gray-200 rounded-lg p-4 hover:border-gray-400 transition-colors bg-white"
                         >
                             <div className="flex justify-between items-start">
-                                <div className="flex items-start flex-1">
-                                    <div className="bg-indigo-100 p-2 rounded-lg mr-3 flex-shrink-0">
-                                        <Assignment className="text-indigo-700" fontSize="small" />
-                                    </div>
+                                <div className="flex items-start flex-1">                                    <div className="bg-gray-200 p-2 rounded-lg mr-3 flex-shrink-0">
+                                    <Assignment className="text-gray-700" fontSize="small" />
+                                </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between mb-2">
                                             <h4 className="font-medium text-gray-900">{item.type}</h4>
@@ -58,14 +57,13 @@ const EvidenceTab = ({ offence, formatDate, canAddEvidence }) => {
                                     </div>
                                 </div>
 
-                                <div className="ml-3 flex-shrink-0">
-                                    <Link
-                                        to={`/evidences/${item.evidence_id}`}
-                                        className="inline-flex items-center px-3 py-1.5 text-sm bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
-                                    >
-                                        <RemoveRedEye className="h-4 w-4 mr-1" />
-                                        View
-                                    </Link>
+                                <div className="ml-3 flex-shrink-0">                                    <Link
+                                    to={`/evidences/${item.evidence_id}`}
+                                    className="inline-flex items-center px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                                >
+                                    <RemoveRedEye className="h-4 w-4 mr-1" />
+                                    View
+                                </Link>
                                 </div>
                             </div>
                         </div>

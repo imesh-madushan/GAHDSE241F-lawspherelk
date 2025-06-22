@@ -214,14 +214,13 @@ const OfficerProfile = () => {
         return null;
     }
   };
-
   // Loading state
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="p-6 rounded-xl bg-white shadow-lg">
           <div className="flex flex-col items-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-800 mb-4"></div>
             <p className="text-lg text-gray-700">Loading officer profile...</p>
           </div>
         </div>
@@ -240,10 +239,9 @@ const OfficerProfile = () => {
               {error
                 ? error
                 : "Officer not found"}
-            </p>
-            <button
+            </p>            <button
               onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
             >
               Retry
             </button>
@@ -282,27 +280,25 @@ const OfficerProfile = () => {
               icon: <Edit fontSize='small' />,
               label: 'Edit Officer',
               onClick: handleEditToggle,
-              styles: 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
+              styles: 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
             },
             isEditing ? {
               icon: <Save fontSize='small' />,
               label: 'Save Changes',
               onClick: handleSaveChanges,
-              styles: 'bg-green-600 text-white border-green-600 hover:bg-green-700'
+              styles: 'bg-gray-800 text-white border-gray-800 hover:bg-gray-900'
             } : null
           ].filter(Boolean) : []),
-          {
-            icon: <History fontSize='small' />,
-            onClick: () => navigate(`/recordhistory/user/${officerId}`),
-            styles: 'bg-white rounded-full text-gray-700 border-purple-600'
-          }
+          // {            icon: <History fontSize='small' />,
+          //   onClick: () => navigate(`/recordhistory/user/${officerId}`),
+          //   styles: 'bg-white rounded-full text-gray-700 border-gray-600'
+          // }
         ]}
       />
 
-      <div className="container mx-auto px-4 py-6">
-        {/* Profile Header with Hero Banner */}
-        <div className="bg-gradient-to-r from-blue-700 to-blue-900 rounded-t-xl shadow-md relative overflow-hidden">
-          <div className="absolute inset-0 bg-blue-900 opacity-20 z-0"></div>
+      <div className="container mx-auto px-4 py-6">        {/* Profile Header with Hero Banner */}
+        <div className="bg-gray-800 rounded-t-xl shadow-md relative overflow-hidden">
+          <div className="absolute inset-0 bg-gray-900 opacity-20 z-0"></div>
           <div className="relative px-8 py-6 flex flex-col md:flex-row items-center md:items-start text-white">
             {/* Profile Photo */}
             <div className="flex-shrink-0 mb-4 md:mb-0 md:mr-8">
@@ -314,8 +310,7 @@ const OfficerProfile = () => {
                     className="w-full h-full object-cover"
                     onError={(e) => { e.target.src = "/default-profile.png" }}
                   />
-                </div>
-                <div className="absolute flex bottom-0.5 right-0.5 bg-white text-blue-700 rounded-full p-2 shadow-lg">
+                </div>                <div className="absolute flex bottom-0.5 right-0.5 bg-white text-gray-700 rounded-full p-2 shadow-lg">
                   <VerifiedUser fontSize="small" />
                 </div>
               </div>
@@ -349,25 +344,23 @@ const OfficerProfile = () => {
                     </span>
                   </div>
                 </div>
-              </div>
-
-              {/* Quick Stats */}
+              </div>              {/* Quick Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
                 <div className="bg-white bg-opacity-30 backdrop-blur-sm rounded-lg px-4 py-3 text-center shadow-md">
-                  <div className="text-2xl font-bold text-gray-600 drop-shadow-sm">{officerData.cases?.length || 0}</div>
-                  <div className="text-xs uppercase text-gray-600 font-medium tracking-wider drop-shadow-sm">Cases</div>
+                  <div className="text-2xl font-bold text-gray-800 drop-shadow-sm">{officerData.cases?.length || 0}</div>
+                  <div className="text-xs uppercase text-gray-800 font-medium tracking-wider drop-shadow-sm">Cases</div>
                 </div>
                 <div className="bg-white bg-opacity-30 backdrop-blur-sm rounded-lg px-4 py-3 text-center shadow-md">
-                  <div className="text-2xl font-bold text-gray-600 drop-shadow-sm">{officerData.complaints?.length || 0}</div>
-                  <div className="text-xs uppercase text-gray-600 font-medium tracking-wider drop-shadow-sm">Complaints</div>
+                  <div className="text-2xl font-bold text-gray-800 drop-shadow-sm">{officerData.complaints?.length || 0}</div>
+                  <div className="text-xs uppercase text-gray-800 font-medium tracking-wider drop-shadow-sm">Complaints</div>
                 </div>
                 <div className="bg-white bg-opacity-30 backdrop-blur-sm rounded-lg px-4 py-3 text-center shadow-md">
-                  <div className="text-2xl font-bold text-gray-600 drop-shadow-sm">{officerData.investigations?.length || 0}</div>
-                  <div className="text-xs uppercase text-gray-600 font-medium tracking-wider drop-shadow-sm">Investigations</div>
+                  <div className="text-2xl font-bold text-gray-800 drop-shadow-sm">{officerData.investigations?.length || 0}</div>
+                  <div className="text-xs uppercase text-gray-800 font-medium tracking-wider drop-shadow-sm">Investigations</div>
                 </div>
                 <div className="bg-white bg-opacity-30 backdrop-blur-sm rounded-lg px-4 py-3 text-center shadow-md">
-                  <div className="text-2xl font-bold text-gray-600 drop-shadow-sm">{officerData.evidence?.length || 0}</div>
-                  <div className="text-xs uppercase text-gray-600 font-medium tracking-wider drop-shadow-sm">Evidence</div>
+                  <div className="text-2xl font-bold text-gray-800 drop-shadow-sm">{officerData.evidence?.length || 0}</div>
+                  <div className="text-xs uppercase text-gray-800 font-medium tracking-wider drop-shadow-sm">Evidence</div>
                 </div>
               </div>
             </div>
@@ -377,23 +370,21 @@ const OfficerProfile = () => {
         {/* Contact & Service Info Cards */}
         <div className="bg-white shadow-md p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
           {/* Contact Info */}
-          <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-              <Phone className="h-5 w-5 mr-2 text-blue-600" />
-              Contact Information
-            </h3>
+          <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <Phone className="h-5 w-5 mr-2 text-gray-700" />
+            Contact Information
+          </h3>
             <ul className="space-y-3">
               <li className="flex items-start">
                 <Mail className="h-5 w-5 mr-3 text-gray-500 mt-0.5" />
                 <div>
-                  <p className="text-sm text-gray-500">Email</p>
-                  {isEditing ? (
+                  <p className="text-sm text-gray-500">Email</p>                  {isEditing ? (
                     <input
                       type="email"
                       name="email"
                       value={editedOfficer.email || ""}
                       onChange={handleInputChange}
-                      className="font-medium bg-blue-50 border rounded px-2 py-1"
+                      className="font-medium bg-gray-50 border rounded px-2 py-1"
                       placeholder="Email"
                     />
                   ) : (
@@ -404,14 +395,13 @@ const OfficerProfile = () => {
               <li className="flex items-start">
                 <Phone className="h-5 w-5 mr-3 text-gray-500 mt-0.5" />
                 <div>
-                  <p className="text-sm text-gray-500">Phone</p>
-                  {isEditing ? (
+                  <p className="text-sm text-gray-500">Phone</p>                  {isEditing ? (
                     <input
                       type="text"
                       name="phone"
                       value={editedOfficer.phone || ""}
                       onChange={handleInputChange}
-                      className="font-medium bg-blue-50 border rounded px-2 py-1"
+                      className="font-medium bg-gray-50 border rounded px-2 py-1"
                       placeholder="Phone"
                     />
                   ) : (
@@ -422,14 +412,13 @@ const OfficerProfile = () => {
               <li className="flex items-start">
                 <LocationOn className="h-5 w-5 mr-3 text-gray-500 mt-0.5" />
                 <div>
-                  <p className="text-sm text-gray-500">Address</p>
-                  {isEditing ? (
+                  <p className="text-sm text-gray-500">Address</p>                  {isEditing ? (
                     <input
                       type="text"
                       name="address"
                       value={editedOfficer.address || ""}
                       onChange={handleInputChange}
-                      className="font-medium bg-blue-50 border rounded px-2 py-1"
+                      className="font-medium bg-gray-50 border rounded px-2 py-1"
                       placeholder="Address"
                     />
                   ) : (
@@ -441,11 +430,10 @@ const OfficerProfile = () => {
           </div>
 
           {/* Service Info */}
-          <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-              <LocalPolice className="h-5 w-5 mr-2 text-blue-600" />
-              Service Information
-            </h3>
+          <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <LocalPolice className="h-5 w-5 mr-2 text-gray-700" />
+            Service Information
+          </h3>
             <ul className="space-y-3">
               <li className="flex items-start">
                 <CalendarToday className="h-5 w-5 mr-3 text-gray-500 mt-0.5" />
@@ -465,19 +453,18 @@ const OfficerProfile = () => {
                 <Badge className="h-5 w-5 mr-3 text-gray-500 mt-0.5" />
                 <div>
                   <p className="text-sm text-gray-500">Department</p>
-                  {isEditing ? (
-                    <select
-                      name="role"
-                      value={editedOfficer.role || officerData.role}
-                      onChange={handleInputChange}
-                      className="font-medium bg-blue-50 border rounded px-2 py-1"
-                    >
-                      <option value="OIC">OIC</option>
-                      <option value="Crime OIC">Crime OIC</option>
-                      <option value="Forensic Officer">Forensic Officer</option>
-                      <option value="Sub Inspector">Sub Inspector</option>
-                      <option value="Sergeant">Sergeant</option>
-                    </select>
+                  {isEditing ? (<select
+                    name="role"
+                    value={editedOfficer.role || officerData.role}
+                    onChange={handleInputChange}
+                    className="font-medium bg-gray-50 border rounded px-2 py-1"
+                  >
+                    <option value="OIC">OIC</option>
+                    <option value="Crime OIC">Crime OIC</option>
+                    <option value="Forensic Officer">Forensic Officer</option>
+                    <option value="Sub Inspector">Sub Inspector</option>
+                    <option value="Sergeant">Sergeant</option>
+                  </select>
                   ) : (
                     <p className="font-medium">
                       {officerData.role === 'Crime OIC' ? 'Crime Division' :
@@ -491,21 +478,19 @@ const OfficerProfile = () => {
           </div>
 
           {/* Cases Summary */}
-          <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-              <Gavel className="h-5 w-5 mr-2 text-blue-600" />
-              Case Summary
-            </h3>
+          <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <Gavel className="h-5 w-5 mr-2 text-gray-700" />
+            Case Summary
+          </h3>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Active Cases:</span>
-                <span className="font-semibold text-blue-600">
+                <span className="text-gray-600">Active Cases:</span>                <span className="font-semibold text-gray-700">
                   {officerData.cases?.filter(c => c.status === 'inprogress').length || 0}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Closed Cases:</span>
-                <span className="font-semibold text-green-600">
+                <span className="font-semibold text-gray-700">
                   {officerData.cases?.filter(c => c.status === 'closed').length || 0}
                 </span>
               </div>

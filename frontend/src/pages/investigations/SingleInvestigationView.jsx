@@ -20,7 +20,7 @@ import CreateEvidenceModal from '../../components/modals/CreateEvidenceModal';
 import CreateNoteModal from '../../components/modals/CreateNoteModal';
 
 const investigationStatusList = [
-    { value: 'inprogress', label: 'In Progress', colorVariant: 'blue' },
+    { value: 'inprogress', label: 'In Progress', colorVariant: 'gray' },
     { value: 'closed', label: 'Closed', colorVariant: 'gray' }
 ];
 
@@ -325,13 +325,13 @@ const SingleInvestigationView = () => {
             icon: <Assignment fontSize="small" />,
             label: 'Add Evidence',
             onClick: handleAddEvidence,
-            styles: 'w-full bg-blue-600 text-white hover:bg-blue-700 border-blue-600'
+            styles: 'w-full bg-gray-800 text-white hover:bg-gray-900 border-gray-800'
         }] : []),
         ...(canCreateNote() ? [{
             icon: <Note fontSize="small" />,
             label: 'Add Note',
             onClick: handleCreateNote,
-            styles: 'w-full bg-purple-600 text-white hover:bg-purple-700 border-purple-600'
+            styles: 'w-full bg-gray-700 text-white hover:bg-gray-800 border-gray-700'
         }] : [])
     ];
 
@@ -374,8 +374,7 @@ const SingleInvestigationView = () => {
                     { label: 'Investigations', link: '/investigations' },
                     { label: investigationId.substring(0, 8) }
                 ]}
-                onBack={() => navigate(-1)}
-                actions={[
+                onBack={() => navigate(-1)} actions={[
                     ...(canEdit() ? [
                         isEditing ? {
                             icon: <Cancel fontSize='small' />,
@@ -386,42 +385,39 @@ const SingleInvestigationView = () => {
                             icon: <Edit fontSize='small' />,
                             label: 'Edit Investigation',
                             onClick: handleEditToggle,
-                            styles: 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
+                            styles: 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                         },
                         isEditing ? {
                             icon: <Save fontSize='small' />,
                             label: 'Save Changes',
                             onClick: handleSaveChanges,
-                            styles: 'bg-green-600 text-white border-green-600 hover:bg-green-700'
+                            styles: 'bg-gray-800 text-white border-gray-800 hover:bg-black'
                         } : null
                     ].filter(Boolean) : []),
-                    {
-                        icon: <History fontSize='small' />,
-                        onClick: () => navigate(`/recordhistory/investigation/${investigationId}`),
-                        styles: 'bg-white rounded-full text-gray-700 border-purple-600'
-                    }
+                    // {
+                    //     icon: <History fontSize='small' />,
+                    //     onClick: () => navigate(`/recordhistory/investigation/${investigationId}`),
+                    //     styles: 'bg-white rounded-full text-gray-700 border-gray-600'
+                    // }
                 ]}
             />
 
-            <div className="max-w-7xl mx-auto px-4 py-6">
-                {/* Investigation Header Card */}
+            <div className="max-w-7xl mx-auto px-4 py-6">                {/* Investigation Header Card */}
                 <div className="bg-white rounded-xl shadow-sm mb-6">
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-5 border-b border-gray-100">
+                    <div className="bg-gray-100 p-5 border-b border-gray-200">
                         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                             <div className="flex items-center">
-                                <div className="bg-blue-100 p-3 rounded-lg mr-4">
-                                    <Search className="text-blue-700" />
+                                <div className="bg-gray-300 p-3 rounded-lg mr-4">
+                                    <Search className="text-gray-800" />
                                 </div>
                                 <div>
-                                    <div className="text-gray-500 text-sm font-medium">Investigation Reference</div>
+                                    <div className="text-gray-700 text-sm font-medium uppercase tracking-wide">Investigation Reference</div>
                                     <h1 className="text-xl font-bold text-gray-900">{'#' + investigationId}</h1>
                                 </div>
-                            </div>
-
-                            <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
-                                <div className="flex items-center text-gray-500">
-                                    <CalendarToday className="h-4 w-4 mr-1" />
-                                    <span className="text-sm">Started: {formatDate(investigation.start_dt)}</span>
+                            </div>                            <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
+                                <div className="flex items-center text-gray-700 px-3 py-2 bg-white rounded">
+                                    <CalendarToday className="h-4 w-4 mr-2 text-gray-700" />
+                                    <span className="text-sm font-medium">Started: {formatDate(investigation.start_dt)}</span>
                                 </div>
 
                                 <StatusBadge
@@ -439,10 +435,9 @@ const SingleInvestigationView = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Left Column - Main Content */}
                     <div className="col-span-2 space-y-6">
-                        {/* Investigation Details Card */}
-                        <div className="bg-white rounded-xl shadow-sm p-6">
+                        {/* Investigation Details Card */}                        <div className="bg-white rounded-xl shadow-sm p-6">
                             <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                                <Description className="h-5 w-5 mr-2 text-blue-600" />
+                                <Description className="h-5 w-5 mr-2 text-gray-800" />
                                 Investigation Details
                             </h2>
 
@@ -450,14 +445,13 @@ const SingleInvestigationView = () => {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Topic {isEditing && <span className="text-red-500">*</span>}
-                                    </label>
-                                    {isEditing ? (
+                                    </label>                                    {isEditing ? (
                                         <input
                                             type="text"
                                             name="topic"
                                             value={editedInvestigation.topic || ''}
                                             onChange={handleInputChange}
-                                            className="w-full p-3 border border-blue-300 rounded-lg bg-blue-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-gray-800 focus:border-gray-800"
                                             placeholder="Investigation topic"
                                         />
                                     ) : (
@@ -471,14 +465,13 @@ const SingleInvestigationView = () => {
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         <LocationOn className="w-4 h-4 inline mr-1" />
                                         Location {isEditing && <span className="text-red-500">*</span>}
-                                    </label>
-                                    {isEditing ? (
+                                    </label>                                    {isEditing ? (
                                         <textarea
                                             name="location"
                                             value={editedInvestigation.location || ''}
                                             onChange={handleInputChange}
                                             rows={3}
-                                            className="w-full p-3 border border-blue-300 rounded-lg bg-blue-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                                            className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-gray-800 focus:border-gray-800 resize-none"
                                             placeholder="Investigation location"
                                         />
                                     ) : (
@@ -501,23 +494,22 @@ const SingleInvestigationView = () => {
                             </div>
                         </div>
 
-                        {/* Related Case Card */}
-                        <div className="bg-white rounded-xl shadow-sm p-6">
+                        {/* Related Case Card */}                        <div className="bg-white rounded-xl shadow-sm p-6">
                             <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                                <FolderOpen className="h-5 w-5 mr-2 text-blue-600" />
+                                <FolderOpen className="h-5 w-5 mr-2 text-gray-800" />
                                 Related Case
                             </h2>
 
-                            <div className="border border-blue-100 rounded-lg overflow-hidden">
-                                <div className="bg-blue-50 p-4">
+                            <div className="border border-gray-200 rounded-lg overflow-hidden">
+                                <div className="bg-gray-100 p-4">
                                     <div className="flex justify-between items-start">                                        <div>
-                                        <h4 className="font-medium text-blue-900">Case #{investigation.case_id}</h4>
-                                        <p className="text-blue-700 mt-1">{investigation.case_topic || "No topic available"}</p>
+                                        <h4 className="font-medium text-gray-800">Case #{investigation.case_id}</h4>
+                                        <p className="text-gray-700 mt-1">{investigation.case_topic || "No topic available"}</p>
                                     </div>
                                         {canViewRelatedCase() && (
                                             <Link
                                                 to={`/cases/${investigation.case_id}`}
-                                                className="bg-blue-100 text-blue-700 hover:bg-blue-200 p-2 rounded-lg transition-colors"
+                                                className="bg-gray-200 text-gray-800 hover:bg-gray-300 p-2 rounded-lg transition-colors"
                                             >
                                                 <BusinessCenter className="h-5 w-5" />
                                             </Link>
@@ -528,7 +520,7 @@ const SingleInvestigationView = () => {
                                 <div className="p-4 bg-white">
                                     <div className="flex items-center mb-4">
                                         <span className="text-sm text-gray-500">Type:</span>
-                                        <span className="ml-2 bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                                        <span className="ml-2 bg-gray-200 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">
                                             {investigation.case_type || "N/A"}
                                         </span>
                                     </div>
@@ -553,8 +545,7 @@ const SingleInvestigationView = () => {
                                                     role: investigation.case_leader_role,
                                                     type: "Case Leader"
                                                 }}
-                                                size="small"
-                                                className="border border-gray-100 hover:border-blue-300"
+                                                size="small" className="border border-gray-100 hover:border-gray-300"
                                             />
                                         </div>
                                     )}
@@ -562,41 +553,39 @@ const SingleInvestigationView = () => {
                             </div>
                         </div>
 
-                        {/* Evidence Card - Remove the Add Evidence button */}
-                        <div className="bg-white rounded-xl shadow-sm p-6">
+                        {/* Evidence Card - Remove the Add Evidence button */}                        <div className="bg-white rounded-xl shadow-sm p-6">
                             <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                                <Assignment className="h-5 w-5 mr-2 text-blue-600" />
+                                <Assignment className="h-5 w-5 mr-2 text-gray-800" />
                                 Evidence ({investigation.evidence?.length || 0})
                             </h2>
 
                             {investigation.evidence && investigation.evidence.length > 0 ? (
                                 <div className="space-y-3">
-                                    {investigation.evidence.map((evidence) => (
-                                        <div key={evidence.evidence_id} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
-                                            <div className="flex justify-between items-start">
-                                                <div className="flex items-start">
-                                                    <div className="bg-indigo-100 p-2 rounded-lg mr-3">
-                                                        <Assignment className="text-indigo-700" />
-                                                    </div>
-                                                    <div>
-                                                        <h4 className="font-medium text-gray-900">{evidence.type}</h4>
-                                                        <p className="text-gray-600 mt-1">{evidence.details}</p>
-                                                        {evidence.location && (
-                                                            <p className="text-gray-500 text-sm mt-1">
-                                                                <LocationOn className="h-3 w-3 inline mr-1" />
-                                                                {evidence.location}
-                                                            </p>
-                                                        )}
-                                                        <p className="text-gray-500 text-xs mt-2">
-                                                            Collected by: {evidence.officer_name} • {formatDate(evidence.collected_dt)}
-                                                        </p>
-                                                    </div>
+                                    {investigation.evidence.map((evidence) => (<div key={evidence.evidence_id} className="border border-gray-200 rounded-lg p-4 hover:border-gray-400 transition-colors">
+                                        <div className="flex justify-between items-start">
+                                            <div className="flex items-start">
+                                                <div className="bg-gray-200 p-2 rounded-lg mr-3">
+                                                    <Assignment className="text-gray-800" />
                                                 </div>
-                                                <div className="bg-gray-100 text-xs text-gray-600 px-2 py-1 rounded-md whitespace-nowrap">
-                                                    {evidence.evidence_id}
+                                                <div>
+                                                    <h4 className="font-medium text-gray-900">{evidence.type}</h4>
+                                                    <p className="text-gray-600 mt-1">{evidence.details}</p>
+                                                    {evidence.location && (
+                                                        <p className="text-gray-500 text-sm mt-1">
+                                                            <LocationOn className="h-3 w-3 inline mr-1" />
+                                                            {evidence.location}
+                                                        </p>
+                                                    )}
+                                                    <p className="text-gray-500 text-xs mt-2">
+                                                        Collected by: {evidence.officer_name} • {formatDate(evidence.collected_dt)}
+                                                    </p>
                                                 </div>
                                             </div>
+                                            <div className="bg-gray-100 text-xs text-gray-600 px-2 py-1 rounded-md whitespace-nowrap">
+                                                {evidence.evidence_id}
+                                            </div>
                                         </div>
+                                    </div>
                                     ))}
                                 </div>
                             ) : (
@@ -610,18 +599,17 @@ const SingleInvestigationView = () => {
 
                     {/* Right Column - Officers and Quick Actions */}
                     <div className="col-span-1 space-y-6">
-                        {/* Investigation Officers Card */}
-                        <div className="bg-white rounded-xl shadow-sm ">
-                            <div className="bg-gradient-to-r from-gray-50 to-blue-50 px-6 py-4 border-b border-gray-100">
+                        {/* Investigation Officers Card */}                        <div className="bg-white rounded-xl shadow-sm ">
+                            <div className="bg-gray-100 px-6 py-4 border-b border-gray-200">
                                 <div className="flex justify-between items-center">
                                     <h2 className="font-semibold text-gray-800 flex items-center">
-                                        <Group className="h-5 w-5 mr-2 text-blue-600" />
+                                        <Group className="h-5 w-5 mr-2 text-gray-800" />
                                         Officers ({investigation.officers?.length || 0})
                                     </h2>
                                     {canManageOfficers() && !showAddOfficer && (
                                         <button
                                             onClick={() => setShowAddOfficer(true)}
-                                            className="flex bg-blue-600  hover:cursor-pointer text-white p-1 rounded-full hover:bg-blue-700 transition-colors"
+                                            className="flex bg-gray-800 hover:cursor-pointer text-white p-1 rounded-full hover:bg-black transition-colors"
                                         >
                                             <Add fontSize="small" />
                                         </button>
@@ -629,41 +617,39 @@ const SingleInvestigationView = () => {
                                 </div>
                             </div>
 
-                            <div className="p-6">
-                                {showAddOfficer && canManageOfficers() && (
-                                    <div className="mb-4 p-4 rounded-lg border border-blue-200">
-                                        <div className="text-sm font-medium text-gray-700 mb-2">Add More Officers to Investigation</div>
-                                        <CustomOfficerDropdown
-                                            filters={{
-                                                dropRoles: ['OIC', 'Crime OIC'],
-                                                dropIds: investigation.officers?.map(o => o.user_id) || []
+                            <div className="p-6">                                {showAddOfficer && canManageOfficers() && (
+                                <div className="mb-4 p-4 rounded-lg border border-gray-200">
+                                    <div className="text-sm font-medium text-gray-700 mb-2">Add More Officers to Investigation</div>
+                                    <CustomOfficerDropdown
+                                        filters={{
+                                            dropRoles: ['OIC', 'Crime OIC'],
+                                            dropIds: investigation.officers?.map(o => o.user_id) || []
+                                        }}
+                                        selectedOfficerId={selectedOfficerToAdd?.id}
+                                        onOfficerSelect={setSelectedOfficerToAdd}
+                                        setError={() => { }}
+                                        className="mb-3"
+                                    />
+                                    <div className="flex gap-2">                                            <OutlinedButton
+                                        action={{
+                                            label: 'Add',
+                                            onClick: handleAddOfficer,
+                                            styles: 'bg-gray-800 text-white hover:bg-black',
+                                        }}
+                                    />
+                                        <OutlinedButton
+                                            action={{
+                                                label: 'Cancel',
+                                                onClick: () => {
+                                                    setShowAddOfficer(false);
+                                                    setSelectedOfficerToAdd(null);
+                                                },
+                                                styles: 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                             }}
-                                            selectedOfficerId={selectedOfficerToAdd?.id}
-                                            onOfficerSelect={setSelectedOfficerToAdd}
-                                            setError={() => { }}
-                                            className="mb-3"
                                         />
-                                        <div className="flex gap-2">
-                                            <OutlinedButton
-                                                action={{
-                                                    label: 'Add',
-                                                    onClick: handleAddOfficer,
-                                                    styles: 'bg-blue-600 text-white hover:bg-blue-700',
-                                                }}
-                                            />
-                                            <OutlinedButton
-                                                action={{
-                                                    label: 'Cancel',
-                                                    onClick: () => {
-                                                        setShowAddOfficer(false);
-                                                        setSelectedOfficerToAdd(null);
-                                                    },
-                                                    styles: 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                                }}
-                                            />
-                                        </div>
                                     </div>
-                                )}
+                                </div>
+                            )}
 
                                 {investigation.officers && investigation.officers.length > 0 ? (
                                     <div className="space-y-3">
@@ -676,8 +662,7 @@ const SingleInvestigationView = () => {
                                                         profilePic: officer.profile_pic,
                                                         type: "Investigation Officer"
                                                     }}
-                                                    size="small"
-                                                    className="border border-gray-100 hover:border-blue-300 flex-1"
+                                                    size="small" className="border border-gray-100 hover:border-gray-300 flex-1"
                                                 />
                                                 {canManageOfficers() && (
                                                     <button
@@ -704,12 +689,11 @@ const SingleInvestigationView = () => {
                                 )}
                             </div>
                         </div>
-                        {/* Quick Actions */}
-                        {quickActions.length > 0 && (
+                        {/* Quick Actions */}                        {quickActions.length > 0 && (
                             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                                <div className="bg-gradient-to-r from-gray-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
+                                <div className="bg-gray-100 px-6 py-4 border-b border-gray-200">
                                     <h2 className="font-semibold text-gray-800 flex items-center">
-                                        <DeviceHub className="h-5 w-5 mr-2 text-blue-600" />
+                                        <DeviceHub className="h-5 w-5 mr-2 text-gray-800" />
                                         Quick Actions
                                     </h2>
                                 </div>

@@ -241,20 +241,20 @@ const CreateNoteModal = ({
 
             {/* Modal */}
             {!popup.open && (
-                <div className="relative bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-xl w-full h-fit max-w-3xl max-h-[95vh] overflow-hidden">
+                <div className="relative bg-white rounded-2xl shadow-xl w-full h-fit max-w-3xl max-h-[95vh] overflow-hidden">
                     {/* Header */}
-                    <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white px-6 py-5 flex items-center justify-between">
+                    <div className="bg-gray-800 text-white px-6 py-5 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="bg-white/20 p-2 rounded-lg">
+                            <div className="bg-gray-700 p-2 rounded-lg">
                                 <StickyNote2 className="text-white" />
                             </div>
                             <div>
                                 <h2 className="text-xl font-bold">Create Note</h2>
-                                <p className="text-white/80 text-sm">Send a note about this {getContextDisplayName().toLowerCase()}</p>
+                                <p className="text-gray-100 text-sm">Send a note about this {getContextDisplayName().toLowerCase()}</p>
                             </div>
                         </div>
                         <button
-                            className="hover:bg-white/10 rounded-full p-2 transition-colors"
+                            className="hover:bg-gray-700 rounded-full p-2 transition-colors"
                             onClick={handleClose}
                         >
                             <Close />
@@ -266,20 +266,20 @@ const CreateNoteModal = ({
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {/* Left Column - Context Information */}
                             <div className="space-y-6">
-                                <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-                                    <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center">
-                                        <Description className="mr-2 text-blue-600" />
+                                <div className="bg-gray-100 rounded-xl p-4 border border-gray-200">
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                                        <Description className="mr-2 text-gray-700" />
                                         Note Context
                                     </h3>
 
                                     <div className="space-y-3">
-                                        <div className="bg-white rounded-lg p-4 border border-blue-200">
+                                        <div className="bg-white rounded-lg p-4 border border-gray-200">
                                             <div className="flex items-center gap-2 mb-2">
-                                                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                                                <div className="w-2 h-2 bg-gray-700 rounded-full"></div>
                                                 <span className="text-sm font-medium text-gray-700">Creating note for:</span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
+                                                <span className="bg-gray-200 text-gray-800 text-xs font-medium px-2 py-1 rounded-full">
                                                     {getContextDisplayName()}
                                                 </span>
                                                 <span className="font-semibold text-gray-900">
@@ -293,19 +293,19 @@ const CreateNoteModal = ({
                                             )}
                                         </div>
 
-                                        <div className="bg-gradient-to-br from-blue-100 to-blue-50 rounded-lg p-4 border border-blue-200">
-                                            <h4 className="text-sm font-semibold text-blue-900 mb-2">What happens next?</h4>
-                                            <div className="space-y-1 text-xs text-blue-800">
+                                        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                            <h4 className="text-sm font-semibold text-gray-800 mb-2">What happens next?</h4>
+                                            <div className="space-y-1 text-xs text-gray-700">
                                                 <div className="flex items-start">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mr-2 mt-1.5"></div>
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-gray-700 mr-2 mt-1.5"></div>
                                                     <span>The selected officer will receive your note</span>
                                                 </div>
                                                 <div className="flex items-start">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mr-2 mt-1.5"></div>
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-gray-700 mr-2 mt-1.5"></div>
                                                     <span>They can view it in their notes dashboard</span>
                                                 </div>
                                                 <div className="flex items-start">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mr-2 mt-1.5"></div>
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-gray-700 mr-2 mt-1.5"></div>
                                                     <span>Note will be linked to this {getContextDisplayName().toLowerCase()}</span>
                                                 </div>
                                             </div>
@@ -316,9 +316,9 @@ const CreateNoteModal = ({
 
                             {/* Right Column - Note Details */}
                             <div className="space-y-6">
-                                <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-                                    <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center">
-                                        <Person className="mr-2 text-blue-600" />
+                                <div className="bg-gray-100 rounded-xl p-4 border border-gray-200">
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                                        <Person className="mr-2 text-gray-700" />
                                         Note Details
                                     </h3>
 
@@ -361,7 +361,7 @@ const CreateNoteModal = ({
                                                 placeholder="Enter your note here... (minimum 10 characters)"
                                                 rows={6}
                                                 maxLength={500}
-                                                className={`w-full px-4 py-3 border rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none ${fieldErrors.description ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                                                className={`w-full px-4 py-3 border rounded-lg bg-white focus:ring-2 focus:ring-gray-700 focus:border-gray-700 transition-colors resize-none ${fieldErrors.description ? 'border-red-500 bg-red-50' : 'border-gray-300'
                                                     }`}
                                             />
                                             {fieldErrors.description && (
@@ -392,7 +392,7 @@ const CreateNoteModal = ({
                                     icon: <Send fontSize="small" />,
                                     label: creatingNote ? "Sending..." : "Send Note",
                                     onClick: handleSubmitNote,
-                                    styles: "bg-gradient-to-r from-blue-600 to-blue-800 text-white hover:from-blue-700 hover:to-blue-900 h-11 px-6 shadow-lg",
+                                    styles: "bg-gray-800 text-white hover:bg-black h-11 px-6 shadow-lg",
                                     disabled: creatingNote || !newNote.description.trim() || !newNote.receiver_id
                                 }}
                             />

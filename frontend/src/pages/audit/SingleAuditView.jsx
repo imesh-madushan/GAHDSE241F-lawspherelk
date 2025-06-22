@@ -87,14 +87,12 @@ const SingleAuditView = () => {
         if (batchId) {
             fetchAuditDetails();
         }
-    }, [batchId, fetchAuditDetails]);
-
-    const getActionColor = (actionType) => {
+    }, [batchId, fetchAuditDetails]); const getActionColor = (actionType) => {
         switch (actionType) {
             case 'INSERT':
                 return 'bg-green-100 text-green-700';
             case 'UPDATE':
-                return 'bg-blue-100 text-blue-700';
+                return 'bg-gray-100 text-gray-700';
             case 'DELETE':
                 return 'bg-red-100 text-red-700';
             default:
@@ -271,9 +269,8 @@ const SingleAuditView = () => {
             />
 
             <div className="container mx-auto px-4 py-4">
-                <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                    {/* Header Section with Official Styling */}
-                    <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                <div className="bg-white rounded-xl shadow-md overflow-hidden">                    {/* Header Section with Official Styling */}
+                    <div className="bg-gray-100 border-b border-gray-200">
                         <div className="p-6">
                             {/* Main Header */}
                             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6">
@@ -309,27 +306,25 @@ const SingleAuditView = () => {
                                     size="medium"
                                     className="border-0 hover:bg-gray-50 rounded-lg p-2"
                                 />
-                            </div>
-
-                            {/* Statistics Cards */}
+                            </div>                            {/* Statistics Cards */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="bg-blue-50 rounded-lg p-4">
+                                <div className="bg-gray-100 rounded-lg p-4">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-xs uppercase font-semibold text-blue-700 mb-1 tracking-wide">
+                                            <p className="text-xs uppercase font-semibold text-gray-700 mb-1 tracking-wide">
                                                 Total Changes
                                             </p>
-                                            <p className="text-3xl font-bold text-blue-900">
+                                            <p className="text-3xl font-bold text-gray-900">
                                                 {auditDetails.logs.length}
                                             </p>
                                         </div>
-                                        <div className="p-2 bg-blue-600 rounded-lg">
+                                        <div className="p-2 bg-gray-800 rounded-lg">
                                             <History className="text-white text-xl" />
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="bg-gray-50rounded-lg p-4">
+                                <div className="bg-gray-100 rounded-lg p-4">
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <p className="text-xs uppercase font-semibold text-gray-700 mb-1 tracking-wide">
@@ -339,16 +334,14 @@ const SingleAuditView = () => {
                                                 {uniqueTables.length}
                                             </p>
                                         </div>
-                                        <div className="p-2 bg-gray-600 rounded-lg">
+                                        <div className="p-2 bg-gray-800 rounded-lg">
                                             <TableChart className="text-white text-xl" />
                                         </div>
                                     </div>
-                                </div>
-
-                                <div className="bg-yellow-50 rounded-lg p-4">
+                                </div>                                <div className="bg-gray-100 rounded-lg p-4">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-xs uppercase font-semibold text-yellow-700 mb-1 tracking-wide">
+                                            <p className="text-xs uppercase font-semibold text-gray-700 mb-1 tracking-wide">
                                                 Action Types
                                             </p>
                                             <div className="flex flex-wrap gap-1 mt-2">
@@ -356,9 +349,8 @@ const SingleAuditView = () => {
                                                     <span className="bg-green-100 border border-green-300 text-green-800 text-xs px-2 py-1 rounded-full font-medium">
                                                         {actionCounts.INSERT} INSERT
                                                     </span>
-                                                )}
-                                                {actionCounts.UPDATE && (
-                                                    <span className="bg-blue-100 border border-blue-300 text-blue-800 text-xs px-2 py-1 rounded-full font-medium">
+                                                )}                                                {actionCounts.UPDATE && (
+                                                    <span className="bg-gray-100 border border-gray-300 text-gray-800 text-xs px-2 py-1 rounded-full font-medium">
                                                         {actionCounts.UPDATE} UPDATE
                                                     </span>
                                                 )}
@@ -383,12 +375,11 @@ const SingleAuditView = () => {
                             </div>
 
                             <div className="flex items-center">
-                                <label htmlFor="table-filter" className="text-sm text-gray-600 mr-2">Table:</label>
-                                <select
+                                <label htmlFor="table-filter" className="text-sm text-gray-600 mr-2">Table:</label>                                <select
                                     id="table-filter"
                                     value={filters.table}
                                     onChange={(e) => handleFilterChange('table', e.target.value)}
-                                    className="border border-gray-300 rounded-md text-sm py-1 px-2 bg-white focus:ring-2 focus:ring-blue-500"
+                                    className="border border-gray-300 rounded-md text-sm py-1 px-2 bg-white focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                                 >
                                     <option value="all">All Tables</option>
                                     {uniqueTables.map(table => (
@@ -398,12 +389,11 @@ const SingleAuditView = () => {
                             </div>
 
                             <div className="flex items-center">
-                                <label htmlFor="action-filter" className="text-sm text-gray-600 mr-2">Action:</label>
-                                <select
+                                <label htmlFor="action-filter" className="text-sm text-gray-600 mr-2">Action:</label>                                <select
                                     id="action-filter"
                                     value={filters.action}
                                     onChange={(e) => handleFilterChange('action', e.target.value)}
-                                    className="border border-gray-300 rounded-md text-sm py-1 px-2 bg-white focus:ring-2 focus:ring-blue-500"
+                                    className="border border-gray-300 rounded-md text-sm py-1 px-2 bg-white focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                                 >
                                     <option value="all">All Actions</option>
                                     <option value="INSERT">Insert</option>
@@ -422,7 +412,7 @@ const SingleAuditView = () => {
                                         placeholder="Search changes..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="border border-gray-300 rounded-md py-1 pl-10 pr-4 w-full text-sm focus:ring-2 focus:ring-blue-500"
+                                        className="border border-gray-300 rounded-md py-1 pl-10 pr-4 w-full text-sm focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                                     />
                                 </div>
                             </div>
@@ -432,17 +422,15 @@ const SingleAuditView = () => {
                             <div className="mt-3 pt-3 border-t border-gray-200">
                                 <div className="flex items-center justify-between">
                                     <div className="text-sm text-gray-600">
-                                        <span className="font-medium">Filters applied:</span>
-                                        {filters.table !== 'all' && <span className="ml-2 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">Table: {filters.table}</span>}
-                                        {filters.action !== 'all' && <span className="ml-2 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Action: {filters.action}</span>}
-                                        {searchTerm && <span className="ml-2 bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">Search: "{searchTerm}"</span>}
-                                    </div>
-                                    <button
+                                        <span className="font-medium">Filters applied:</span>                                        {filters.table !== 'all' && <span className="ml-2 bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">Table: {filters.table}</span>}
+                                        {filters.action !== 'all' && <span className="ml-2 bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">Action: {filters.action}</span>}
+                                        {searchTerm && <span className="ml-2 bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">Search: "{searchTerm}"</span>}
+                                    </div>                                    <button
                                         onClick={() => {
                                             setFilters({ table: 'all', action: 'all' });
                                             setSearchTerm('');
                                         }}
-                                        className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                        className="text-sm text-gray-700 hover:text-gray-900 font-medium"
                                     >
                                         Clear All Filters
                                     </button>
@@ -468,13 +456,12 @@ const SingleAuditView = () => {
                                     <Search className="text-gray-400" style={{ fontSize: '2rem' }} />
                                 </div>
                                 <p className="text-gray-600 text-lg font-medium mb-2">No results match your current filters</p>
-                                <p className="text-gray-500 mb-4">Try adjusting your search criteria or filters</p>
-                                <button
+                                <p className="text-gray-500 mb-4">Try adjusting your search criteria or filters</p>                                <button
                                     onClick={() => {
                                         setFilters({ table: 'all', action: 'all' });
                                         setSearchTerm('');
                                     }}
-                                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                                    className="bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-900 transition-colors"
                                 >
                                     Clear all filters
                                 </button>

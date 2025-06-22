@@ -41,6 +41,7 @@ const OfficerCard = ({ officer, size = "medium", className = "" }) => {
         <div
             className={`flex items-center rounded-lg transition-all cursor-pointer
                 hover:shadow-sm hover:bg-gray-100
+                bg-white border border-gray-200
                 ${containerClasses[size]} 
                 ${className}`}
             onClick={() => {
@@ -51,12 +52,12 @@ const OfficerCard = ({ officer, size = "medium", className = "" }) => {
         >
             <div className="flex items-center w-full space-x-3">
                 {/* Officer Avatar */}
-                <div className={`relative ${sizeClasses[size]} rounded-full flex-shrink-0 overflow-hidden border-2 border-gray-300 shadow-sm`}>
+                <div className={`relative ${sizeClasses[size]} rounded-full flex-shrink-0 overflow-hidden border-2 border-gray-300 shadow-sm bg-gray-100`}>
                     {officer.profilePic || officer.profile_pic || officer.image ? (
                         <img
                             src={officer.profilePic || officer.profile_pic || officer.image}
                             alt={`${officer.name}`}
-                            className="h-full w-full object-cover"
+                            className="h-full w-full object-cover bg-gray-100"
                         />
                     ) : (
                         <div className="h-full w-full bg-gray-700 flex items-center justify-center text-white font-medium">

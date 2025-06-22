@@ -55,8 +55,7 @@ const OffencesTab = ({ offences, formatDate, formatTime, getRiskLevel, isEditing
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                                 <div>
-                                    <div className="text-xs text-gray-500">Related Case</div>
-                                    <Link to={`/cases/${offence.case_id}`} className="text-sm text-blue-800 hover:underline">
+                                    <div className="text-xs text-gray-500">Related Case</div>                                    <Link to={`/cases/${offence.case_id}`} className="text-sm text-gray-800 hover:underline">
                                         {offence.case_id}
                                     </Link>
                                 </div>

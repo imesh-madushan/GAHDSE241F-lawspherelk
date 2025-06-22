@@ -118,10 +118,9 @@ const CreateCaseModal = ({ open, onClose, complaintId, caseId, isOnlineComplaint
                 okLabel={popup.status === "success" ? "OK" : "Close"}
             />
             {/* Modal */}
-            {!popup.open && (
-                <div className="relative bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-xl w-full h-fit max-w-3xl max-h-[95vh] overflow-hidden">
+            {!popup.open && (                <div className="relative bg-white rounded-2xl shadow-xl w-full h-fit max-w-3xl max-h-[95vh] overflow-hidden">
                     {/* Header */}
-                    <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white px-6 py-5 flex items-center justify-between">
+                    <div className="bg-gray-800 text-white px-6 py-5 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="bg-white/20 p-2 rounded-lg">
                                 <BusinessCenter className="text-white" />
@@ -152,10 +151,9 @@ const CreateCaseModal = ({ open, onClose, complaintId, caseId, isOnlineComplaint
 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {/* Left Column - Case Details */}
-                            <div className="space-y-6">
-                                <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-                                    <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center">
-                                        <Gavel className="mr-2 text-blue-600" />
+                            <div className="space-y-6">                                <div className="bg-gray-100 rounded-xl p-4 border border-gray-200">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                                        <Gavel className="mr-2 text-gray-600" />
                                         Case Information
                                     </h3>
 
@@ -170,7 +168,7 @@ const CreateCaseModal = ({ open, onClose, complaintId, caseId, isOnlineComplaint
                                                 value={caseTopicInput}
                                                 onChange={(e) => setCaseTopicInput(e.target.value)}
                                                 placeholder="Enter a descriptive case title..."
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors"
                                             />
                                             <p className="text-xs text-gray-500 mt-1">
                                                 This will be the main title for the investigation case
@@ -196,10 +194,9 @@ const CreateCaseModal = ({ open, onClose, complaintId, caseId, isOnlineComplaint
                             </div>
 
                             {/* Right Column - Assignment */}
-                            <div className="space-y-6">
-                                <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-                                    <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center">
-                                        <PeopleAlt className="mr-2 text-blue-600" />
+                            <div className="space-y-6">                                <div className="bg-gray-100 rounded-xl p-4 border border-gray-200">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                                        <PeopleAlt className="mr-2 text-gray-600" />
                                         Case Assignment
                                     </h3>
 
@@ -228,23 +225,21 @@ const CreateCaseModal = ({ open, onClose, complaintId, caseId, isOnlineComplaint
                                     </div>
                                 </div>
 
-                                {/* Info Card */}
-                                <div className="bg-gradient-to-br from-blue-100 to-blue-50 rounded-xl p-4 border border-blue-200">
-                                    <h3 className="text-lg font-semibold text-blue-900 mb-3 flex items-center">
-                                        <Assignment className="mr-2 text-blue-600" />
+                                {/* Info Card */}                                <div className="bg-gray-100 rounded-xl p-4 border border-gray-200">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                                        <Assignment className="mr-2 text-gray-600" />
                                         What happens next?
                                     </h3>
-                                    <div className="space-y-2 text-sm text-blue-800">
-                                        <div className="flex items-start">
-                                            <div className="w-2 h-2 rounded-full bg-blue-600 mr-2 mt-1.5"></div>
+                                    <div className="space-y-2 text-sm text-gray-800"><div className="flex items-start">
+                                            <div className="w-2 h-2 rounded-full bg-gray-600 mr-2 mt-1.5"></div>
                                             <span>A formal case will be created and assigned to the selected officer</span>
                                         </div>
                                         <div className="flex items-start">
-                                            <div className="w-2 h-2 rounded-full bg-blue-600 mr-2 mt-1.5"></div>
+                                            <div className="w-2 h-2 rounded-full bg-gray-600 mr-2 mt-1.5"></div>
                                             <span>The case leader will receive notification about the assignment</span>
                                         </div>
                                         <div className="flex items-start">
-                                            <div className="w-2 h-2 rounded-full bg-blue-600 mr-2 mt-1.5"></div>
+                                            <div className="w-2 h-2 rounded-full bg-gray-600 mr-2 mt-1.5"></div>
                                             <span>Investigation can begin immediately after case creation</span>
                                         </div>
                                     </div>
@@ -267,7 +262,7 @@ const CreateCaseModal = ({ open, onClose, complaintId, caseId, isOnlineComplaint
                                     icon: <BusinessCenter fontSize="small" />,
                                     label: isLoading ? "Creating..." : "Create Case",
                                     onClick: handleSubmit,
-                                    styles: "bg-gradient-to-r from-blue-600 to-blue-800 text-white hover:from-blue-700 hover:to-blue-900 h-11 px-6 shadow-lg",
+                                    styles: "bg-gray-800 text-white hover:bg-gray-900 h-11 px-6 shadow-lg",
                                     disabled: isLoading
                                 }}
                             />

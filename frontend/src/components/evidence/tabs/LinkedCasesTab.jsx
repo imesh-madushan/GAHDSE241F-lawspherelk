@@ -15,23 +15,22 @@ const LinkedCasesTab = ({ evidence }) => {
                                 className="block hover:bg-gray-50 p-3 rounded-lg transition-colors"
                             >
                                 <div className="flex items-start">
-                                    <div className="bg-blue-100 p-1 rounded-full mr-3">
-                                        <FolderOpen className="text-blue-600" fontSize="small" />
+                                    <div className="bg-gray-200 p-1 rounded-full mr-3">
+                                        <FolderOpen className="text-gray-600" fontSize="small" />
                                     </div>
                                     <div className="flex-1">
-                                        <div className="font-medium text-blue-600 hover:text-blue-800 text-base">
+                                        <div className="font-medium text-gray-800 hover:text-gray-900 text-base">
                                             {caseItem.case_topic || 'Untitled Case'}
                                         </div>
                                         <div className="text-xs text-gray-500 mt-1">
                                             Type: <span className="font-medium">{caseItem.case_type}</span>
                                         </div>
                                         <div className="text-xs text-gray-500">
-                                            Status: <span className={`font-medium ${
-                                                caseItem.case_status === 'inprogress' ? 'text-blue-600' :
+                                            Status: <span className={`font-medium ${caseItem.case_status === 'inprogress' ? 'text-orange-600' :
                                                 caseItem.case_status === 'closed' ? 'text-green-600' :
-                                                caseItem.case_status === 'oicrejected' ? 'text-red-600' :
-                                                'text-gray-600'
-                                            }`}>
+                                                    caseItem.case_status === 'oicrejected' ? 'text-red-600' :
+                                                        'text-gray-600'
+                                                }`}>
                                                 {caseItem.case_status}
                                             </span>
                                         </div>

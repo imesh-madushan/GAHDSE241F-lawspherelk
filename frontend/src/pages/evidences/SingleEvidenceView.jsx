@@ -118,13 +118,13 @@ const SingleEvidenceView = () => {
             icon: <AttachFile fontSize="small" />,
             label: 'Upload Attachment',
             onClick: () => setShowUploadModal(true),
-            styles: 'bg-blue-600 text-white hover:bg-blue-700 border-blue-600'
+            styles: 'bg-gray-800 text-white hover:bg-gray-900 border-gray-800'
         }] : []),
         ...(canCreateNote() ? [{
             icon: <Note fontSize="small" />,
             label: 'Add Note',
             onClick: handleCreateNote,
-            styles: 'bg-purple-600 text-white hover:bg-purple-700 border-purple-600'
+            styles: 'bg-gray-700 text-white hover:bg-gray-800 border-gray-700'
         }] : [])
     ];
 
@@ -312,12 +312,10 @@ const SingleEvidenceView = () => {
             default:
                 return <AttachmentsTab evidence={evidence} formatDateTime={formatDateTime} />;
         }
-    };
-
-    if (loading) {
+    }; if (loading) {
         return (
             <div className="flex justify-center items-center h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-800"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-800"></div>
             </div>
         );
     }
@@ -328,19 +326,15 @@ const SingleEvidenceView = () => {
                 <div className="text-red-500">{error || 'Evidence not found'}</div>
             </div>
         );
-    }
-
-    return (
-        <div className="bg-gray-100 min-h-screen">
+    } return (
+        <div className="bg-gray-50 min-h-screen">
             <StatusPopup
                 open={popup.open}
                 status={popup.status}
                 message={popup.message}
                 description={popup.description}
                 onClose={() => setPopup({ ...popup, open: false })}
-            />
-
-            <PageHeader
+            />            <PageHeader
                 title={isEditing ? "Edit Evidence" : "Evidence"}
                 breadcrumbItems={[
                     { label: 'Dashboard', link: '/dashboard' },
@@ -354,30 +348,29 @@ const SingleEvidenceView = () => {
                         onClick: handleEditToggle,
                         styles: isEditing
                             ? 'h-10 bg-red-50 text-red-700 border-red-700'
-                            : 'h-10 bg-blue-50 text-blue-600 border-blue-600'
+                            : 'h-10 bg-gray-50 text-gray-700 border-gray-600'
                     }] : []),
                     ...(isEditing ? [{
                         icon: <Save fontSize="small" />,
                         label: updateLoading ? 'Saving...' : 'Save',
                         onClick: handleUpdate,
                         disabled: updateLoading,
-                        styles: 'h-10 bg-green-600 text-white border-green-600'
+                        styles: 'h-10 bg-gray-800 text-white border-gray-800'
                     }] : []),
-                    {
-                        icon: <History fontSize='small' />,
-                        onClick: () => navigate(`/recordhistory/evidence/${evidenceId}`),
-                        styles: 'bg-white rounded-full text-gray-700 border-purple-600'
-                    }
+                    // {
+                    //     icon: <History fontSize='small' />,
+                    //     onClick: () => navigate(`/recordhistory/evidence/${evidenceId}`),
+                    //     styles: 'bg-white rounded-full text-gray-700 border-gray-600'
+                    // }
                 ]}
                 onBack={() => navigate(-1)}
             />
 
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                {/* Evidence Details Card - Always Visible */}
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">                {/* Evidence Details Card - Always Visible */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 overflow-hidden">
-                    <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-                        <h2 className="text-xl font-semibold text-blue-900 flex items-center">
-                            <Assignment className="mr-3 text-blue-600" />
+                    <div className="px-6 py-5 border-b border-gray-200 bg-gray-100">
+                        <h2 className="text-xl font-semibold text-gray-800 flex items-center">
+                            <Assignment className="mr-3 text-gray-800" />
                             Evidence Details
                         </h2>
                     </div>
@@ -392,13 +385,12 @@ const SingleEvidenceView = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-500">Type</label>
-                                {isEditing ? (
+                                <label className="text-sm font-medium text-gray-500">Type</label>                                {isEditing ? (
                                     <select
                                         name="type"
                                         value={editForm.type}
                                         onChange={handleFormChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-700 focus:border-gray-700"
                                     >
                                         {evidenceTypes.map(type => (
                                             <option key={type} value={type}>{type}</option>
@@ -406,8 +398,8 @@ const SingleEvidenceView = () => {
                                     </select>
                                 ) : (
                                     <div className="flex items-center bg-gray-50 px-3 py-2 rounded-lg">
-                                        <div className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full mr-3 flex-shrink-0">
-                                            <Assignment className="text-blue-600" fontSize="small" />
+                                        <div className="inline-flex items-center justify-center w-8 h-8 bg-gray-200 rounded-full mr-3 flex-shrink-0">
+                                            <Assignment className="text-gray-800" fontSize="small" />
                                         </div>
                                         <span className="font-medium text-gray-900">{evidence.type}</span>
                                     </div>
@@ -418,14 +410,13 @@ const SingleEvidenceView = () => {
                                 <label className="text-sm font-medium text-gray-500 flex items-center">
                                     <CalendarMonth className="w-4 h-4 mr-1" />
                                     Collection Date & Time
-                                </label>
-                                {isEditing ? (
+                                </label>                                {isEditing ? (
                                     <input
                                         type="datetime-local"
                                         name="collected_dt"
                                         value={editForm.collected_dt}
                                         onChange={handleFormChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-700 focus:border-gray-700"
                                     />
                                 ) : (
                                     <div className="text-gray-900 font-medium bg-gray-50 px-3 py-2 rounded-lg">
@@ -440,15 +431,14 @@ const SingleEvidenceView = () => {
                                 <label className="text-sm font-medium text-gray-500 flex items-center">
                                     <LocationOn className="w-4 h-4 mr-1" />
                                     Location
-                                </label>
-                                {isEditing ? (
+                                </label>                                {isEditing ? (
                                     <input
                                         type="text"
                                         name="location"
                                         value={editForm.location}
                                         onChange={handleFormChange}
                                         placeholder="Evidence collection location"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-700 focus:border-gray-700"
                                     />
                                 ) : (
                                     <div className="text-gray-900 font-medium bg-gray-50 px-3 py-2 rounded-lg">
@@ -458,15 +448,14 @@ const SingleEvidenceView = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-500">Details</label>
-                                {isEditing ? (
+                                <label className="text-sm font-medium text-gray-500">Details</label>                                {isEditing ? (
                                     <textarea
                                         name="details"
                                         value={editForm.details}
                                         onChange={handleFormChange}
                                         rows={4}
                                         placeholder="Evidence details and description"
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-700 focus:border-gray-700 resize-none"
                                     />
                                 ) : (
                                     <div className="text-gray-800 bg-gray-50 p-4 rounded-lg border border-gray-200 whitespace-pre-wrap">
@@ -485,8 +474,7 @@ const SingleEvidenceView = () => {
                                     profilePic: evidence.officer_profile,
                                     type: "Collected By"
                                 }}
-                                size="small"
-                                className="bg-white border border-gray-200 hover:border-blue-300"
+                                size="small" className="bg-white border border-gray-200 hover:border-gray-400"
                             />
                         </div>
                     </div>
@@ -513,11 +501,10 @@ const SingleEvidenceView = () => {
 
                     {/* Right Column - Sidebar with Quick Actions (20% width) */}
                     <div className="space-y-4">
-                        {/* Quick Actions Card - Reduced Size */}
-                        {quickActions.length > 0 && (
+                        {/* Quick Actions Card - Reduced Size */}                        {quickActions.length > 0 && (
                             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-3 border-b border-gray-200">
-                                    <h3 className="font-semibold text-blue-900 text-sm">Quick Actions</h3>
+                                <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
+                                    <h3 className="font-semibold text-gray-800 text-sm">Quick Actions</h3>
                                 </div>
                                 <div className="p-3 space-y-2">
                                     {quickActions.map((action, index) => (

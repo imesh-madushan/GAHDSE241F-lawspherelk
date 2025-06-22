@@ -35,32 +35,32 @@ const ConfirmationPopup = ({
                 return {
                     icon: <Error className="text-red-500" style={{ fontSize: 48 }} />,
                     iconBg: "bg-red-100",
-                    confirmButton: "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white",
+                    confirmButton: "bg-red-700 text-white hover:bg-red-800",
                     titleColor: "text-red-900",
                     backdrop: "bg-red-50/80"
                 };
             case "success":
                 return {
-                    icon: <CheckCircle className="text-green-500" style={{ fontSize: 48 }} />,
-                    iconBg: "bg-green-100",
-                    confirmButton: "bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white",
-                    titleColor: "text-green-900",
-                    backdrop: "bg-green-50/80"
+                    icon: <CheckCircle className="text-gray-700" style={{ fontSize: 48 }} />,
+                    iconBg: "bg-gray-100",
+                    confirmButton: "bg-gray-800 text-white hover:bg-black",
+                    titleColor: "text-gray-800",
+                    backdrop: "bg-gray-50/80"
                 };
             case "info":
                 return {
-                    icon: <Info className="text-blue-500" style={{ fontSize: 48 }} />,
-                    iconBg: "bg-blue-100",
-                    confirmButton: "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white",
-                    titleColor: "text-blue-900",
-                    backdrop: "bg-blue-50/80"
+                    icon: <Info className="text-gray-700" style={{ fontSize: 48 }} />,
+                    iconBg: "bg-gray-100",
+                    confirmButton: "bg-gray-800 text-white hover:bg-black",
+                    titleColor: "text-gray-800",
+                    backdrop: "bg-gray-50/80"
                 };
             default: // warning
                 return {
                     icon: <Warning className="text-amber-500" style={{ fontSize: 48 }} />,
                     iconBg: "bg-amber-100",
-                    confirmButton: "bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white",
-                    titleColor: "text-amber-900",
+                    confirmButton: "bg-gray-700 text-white hover:bg-black",
+                    titleColor: "text-gray-800",
                     backdrop: "bg-amber-50/80"
                 };
         }

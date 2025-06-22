@@ -431,20 +431,20 @@ const CreateEvidenceModal = ({
             />
 
             {!popup.open && (
-                <div className="relative bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-xl w-full h-fit max-w-6xl max-h-[95vh] overflow-hidden">
+                <div className="relative bg-white rounded-2xl shadow-xl w-full h-fit max-w-6xl max-h-[95vh] overflow-hidden">
                     {/* Header */}
-                    <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white px-6 py-5 flex items-center justify-between">
+                    <div className="bg-gray-800 text-white px-6 py-5 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="bg-white/20 p-2 rounded-lg">
+                            <div className="bg-gray-700 p-2 rounded-lg">
                                 <Assignment className="text-white" />
                             </div>
                             <div>
                                 <h2 className="text-xl font-bold">Create New Evidence</h2>
-                                <p className="text-white/80 text-sm">Record and link evidence to case or investigation</p>
+                                <p className="text-gray-100 text-sm">Record and link evidence to case or investigation</p>
                             </div>
                         </div>
                         <button
-                            className="flex hover:bg-white/10 rounded-full p-2 transition-colors"
+                            className="flex hover:bg-gray-700 rounded-full p-2 transition-colors"
                             onClick={handleClose}
                         >
                             <Close />
@@ -456,9 +456,9 @@ const CreateEvidenceModal = ({
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {/* Left Column - Evidence Details */}
                             <div className="space-y-6">
-                                <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-                                    <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center">
-                                        <Assignment className="mr-2 text-blue-600" />
+                                <div className="bg-gray-100 rounded-xl p-4 border border-gray-200">
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                                        <Assignment className="mr-2 text-gray-700" />
                                         Evidence Details
                                     </h3>
 
@@ -471,7 +471,7 @@ const CreateEvidenceModal = ({
                                                 name="type"
                                                 value={newEvidence.type}
                                                 onChange={handleEvidenceChange}
-                                                className={`w-full px-4 py-3 border rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.type ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
+                                                className={`w-full px-4 py-3 border rounded-lg bg-white focus:ring-2 focus:ring-gray-700 focus:border-gray-700 transition-colors ${fieldErrors.type ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
                                             >
                                                 {evidenceTypes.map(type => (
                                                     <option key={type} value={type}>{type}</option>
@@ -492,7 +492,7 @@ const CreateEvidenceModal = ({
                                                     value={newEvidence.collected_date}
                                                     onChange={handleEvidenceChange}
                                                     max={new Date().toISOString().split('T')[0]}
-                                                    className={`w-full px-4 py-3 border rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.collected_date ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
+                                                    className={`w-full px-4 py-3 border rounded-lg bg-white focus:ring-2 focus:ring-gray-700 focus:border-gray-700 transition-colors ${fieldErrors.collected_date ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
                                                 />
                                                 {fieldErrors.collected_date && <p className="text-red-500 text-xs mt-1">{fieldErrors.collected_date}</p>}
                                             </div>
@@ -507,7 +507,7 @@ const CreateEvidenceModal = ({
                                                     name="collected_time"
                                                     value={newEvidence.collected_time}
                                                     onChange={handleEvidenceChange}
-                                                    className={`w-full px-4 py-3 border rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.collected_time ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
+                                                    className={`w-full px-4 py-3 border rounded-lg bg-white focus:ring-2 focus:ring-gray-700 focus:border-gray-700 transition-colors ${fieldErrors.collected_time ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
                                                 />
                                                 {fieldErrors.collected_time && <p className="text-red-500 text-xs mt-1">{fieldErrors.collected_time}</p>}
                                             </div>
@@ -524,7 +524,7 @@ const CreateEvidenceModal = ({
                                                 value={newEvidence.location}
                                                 onChange={handleEvidenceChange}
                                                 placeholder="Where was this evidence found/collected?"
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-gray-700 focus:border-gray-700 transition-colors"
                                             />
                                         </div>
 
@@ -538,7 +538,7 @@ const CreateEvidenceModal = ({
                                                 onChange={handleEvidenceChange}
                                                 placeholder="Detailed description of the evidence..."
                                                 rows={4}
-                                                className={`w-full px-4 py-3 border rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none ${fieldErrors.details ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
+                                                className={`w-full px-4 py-3 border rounded-lg bg-white focus:ring-2 focus:ring-gray-700 focus:border-gray-700 transition-colors resize-none ${fieldErrors.details ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
                                             />
                                             {fieldErrors.details && <p className="text-red-500 text-xs mt-1">{fieldErrors.details}</p>}
                                         </div>
@@ -546,9 +546,9 @@ const CreateEvidenceModal = ({
                                 </div>
 
                                 {/* Linking Section */}
-                                <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-                                    <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center">
-                                        <FolderOpen className="mr-2 text-blue-600" />
+                                <div className="bg-gray-100 rounded-xl p-4 border border-gray-200">
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                                        <FolderOpen className="mr-2 text-gray-700" />
                                         Link Evidence To
                                     </h3>
 
@@ -605,18 +605,18 @@ const CreateEvidenceModal = ({
                                 </div>
 
                                 {/* File Attachments Section */}
-                                <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-                                    <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center">
-                                        <AttachFile className="mr-2 text-blue-600" />
+                                <div className="bg-gray-100 rounded-xl p-4 border border-gray-200">
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                                        <AttachFile className="mr-2 text-gray-700" />
                                         File Attachments
                                     </h3>
 
                                     <div className="space-y-4">
                                         {/* File Upload Area */}
-                                        <div className="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center bg-white">
-                                            <CloudUpload className="mx-auto h-12 w-12 text-blue-400 mb-4" />
+                                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-white">
+                                            <CloudUpload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                                             <label htmlFor="file-upload" className="cursor-pointer">
-                                                <span className="text-sm font-medium text-blue-600 hover:text-blue-800">
+                                                <span className="text-sm font-medium text-gray-700 hover:text-gray-900">
                                                     Click to upload files
                                                 </span>
                                                 <input
@@ -678,16 +678,16 @@ const CreateEvidenceModal = ({
 
                             {/* Right Column - Investigation and Witnesses */}
                             <div className="space-y-6">
-                                <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                                <div className="bg-gray-100 rounded-xl p-4 border border-gray-200">
                                     <div className="flex justify-between items-center mb-4">
-                                        <h3 className="text-lg font-semibold text-blue-900 flex items-center">
-                                            <Assignment className="mr-2 text-blue-600" />
+                                        <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                                            <Assignment className="mr-2 text-gray-700" />
                                             Witnesses (Optional)
                                         </h3>
                                         <button
                                             type="button"
                                             onClick={addWitness}
-                                            className="flex bg-blue-600 text-white p-1 rounded-full hover:bg-blue-700 transition-colors"
+                                            className="flex bg-gray-800 text-white p-1 rounded-full hover:bg-black transition-colors"
                                         >
                                             <Add fontSize="small" />
                                         </button>
@@ -715,42 +715,42 @@ const CreateEvidenceModal = ({
                                                         placeholder="NIC *"
                                                         value={witness.nic}
                                                         onChange={(e) => handleWitnessChange(index, 'nic', e.target.value)}
-                                                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-700 focus:border-gray-700"
                                                     />
                                                     <input
                                                         type="text"
                                                         placeholder="Full Name *"
                                                         value={witness.name}
                                                         onChange={(e) => handleWitnessChange(index, 'name', e.target.value)}
-                                                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-700 focus:border-gray-700"
                                                     />
                                                     <input
                                                         type="tel"
                                                         placeholder="Phone"
                                                         value={witness.phone}
                                                         onChange={(e) => handleWitnessChange(index, 'phone', e.target.value)}
-                                                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-700 focus:border-gray-700"
                                                     />
                                                     <input
                                                         type="email"
                                                         placeholder="Email"
                                                         value={witness.email}
                                                         onChange={(e) => handleWitnessChange(index, 'email', e.target.value)}
-                                                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-700 focus:border-gray-700"
                                                     />
                                                     <input
                                                         type="date"
                                                         placeholder="Date of Birth"
                                                         value={witness.dob}
                                                         onChange={(e) => handleWitnessChange(index, 'dob', e.target.value)}
-                                                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-700 focus:border-gray-700"
                                                     />
                                                     <textarea
                                                         placeholder="Address"
                                                         value={witness.address}
                                                         onChange={(e) => handleWitnessChange(index, 'address', e.target.value)}
                                                         rows={2}
-                                                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                                                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-700 focus:border-gray-700 resize-none"
                                                     />
                                                 </div>
                                                 {fieldErrors[`witness_${index}`] && (
@@ -779,7 +779,7 @@ const CreateEvidenceModal = ({
                                     label: creatingEvidence ? 'Creating...' : 'Create Evidence',
                                     ariaLabel: 'Create Evidence',
                                     onClick: handleSubmitEvidence,
-                                    styles: 'bg-gradient-to-r from-blue-600 to-blue-800 text-white hover:from-blue-700 hover:to-blue-900 h-11 px-6 shadow-lg',
+                                    styles: 'bg-gray-800 text-white hover:bg-black h-11 px-6 shadow-lg',
                                     disabled: creatingEvidence
                                 }}
                             />

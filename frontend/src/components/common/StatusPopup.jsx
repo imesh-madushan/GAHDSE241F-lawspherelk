@@ -27,7 +27,7 @@ const StatusPopup = ({
 
     const isSuccess = status === "success";
     const icon = isSuccess ? (
-        <CheckCircle className="text-green-500 mb-2" style={{ fontSize: 48 }} />
+        <CheckCircle className="text-gray-700 mb-2" style={{ fontSize: 48 }} />
     ) : (
         <ErrorIcon className="text-red-500 mb-2" style={{ fontSize: 48 }} />
     );
@@ -47,7 +47,7 @@ const StatusPopup = ({
                 {referenceLink && (
                     <a
                         href={referenceLink}
-                        className="mb-4 text-blue-700 underline hover:text-blue-900 transition text-sm"
+                        className="mb-4 text-gray-800 underline hover:text-gray-900 transition text-sm"
                         target="_blank"
                         rel="noopener noreferrer"
                     >
@@ -56,15 +56,13 @@ const StatusPopup = ({
                 )}
                 <button
                     className={`px-6 py-2 rounded-full font-medium transition hover:cursor-pointer ${isSuccess
-                        ? "bg-blue-700 text-white hover:bg-blue-800"
-                        : "bg-red-600 text-white hover:bg-red-700"
-                        }`}
+                        ? "bg-gray-800 text-white hover:bg-black"
+                        : "bg-red-600 text-white hover:bg-red-700"}
+                    `}
                     onClick={handleClose}
-                    autoFocus
                 >
                     {okLabel}
                 </button>
-                <div className="text-xs text-gray-400 mt-2">(Press Enter to close)</div>
             </div>
         </div>
     );

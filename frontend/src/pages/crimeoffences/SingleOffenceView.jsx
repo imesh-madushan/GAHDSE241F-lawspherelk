@@ -301,19 +301,19 @@ const SingleOffenceView = () => {
             icon: <FolderOpen fontSize="small" />,
             label: 'Link Evidence',
             onClick: () => setShowLinkEvidenceModal(true),
-            styles: 'w-full bg-indigo-600 text-white hover:bg-indigo-700 border-indigo-600'
+            styles: 'w-full bg-gray-800 text-white hover:bg-gray-900 border-gray-800'
         }] : []),
         ...(canAddVictimToOffence() ? [{
             icon: <PersonAdd fontSize="small" />,
             label: 'Add Victim',
             onClick: () => setShowCreateVictimModal(true),
-            styles: 'w-full bg-red-600 text-white hover:bg-red-700 border-red-600'
+            styles: 'w-full bg-gray-700 text-white hover:bg-gray-800 border-gray-700'
         }] : []),
         ...(canCreateNote() ? [{
             icon: <Note fontSize="small" />,
             label: 'Add Note',
             onClick: handleCreateNote,
-            styles: 'w-full bg-purple-600 text-white hover:bg-purple-700 border-purple-600'
+            styles: 'w-full bg-gray-600 text-white hover:bg-gray-800 border-gray-600'
         }] : [])
     ];
 
@@ -345,12 +345,10 @@ const SingleOffenceView = () => {
                     />
                 );
         }
-    };
-
-    if (loading) {
+    }; if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-800"></div>
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-800"></div>
             </div>
         );
     }
@@ -361,7 +359,7 @@ const SingleOffenceView = () => {
                 <div className="text-red-500 text-xl mb-4">Error: {error}</div>
                 <button
                     onClick={() => navigate('/crimeoffences')}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900"
                 >
                     Return to Crime Offences
                 </button>
@@ -389,8 +387,7 @@ const SingleOffenceView = () => {
                     { label: 'Crime Offences', link: '/crimeoffences' },
                     { label: offenceId.substring(0, 8) }
                 ]}
-                onBack={() => navigate(-1)}
-                actions={[
+                onBack={() => navigate(-1)} actions={[
                     ...(canEditOffence() ? [
                         isEditing ? {
                             icon: <Cancel fontSize='small' />,
@@ -401,32 +398,31 @@ const SingleOffenceView = () => {
                             icon: <Edit fontSize='small' />,
                             label: 'Edit Offence',
                             onClick: handleEditToggle,
-                            styles: 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
+                            styles: 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                         },
                         isEditing ? {
                             icon: <Save fontSize='small' />,
                             label: 'Save Changes',
                             onClick: handleSaveChanges,
-                            styles: 'bg-green-600 text-white border-green-600 hover:bg-green-700'
+                            styles: 'bg-gray-800 text-white border-gray-800 hover:bg-gray-900'
                         } : null
                     ].filter(Boolean) : []),
-                    {
-                        icon: <History fontSize='small' />,
-                        onClick: () => navigate(`/recordhistory/crimeoffence/${offenceId}`),
-                        styles: 'bg-white rounded-full text-gray-700 border-purple-600'
-                    }
+                    // {
+                    //     icon: <History fontSize='small' />,
+                    //     onClick: () => navigate(`/recordhistory/crimeoffence/${offenceId}`),
+                    //     styles: 'bg-white rounded-full text-gray-700 border-gray-600'
+                    // }
                 ]}
             />
 
             {/* Content section */}
-            <div className="max-w-7xl mx-auto px-4 py-6">
-                {/* Top Card - Offence Header */}
+            <div className="max-w-7xl mx-auto px-4 py-6">                {/* Top Card - Offence Header */}
                 <div className="bg-white rounded-xl shadow-sm mb-6">
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-5 border-b border-gray-100">
+                    <div className="bg-gray-100 p-5 border-b border-gray-200">
                         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                             <div className="flex items-center">
-                                <div className="bg-blue-100 p-3 rounded-lg mr-4">
-                                    <Gavel className="text-blue-700" />
+                                <div className="bg-gray-700 p-3 rounded-lg mr-4">
+                                    <Gavel className="text-white" />
                                 </div>
                                 <div>
                                     <div className="text-gray-500 text-sm font-medium">Offence Reference</div>
@@ -459,10 +455,9 @@ const SingleOffenceView = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Left Column - Main Content */}
                     <div className="col-span-2 space-y-6">
-                        {/* Crime Details Card - Always Visible */}
-                        <div className="bg-white rounded-xl shadow-sm p-6">
+                        {/* Crime Details Card - Always Visible */}                        <div className="bg-white rounded-xl shadow-sm p-6">
                             <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                                <Scale className="h-5 w-5 mr-2 text-blue-600" />
+                                <Scale className="h-5 w-5 mr-2 text-gray-700" />
                                 Crime Information
                             </h2>
 
@@ -472,21 +467,20 @@ const SingleOffenceView = () => {
                                         Crime Type {isEditing && <span className="text-red-500">*</span>}
                                     </label>
                                     {isEditing ? (
-                                        <>
-                                            <select
-                                                name="crime_type"
-                                                value={editedOffence.crime_type || ''}
-                                                onChange={handleInputChange}
-                                                className={`w-full p-3 border rounded-lg bg-blue-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${touched.crime_type && !isCrimeTypeValid ? 'border-red-500' : 'border-blue-300'
-                                                    }`}
-                                            >
-                                                <option value="">Select crime type</option>
-                                                {crimeTypes.map(type =>
-                                                    typeof type === 'object'
-                                                        ? <option key={type.type} value={type.type}>{type.type} ({type.points} pts)</option>
-                                                        : <option key={type} value={type}>{type}</option>
-                                                )}
-                                            </select>
+                                        <>                                            <select
+                                            name="crime_type"
+                                            value={editedOffence.crime_type || ''}
+                                            onChange={handleInputChange}
+                                            className={`w-full p-3 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:border-gray-500 ${touched.crime_type && !isCrimeTypeValid ? 'border-red-500' : 'border-gray-300'
+                                                }`}
+                                        >
+                                            <option value="">Select crime type</option>
+                                            {crimeTypes.map(type =>
+                                                typeof type === 'object'
+                                                    ? <option key={type.type} value={type.type}>{type.type} ({type.points} pts)</option>
+                                                    : <option key={type} value={type}>{type}</option>
+                                            )}
+                                        </select>
                                             {touched.crime_type && !isCrimeTypeValid && (
                                                 <span className="text-xs text-red-600">Crime type is required.</span>
                                             )}
@@ -513,15 +507,14 @@ const SingleOffenceView = () => {
                                         Reported Date/Time {isEditing && <span className="text-red-500">*</span>}
                                     </label>
                                     {isEditing ? (
-                                        <>
-                                            <input
-                                                type="datetime-local"
-                                                name="reported_dt"
-                                                value={formatDateTimeLocal(editedOffence.reported_dt)}
-                                                onChange={handleInputChange}
-                                                className={`w-full p-3 border rounded-lg bg-blue-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${touched.reported_dt && !isReportedDateValid ? 'border-red-500' : 'border-blue-300'
-                                                    }`}
-                                            />
+                                        <>                                            <input
+                                            type="datetime-local"
+                                            name="reported_dt"
+                                            value={formatDateTimeLocal(editedOffence.reported_dt)}
+                                            onChange={handleInputChange}
+                                            className={`w-full p-3 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:border-gray-500 ${touched.reported_dt && !isReportedDateValid ? 'border-red-500' : 'border-gray-300'
+                                                }`}
+                                        />
                                             {touched.reported_dt && !isReportedDateValid && (
                                                 <span className="text-xs text-red-600">Reported date is required.</span>
                                             )}
@@ -539,15 +532,14 @@ const SingleOffenceView = () => {
                                         Happened Date/Time {isEditing && <span className="text-red-500">*</span>}
                                     </label>
                                     {isEditing ? (
-                                        <>
-                                            <input
-                                                type="datetime-local"
-                                                name="happened_dt"
-                                                value={formatDateTimeLocal(editedOffence.happened_dt)}
-                                                onChange={handleInputChange}
-                                                className={`w-full p-3 border rounded-lg bg-blue-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${touched.happened_dt && !isHappenedDateValid ? 'border-red-500' : 'border-blue-300'
-                                                    }`}
-                                            />
+                                        <>                                            <input
+                                            type="datetime-local"
+                                            name="happened_dt"
+                                            value={formatDateTimeLocal(editedOffence.happened_dt)}
+                                            onChange={handleInputChange}
+                                            className={`w-full p-3 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:border-gray-500 ${touched.happened_dt && !isHappenedDateValid ? 'border-red-500' : 'border-gray-300'
+                                                }`}
+                                        />
                                             {touched.happened_dt && !isHappenedDateValid && (
                                                 <span className="text-xs text-red-600">Happened date is required.</span>
                                             )}
@@ -578,12 +570,11 @@ const SingleOffenceView = () => {
                     </div>
 
                     {/* Right Column - Sidebar */}
-                    <div className="col-span-1 space-y-6">
-                        {/* Criminal Info Card */}
+                    <div className="col-span-1 space-y-6">                        {/* Criminal Info Card */}
                         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                            <div className="bg-gradient-to-r from-gray-50 to-blue-50 px-6 py-4 border-b border-gray-100">
+                            <div className="bg-gray-100 px-6 py-4 border-b border-gray-200">
                                 <h2 className="font-semibold text-gray-800 flex items-center">
-                                    <Person className="h-5 w-5 mr-2 text-blue-600" />
+                                    <Person className="h-5 w-5 mr-2 text-gray-700" />
                                     Criminal Details
                                 </h2>
                             </div>
@@ -595,13 +586,12 @@ const SingleOffenceView = () => {
                                             <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mr-3">
                                                 <Person className="text-red-700" />
                                             </div>
-                                            <div>
-                                                <Link
-                                                    to={`/criminals/${offence.criminal_id}`}
-                                                    className="font-medium text-gray-900 hover:text-blue-600 hover:underline"
-                                                >
-                                                    {offence.criminal_name}
-                                                </Link>
+                                            <div>                                                <Link
+                                                to={`/criminals/${offence.criminal_id}`}
+                                                className="font-medium text-gray-900 hover:text-gray-700 hover:underline"
+                                            >
+                                                {offence.criminal_name}
+                                            </Link>
                                                 <div className="flex items-center mt-0.5">
                                                     <Badge className="h-3.5 w-3.5 text-gray-400 mr-1" />
                                                     <span className="text-xs text-gray-500">{offence.criminal_id}</span>
@@ -632,13 +622,11 @@ const SingleOffenceView = () => {
                                     <p className="text-sm">No criminal assigned</p>
                                 </div>
                             )}
-                        </div>
-
-                        {/* Quick Actions */}
+                        </div>                        {/* Quick Actions */}
                         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                            <div className="bg-gradient-to-r from-gray-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
+                            <div className="bg-gray-100 px-6 py-4 border-b border-gray-200">
                                 <h2 className="font-semibold text-gray-800 flex items-center">
-                                    <DeviceHub className="h-5 w-5 mr-2 text-blue-600" />
+                                    <DeviceHub className="h-5 w-5 mr-2 text-gray-700" />
                                     Quick Actions
                                 </h2>
                             </div>

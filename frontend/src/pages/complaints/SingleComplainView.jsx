@@ -62,19 +62,19 @@ const SingleComplaintView = () => {
             icon: <BusinessCenter fontSize='small' />,
             label: 'Start Case',
             onClick: () => setShowStartCaseModal(true),
-            styles: 'bg-blue-700 text-white hover:bg-blue-800 border-blue-700 h-10'
+            styles: 'bg-gray-800 text-white hover:bg-gray-900 border-gray-800 h-10'
         },
         viewrelatedcase: {
             icon: <RemoveRedEye fontSize='small' />,
             label: 'View Related Case',
             onClick: () => navigate(`/cases/${complaint.case.case_id}`),
-            styles: 'bg-green-700 text-white hover:bg-green-800 border-green-700 h-10'
+            styles: 'bg-gray-700 text-white hover:bg-gray-800 border-gray-700 h-10'
         },
         closeComplaint: {
             icon: <Close fontSize='small' />,
             label: 'Close Complaint',
             onClick: () => setShowCloseConfirmation(true),
-            styles: 'bg-red-600 text-white hover:bg-red-700 border-red-600 h-10'
+            styles: 'bg-gray-900 text-white hover:bg-black border-gray-900 h-10'
         },
     };
 
@@ -359,7 +359,7 @@ const SingleComplaintView = () => {
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-800"></div>
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-800"></div>
             </div>
         );
     }
@@ -370,7 +370,7 @@ const SingleComplaintView = () => {
                 <div className="text-red-500 text-xl mb-4">Error: {error}</div>
                 <button
                     onClick={() => navigate('/complaints')}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900"
                 >
                     Return to Complaints List
                 </button>
@@ -408,13 +408,13 @@ const SingleComplaintView = () => {
                             icon: <Edit fontSize='small' />,
                             label: 'Edit Complaint',
                             onClick: handleEditToggle,
-                            styles: 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
+                            styles: 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                         },
                         isEditing ? {
                             icon: <Save fontSize='small' />,
                             label: 'Save Changes',
                             onClick: handleSaveChanges,
-                            styles: 'bg-green-600 text-white border-green-600 hover:bg-green-700'
+                            styles: 'bg-gray-800 text-white border-gray-800 hover:bg-gray-900'
                         } : null
                     ].filter(Boolean) : []),
                     {
@@ -429,11 +429,11 @@ const SingleComplaintView = () => {
             <div className="max-w-7xl mx-auto px-4 py-6">
                 {/* Top Card - Complaint Header */}
                 <div className="bg-white rounded-xl shadow-sm mb-6">
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-5 border-b border-gray-100">
+                    <div className="bg-gray-100 p-5 border-b border-gray-200">
                         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                             <div className="flex items-center">
-                                <div className="bg-blue-100 p-3 rounded-lg mr-4">
-                                    <Folder className="text-blue-700" />
+                                <div className="bg-gray-200 p-3 rounded-lg mr-4">
+                                    <Folder className="text-gray-800" />
                                 </div>
                                 <div>
                                     <div className="text-gray-500 text-sm font-medium">Complaint Reference</div>
@@ -483,7 +483,7 @@ const SingleComplaintView = () => {
                         {/* Complaint Description Card */}
                         <div className="bg-white rounded-xl shadow-sm p-6">
                             <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                                <Description className="h-5 w-5 mr-2 text-blue-600" />
+                                <Description className="h-5 w-5 mr-2 text-gray-800" />
                                 Complaint Details
                             </h2>
                             {isEditing ? (
@@ -493,7 +493,7 @@ const SingleComplaintView = () => {
                                         value={editedComplaint.description}
                                         onChange={handleInputChange}
                                         onBlur={() => setTouched(t => ({ ...t, description: true }))}
-                                        className={`w-full p-3 border rounded-lg bg-blue-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${touched.description && !isDescriptionValid ? 'border-red-500' : 'border-blue-300'
+                                        className={`w-full p-3 border rounded-lg bg-gray-100 focus:ring-2 focus:ring-gray-800 focus:border-gray-800 ${touched.description && !isDescriptionValid ? 'border-red-500' : 'border-gray-300'
                                             }`}
                                         rows={4}
                                         placeholder="Enter complaint details"
@@ -519,7 +519,7 @@ const SingleComplaintView = () => {
                                                 type: "Complaint Handler"
                                             }}
                                             size="small"
-                                            className="bg-white border border-gray-200 hover:border-blue-300"
+                                            className="bg-white border border-gray-200 hover:border-gray-400"
                                         />
                                     ) : (
                                         <div className="inline-flex items-center bg-yellow-50 px-3 py-1 rounded-md text-yellow-700 text-sm">
@@ -535,7 +535,7 @@ const SingleComplaintView = () => {
                         {complaint.case && (
                             <div className="bg-white rounded-xl shadow-sm p-6">
                                 <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                                    <BusinessCenter className="h-5 w-5 mr-2 text-blue-600" />
+                                    <BusinessCenter className="h-5 w-5 mr-2 text-gray-800" />
                                     Linked Case
                                 </h2>
 
@@ -550,16 +550,16 @@ const SingleComplaintView = () => {
                                         </div>
                                     </div>
                                 ) : complaint.case.status !== 'oicnotreviewed' ? (
-                                    <div className="border border-blue-100 rounded-lg overflow-hidden">
-                                        <div className="bg-blue-50 p-4">
+                                    <div className="border border-gray-200 rounded-lg overflow-hidden">
+                                        <div className="bg-gray-100 p-4">
                                             <div className="flex justify-between items-start">                                                <div>
-                                                <h4 className="font-medium text-blue-900">Case #{complaint.case.case_id}</h4>
-                                                <p className="text-blue-700 mt-1">{complaint.case.topic || "No topic available"}</p>
+                                                <h4 className="font-medium text-gray-900">Case #{complaint.case.case_id}</h4>
+                                                <p className="text-gray-700 mt-1">{complaint.case.topic || "No topic available"}</p>
                                             </div>
                                                 {canViewRelatedCase() && (
                                                     <Link
                                                         to={`/cases/${complaint.case.case_id}`}
-                                                        className="bg-blue-100 text-blue-700 hover:bg-blue-200 p-2 rounded-lg transition-colors"
+                                                        className="bg-gray-100 text-gray-700 hover:bg-gray-200 p-2 rounded-lg transition-colors"
                                                     >
                                                         <RemoveRedEye className="h-5 w-5" />
                                                     </Link>
@@ -570,7 +570,7 @@ const SingleComplaintView = () => {
                                         <div className="p-4 bg-white">
                                             <div className="flex items-center mb-4">
                                                 <span className="text-sm text-gray-500">Type:</span>
-                                                <span className="ml-2 bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                                                <span className="ml-2 bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">
                                                     {complaint.case.case_type || "N/A"}
                                                 </span>
                                             </div>
@@ -597,7 +597,7 @@ const SingleComplaintView = () => {
                                                             type: "Case Leader"
                                                         }}
                                                         size="small"
-                                                        className="border border-gray-100 hover:border-blue-300"
+                                                        className="border border-gray-100 hover:border-gray-400"
                                                     />
                                                 ) : (
                                                     <div className="inline-flex items-center bg-yellow-50 px-3 py-1 rounded-md text-yellow-700 text-sm">
@@ -625,16 +625,16 @@ const SingleComplaintView = () => {
                         {/* Evidence Card */}
                         <div className="bg-white rounded-xl shadow-sm p-6">
                             <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                                <LocalOffer className="h-5 w-5 mr-2 text-blue-600" />
+                                <LocalOffer className="h-5 w-5 mr-2 text-gray-800" />
                                 Evidence
                             </h2>
 
                             {complaint.firstEvidence ? (
-                                <div className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors bg-white">
+                                <div className="border border-gray-200 rounded-lg p-4 hover:border-gray-400 transition-colors bg-white">
                                     <div className="flex justify-between">
                                         <div className="flex items-start">
-                                            <div className="bg-indigo-100 p-2 rounded-lg mr-3">
-                                                <FindInPage className="text-indigo-700" />
+                                            <div className="bg-gray-200 p-2 rounded-lg mr-3">
+                                                <FindInPage className="text-gray-800" />
                                             </div>
                                             <div>
                                                 <h4 className="font-medium text-gray-900">{complaint.firstEvidence.type}</h4>
@@ -661,9 +661,9 @@ const SingleComplaintView = () => {
                     <div className="col-span-1 space-y-6">
                         {/* Complainer Info Card */}
                         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                            <div className="bg-gradient-to-r from-gray-50 to-blue-50 px-6 py-4 border-b border-gray-100">
+                            <div className="bg-gray-100 px-6 py-4 border-b border-gray-200">
                                 <h2 className="font-semibold text-gray-800 flex items-center">
-                                    <Person className="h-5 w-5 mr-2 text-blue-600" />
+                                    <Person className="h-5 w-5 mr-2 text-gray-800" />
                                     Complainant Details
                                 </h2>
                             </div>
@@ -671,8 +671,8 @@ const SingleComplaintView = () => {
                                 <div className="p-6">
                                     <div className="flex flex-col space-y-4">
                                         <div className="flex items-center">
-                                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-                                                <Person className="text-blue-700" />
+                                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
+                                                <Person className="text-gray-800" />
                                             </div>
                                             <div>
                                                 <input
@@ -680,8 +680,9 @@ const SingleComplaintView = () => {
                                                     name="name"
                                                     value={editedComplainer.name || ""}
                                                     onChange={handleComplainerInputChange}
-                                                    onBlur={() => setTouched(t => ({ ...t, name: true }))}
-                                                    className={`font-medium text-gray-900 bg-blue-50 border rounded px-2 py-1 ${touched.name && !isNameValid ? 'border-red-500' : 'border-blue-200'
+                                                    onBlur={() => setTouched(t => ({ ...t, name: true }))
+                                                    }
+                                                    className={`font-medium text-gray-900 bg-gray-100 border rounded px-2 py-1 ${touched.name && !isNameValid ? 'border-red-500' : 'border-gray-300'
                                                         }`}
                                                     placeholder="Name"
                                                 />
@@ -695,8 +696,9 @@ const SingleComplaintView = () => {
                                                         name="nic"
                                                         value={editedComplainer.nic || ""}
                                                         onChange={handleComplainerInputChange}
-                                                        onBlur={() => setTouched(t => ({ ...t, nic: true }))}
-                                                        className={`text-xs text-gray-500 bg-blue-50 border rounded px-1 py-0.5 ${touched.nic && !isNicValid ? 'border-red-500' : 'border-blue-200'
+                                                        onBlur={() => setTouched(t => ({ ...t, nic: true }))
+                                                        }
+                                                        className={`text-xs text-gray-500 bg-gray-100 border rounded px-1 py-0.5 ${touched.nic && !isNicValid ? 'border-red-500' : 'border-gray-300'
                                                             }`}
                                                         placeholder="NIC"
                                                     />
@@ -707,7 +709,7 @@ const SingleComplaintView = () => {
                                             </div>
                                         </div>
 
-                                        <div className="pt-3 border-t border-gray-100">
+                                        <div className="pt-3 border-t border-gray-200">
                                             <div className="grid grid-cols-1 gap-3">
                                                 <div className="flex items-center">
                                                     <Phone className="h-4 w-4 text-gray-400 mr-2" />
@@ -716,7 +718,7 @@ const SingleComplaintView = () => {
                                                         name="phone"
                                                         value={editedComplainer.phone || ""}
                                                         onChange={handleComplainerInputChange}
-                                                        className="text-sm bg-blue-50 border border-blue-200 rounded px-2 py-1"
+                                                        className="text-sm bg-gray-100 border border-gray-300 rounded px-2 py-1"
                                                         placeholder="Phone"
                                                     />
                                                 </div>
@@ -728,7 +730,7 @@ const SingleComplaintView = () => {
                                                         name="email"
                                                         value={editedComplainer.email || ""}
                                                         onChange={handleComplainerInputChange}
-                                                        className="text-sm bg-blue-50 border border-blue-200 rounded px-2 py-1"
+                                                        className="text-sm bg-gray-100 border border-gray-300 rounded px-2 py-1"
                                                         placeholder="Email"
                                                     />
                                                 </div>
@@ -739,7 +741,7 @@ const SingleComplaintView = () => {
                                                         name="address"
                                                         value={editedComplainer.address || ""}
                                                         onChange={handleComplainerInputChange}
-                                                        className="text-sm bg-blue-50 border border-blue-200 rounded px-2 py-1"
+                                                        className="text-sm bg-gray-100 border border-gray-300 rounded px-2 py-1"
                                                         placeholder="Address"
                                                         rows={2}
                                                     />
@@ -752,7 +754,7 @@ const SingleComplaintView = () => {
                                                         name="dob"
                                                         value={editedComplainer.dob ? editedComplainer.dob.slice(0, 10) : ""}
                                                         onChange={handleComplainerInputChange}
-                                                        className="text-sm bg-blue-50 border border-blue-200 rounded px-2 py-1"
+                                                        className="text-sm bg-gray-100 border border-gray-300 rounded px-2 py-1"
                                                         placeholder="DOB"
                                                     />
                                                 </div>
@@ -764,8 +766,8 @@ const SingleComplaintView = () => {
                                 <div className="p-6">
                                     <div className="flex flex-col space-y-4">
                                         <div className="flex items-center">
-                                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-                                                <Person className="text-blue-700" />
+                                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
+                                                <Person className="text-gray-800" />
                                             </div>
                                             <div>
                                                 <h3 className="font-medium text-gray-900">{complaint.complainer.name}</h3>
@@ -776,7 +778,7 @@ const SingleComplaintView = () => {
                                             </div>
                                         </div>
 
-                                        <div className="pt-3 border-t border-gray-100">
+                                        <div className="pt-3 border-t border-gray-200">
                                             <div className="grid grid-cols-1 gap-3">
                                                 <div className="flex items-center">
                                                     <Phone className="h-4 w-4 text-gray-400 mr-2" />

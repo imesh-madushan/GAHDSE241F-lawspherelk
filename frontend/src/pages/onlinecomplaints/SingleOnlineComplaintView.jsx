@@ -70,19 +70,19 @@ const SingleOnlineComplaintView = () => {
             icon: <BusinessCenter fontSize='small' />,
             label: 'Start Case',
             onClick: () => setShowStartCaseModal(true),
-            styles: 'bg-blue-700 text-white hover:bg-blue-800 border-blue-700 h-10'
+            styles: 'bg-gray-800 text-white hover:bg-gray-900 border-gray-800 h-10'
         },
         viewrelatedcase: {
             icon: <RemoveRedEye fontSize='small' />,
             label: 'View Related Case',
             onClick: () => navigate(`/cases/${complaint.case?.case_id}`),
-            styles: 'bg-green-700 text-white hover:bg-green-800 border-green-700 h-10'
+            styles: 'bg-gray-700 text-white hover:bg-gray-800 border-gray-700 h-10'
         },
         closeComplaint: {
             icon: <Close fontSize='small' />,
             label: 'Reject Complaint',
             onClick: () => setShowCloseConfirmation(true),
-            styles: 'bg-red-600 text-white hover:bg-red-700 border-red-600 h-10'
+            styles: 'bg-gray-900 text-white hover:bg-black border-gray-900 h-10'
         },
     };
 
@@ -324,7 +324,7 @@ const SingleOnlineComplaintView = () => {
                 <p className="text-gray-600 mb-4">You don't have permission to view online complaints.</p>
                 <button
                     onClick={() => navigate('/dashboard')}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900"
                 >
                     Return to Dashboard
                 </button>
@@ -335,7 +335,7 @@ const SingleOnlineComplaintView = () => {
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-800"></div>
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-800"></div>
             </div>
         );
     }
@@ -346,7 +346,7 @@ const SingleOnlineComplaintView = () => {
                 <div className="text-red-500 text-xl mb-4">Error: {error}</div>
                 <button
                     onClick={() => navigate('/onlinecomplaints')}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900"
                 >
                     Return to Online Complaints List
                 </button>
@@ -381,16 +381,16 @@ const SingleOnlineComplaintView = () => {
             <div className="max-w-7xl mx-auto px-4 py-6">
                 {/* Top Card - Complaint Header */}
                 <div className="bg-white rounded-xl shadow-sm mb-6">
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-5 border-b border-gray-100">
+                    <div className="bg-gray-100 p-5 border-b border-gray-200">
                         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                             <div className="flex items-center">
-                                <div className="bg-green-100 p-3 rounded-lg mr-4">
-                                    <Web className="text-green-700" />
+                                <div className="bg-gray-200 p-3 rounded-lg mr-4">
+                                    <Web className="text-gray-800" />
                                 </div>
                                 <div>
                                     <div className="text-gray-500 text-sm font-medium">Online Complaint Reference</div>
                                     <h1 className="text-xl font-bold text-gray-900">{'#' + complaintId}</h1>
-                                    <div className="text-sm text-green-700 font-medium mt-1">
+                                    <div className="text-sm text-gray-700 font-medium mt-1">
                                         {complaint.complaint_type}
                                     </div>
                                 </div>
@@ -428,7 +428,7 @@ const SingleOnlineComplaintView = () => {
                         {/* Complaint Description Card */}
                         <div className="bg-white rounded-xl shadow-sm p-6">
                             <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                                <Description className="h-5 w-5 mr-2 text-green-600" />
+                                <Description className="h-5 w-5 mr-2 text-gray-800" />
                                 Complaint Details
                             </h2>
                             {isEditing ? (
@@ -438,7 +438,7 @@ const SingleOnlineComplaintView = () => {
                                         value={editedComplaint.description}
                                         onChange={handleInputChange}
                                         onBlur={() => setTouched(t => ({ ...t, description: true }))}
-                                        className={`w-full p-3 border rounded-lg bg-green-50 focus:ring-2 focus:ring-green-500 focus:border-green-500 ${touched.description && !isDescriptionValid ? 'border-red-500' : 'border-green-300'
+                                        className={`w-full p-3 border rounded-lg bg-gray-100 focus:ring-2 focus:ring-gray-800 focus:border-gray-800 ${touched.description && !isDescriptionValid ? 'border-red-500' : 'border-gray-300'
                                             }`}
                                         rows={4}
                                         placeholder="Enter complaint details"
@@ -457,7 +457,7 @@ const SingleOnlineComplaintView = () => {
                         {/* Evidence Files Card */}
                         <div className="bg-white rounded-xl shadow-sm p-6">
                             <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                                <LocalOffer className="h-5 w-5 mr-2 text-green-600" />
+                                <LocalOffer className="h-5 w-5 mr-2 text-gray-800" />
                                 Evidence Files
                             </h2>
 
@@ -466,11 +466,11 @@ const SingleOnlineComplaintView = () => {
                                     {complaint.evidence_files.map((file, index) => (
                                         <div
                                             key={file.evidence_id || index}
-                                            className="border border-gray-200 rounded-lg p-4 hover:border-green-300 transition-colors bg-white"
+                                            className="border border-gray-200 rounded-lg p-4 hover:border-gray-400 transition-colors bg-white"
                                         >
                                             <div className="flex items-start justify-between">
                                                 <div className="flex items-start flex-1">
-                                                    <div className="bg-gray-100 p-2 rounded-lg mr-3 flex-shrink-0">
+                                                    <div className="bg-gray-200 p-2 rounded-lg mr-3 flex-shrink-0">
                                                         {getFileIcon(file.file_type)}
                                                     </div>
                                                     <div className="min-w-0 flex-1">
@@ -492,7 +492,7 @@ const SingleOnlineComplaintView = () => {
                                                 {file.file_url && (
                                                     <button
                                                         onClick={() => handleFileDownload(file.file_url, file.file_name)}
-                                                        className="ml-2 bg-green-100 text-green-700 hover:bg-green-200 p-2 rounded-lg transition-colors flex-shrink-0"
+                                                        className="ml-2 bg-gray-100 text-gray-800 hover:bg-gray-200 p-2 rounded-lg transition-colors flex-shrink-0"
                                                         title="Download file"
                                                     >
                                                         <CloudDownload className="h-4 w-4" />
@@ -516,7 +516,7 @@ const SingleOnlineComplaintView = () => {
                         {complaint.case && (
                             <div className="bg-white rounded-xl shadow-sm p-6">
                                 <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                                    <BusinessCenter className="h-5 w-5 mr-2 text-green-600" />
+                                    <BusinessCenter className="h-5 w-5 mr-2 text-gray-800" />
                                     Linked Case
                                 </h2>
 
@@ -531,17 +531,17 @@ const SingleOnlineComplaintView = () => {
                                         </div>
                                     </div>
                                 ) : complaint.case.status !== 'oicnotreviewed' ? (
-                                    <div className="border border-green-100 rounded-lg overflow-hidden">
-                                        <div className="bg-green-50 p-4">
+                                    <div className="border border-gray-300 rounded-lg overflow-hidden">
+                                        <div className="bg-gray-100 p-4">
                                             <div className="flex justify-between items-start">
                                                 <div>
-                                                    <h4 className="font-medium text-green-900">Case #{complaint.case.case_id}</h4>
-                                                    <p className="text-green-700 mt-1">{complaint.case.topic || "No topic available"}</p>
+                                                    <h4 className="font-medium text-gray-900">Case #{complaint.case.case_id}</h4>
+                                                    <p className="text-gray-700 mt-1">{complaint.case.topic || "No topic available"}</p>
                                                 </div>
                                                 {canViewRelatedCase() && (
                                                     <button
                                                         onClick={() => navigate(`/cases/${complaint.case.case_id}`)}
-                                                        className="bg-green-100 text-green-700 hover:bg-green-200 p-2 rounded-lg transition-colors"
+                                                        className="bg-gray-100 text-gray-800 hover:bg-gray-200 p-2 rounded-lg transition-colors"
                                                     >
                                                         <RemoveRedEye className="h-5 w-5" />
                                                     </button>
@@ -552,19 +552,19 @@ const SingleOnlineComplaintView = () => {
                                         <div className="p-4 bg-white">
                                             <div className="flex items-center mb-4">
                                                 <span className="text-sm text-gray-500">Type:</span>
-                                                <span className="ml-2 bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                                                <span className="ml-2 bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">
                                                     {complaint.case.case_type || "N/A"}
                                                 </span>
                                             </div>
 
                                             <div className="flex items-center mb-4">
                                                 <span className="text-sm text-gray-500">Status:</span>
-                                                <span className={`ml-2 font-medium ${complaint.case.status === 'inprogress' ? 'text-green-700' :
+                                                <span className={`ml-2 font-medium ${complaint.case.status === 'inprogress' ? 'text-gray-800' :
                                                     complaint.case.status === 'closed' ? 'text-red-700' : 'text-yellow-700'
                                                     }`}>
                                                     {complaint.case.status || "Unknown"}
                                                 </span>
-                                                <div className={`h-3 w-3 rounded-full ml-2 ${complaint.case.status === 'inprogress' ? 'bg-green-500' :
+                                                <div className={`h-3 w-3 rounded-full ml-2 ${complaint.case.status === 'inprogress' ? 'bg-gray-800' :
                                                     complaint.case.status === 'closed' ? 'bg-red-500' : 'bg-yellow-500'
                                                     }`} />
                                             </div>
@@ -589,17 +589,17 @@ const SingleOnlineComplaintView = () => {
                     <div className="col-span-1 space-y-6">
                         {/* Complainant Info Card */}
                         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                            <div className="bg-gradient-to-r from-gray-50 to-green-50 px-6 py-4 border-b border-gray-100">
+                            <div className="bg-gray-100 px-6 py-4 border-b border-gray-200">
                                 <h2 className="font-semibold text-gray-800 flex items-center">
-                                    <Person className="h-5 w-5 mr-2 text-green-600" />
+                                    <Person className="h-5 w-5 mr-2 text-gray-800" />
                                     Complainant Details
                                 </h2>
                             </div>
                             <div className="p-6">
                                 <div className="flex flex-col space-y-4">
                                     <div className="flex items-center">
-                                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
-                                            <Person className="text-green-700" />
+                                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
+                                            <Person className="text-gray-800" />
                                         </div>
                                         <div>
                                             <h3 className="font-medium text-gray-900">{complaint.complainant_full_name}</h3>

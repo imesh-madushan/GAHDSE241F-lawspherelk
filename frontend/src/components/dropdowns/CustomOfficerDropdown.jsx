@@ -125,111 +125,80 @@ const CustomOfficerDropdown = ({
         }
 
         return (
-            <div className={`flex-shrink-0 ${sizeClasses} rounded-full bg-gradient-to-br from-gray-500 to-gray-700 flex items-center justify-center text-white font-medium shadow-sm`}>
+            <div className={`flex-shrink-0 ${sizeClasses} rounded-full bg-gray-100 flex items-center justify-center text-gray-700 font-medium shadow-sm`}>
                 {getInitials(officer?.name || "??")}
             </div>
         );
     };
 
     return (
-        <div className={`relative ${className} z-1`} ref={dropdownRef}>
-            {/* Selected officer display */}
-            <div
+        <div className={`relative w-full ${className}`} ref={dropdownRef}>
+            <button
+                type="button"
+                className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2 text-left flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-gray-700 focus:border-gray-700"
                 onClick={() => setIsOpen(!isOpen)}
-                className={`w-full border rounded-lg p-2 flex items-center justify-between cursor-pointer transition-all 
-                    ${isOpen ? 'border-gray-400 ring-2 ring-gray-100 shadow-md' : 'border-gray-200 hover:border-gray-300'}`}
             >
-                <div className="flex items-center flex-1 min-w-0">
+                <div className="flex items-center">
                     {selectedOfficer ? (
                         <>
-                            {renderAvatar(selectedOfficer, 'small')}
-                            <div className="ml-3 truncate">
-                                <div className="text-gray-900 font-medium truncate">{selectedOfficer.name}</div>
-                                {selectedOfficer.role && (
-                                    <div className="text-xs text-gray-500 truncate">{selectedOfficer.role}</div>
+                            <span className="w-8 h-8 rounded-full overflow-hidden border-2 border-gray-300 bg-gray-100 flex items-center justify-center mr-2">
+                                {selectedOfficer.image ? (
+                                    <img src={selectedOfficer.image} alt={selectedOfficer.name} className="w-full h-full object-cover" />
+                                ) : (
+                                    <Person className="text-gray-700" />
                                 )}
-                            </div>
+                            </span>
+                            <span className="text-gray-800 font-medium">{selectedOfficer.name}</span>
                         </>
                     ) : (
-                        <div className="text-gray-500 flex items-center">
-                            <Person className="mr-2 text-gray-400" />
-                            <span>Select officer</span>
-                        </div>
+                        <span className="text-gray-700">Select Officer</span>
                     )}
                 </div>
-
-                <div className="flex items-center ml-2">
-                    {selectedOfficer && (
-                        <button
-                            onClick={handleClearSelection}
-                            className="mr-1 flex p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600"
-                        >
-                            <Clear fontSize="small" />
-                        </button>
-                    )}
-                    <div className={`text-gray-400 transition-transform duration-200 ${isOpen ? 'transform rotate-180' : ''}`}>
-                        <KeyboardArrowDown />
-                    </div>
-                </div>
-            </div>
+                <KeyboardArrowDown className={`transition-transform duration-200 ${isOpen ? 'transform rotate-180' : ''} text-gray-700`} />
+            </button>
 
             {/* Dropdown panel */}
             {isOpen && (
-                <div className="absolute mt-1 w-full bg-white rounded-lg shadow-lg z-20 border border-gray-200 overflow-hidden">
-                    {/* Search box */}
-                    <div className="p-3 border-b border-gray-200 bg-gray-50">
-                        <div className="relative rounded-md shadow-sm">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <Search className="text-gray-400" fontSize="small" />
-                            </div>
-                            <input
-                                ref={inputRef}
-                                type="text"
-                                placeholder="Search officers..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 sm:text-sm"
-                            />
-                        </div>
+                <div className="absolute mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-60 overflow-auto">
+                    <div className="p-2 flex items-center border-b border-gray-200 bg-gray-50">
+                        <Search className="text-gray-700 mr-2" />
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            className="w-full bg-transparent outline-none text-gray-800 placeholder-gray-400"
+                            placeholder="Search officers..."
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                        />
+                        {searchTerm && (
+                            <Clear className="text-gray-400 cursor-pointer ml-2" onClick={() => setSearchTerm('')} />
+                        )}
                     </div>
-
-                    {/* Officers list */}
-                    <div className="max-h-60 overflow-y-auto py-1">
-                        {isLoading ? (
-                            <div className="flex justify-center items-center py-4">
-                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-500"></div>
-                            </div>
-                        ) : filteredOfficers.length > 0 ? (
+                    {isLoading ? (
+                        <div className="p-4 text-center text-gray-500">Loading...</div>
+                    ) : (
+                        filteredOfficers.length === 0 ? (
+                            <div className="p-4 text-center text-gray-500">No officers found</div>
+                        ) : (
                             filteredOfficers.map(officer => (
                                 <div
                                     key={officer.id}
-                                    className={`px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center transition-colors ${selectedOfficerId === officer.id ? 'bg-gray-50' : ''
-                                        }`}
+                                    className={`flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer ${selectedOfficerId === officer.id ? 'bg-gray-100' : ''}`}
                                     onClick={() => handleSelect(officer)}
                                 >
-                                    {renderAvatar(officer, 'small')}
-                                    <div className="ml-3 min-w-0">
-                                        <div className="text-gray-900 font-medium truncate">{officer.name}</div>
-                                        <div className="flex items-center">
-                                            <div className="text-xs text-gray-500 truncate">{officer.role || "Officer"}</div>
-                                            {officer.id === selectedOfficerId && (
-                                                <div className="ml-2 px-1.5 py-0.5 bg-gray-100 text-gray-800 text-xs rounded-full">
-                                                    Selected
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
+                                    <span className="w-8 h-8 rounded-full overflow-hidden border-2 border-gray-300 bg-gray-100 flex items-center justify-center mr-2">
+                                        {officer.image ? (
+                                            <img src={officer.image} alt={officer.name} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <Person className="text-gray-700" />
+                                        )}
+                                    </span>
+                                    <span className="text-gray-800 font-medium">{officer.name}</span>
+                                    <span className="ml-2 text-gray-500 text-xs">{officer.role}</span>
                                 </div>
                             ))
-                        ) : (
-                            <div className="flex flex-col items-center justify-center py-6 px-4 text-center">
-                                <div className="flex bg-gray-100 rounded-full p-2 mb-2">
-                                    <Person className="text-gray-400" />
-                                </div>
-                                <p className="text-gray-500 text-sm">No officers found</p>
-                            </div>
-                        )}
-                    </div>
+                        )
+                    )}
                 </div>
             )}
 

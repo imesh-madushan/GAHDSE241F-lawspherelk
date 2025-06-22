@@ -38,21 +38,21 @@ const AttachmentsTab = ({ evidence, formatDateTime }) => {
         const iconSize = size === 'large' ? 'text-2xl' : size === 'small' ? 'text-sm' : 'text-lg';
 
         if (fileType.startsWith('image/')) {
-            return <Image className={`text-blue-500 ${iconSize}`} />;
+            return <Image className={`text-gray-600 ${iconSize}`} />;
         } else if (fileType.startsWith('video/')) {
             return <VideoLibrary className={`text-purple-500 ${iconSize}`} />;
         } else if (fileType.startsWith('audio/')) {
             return <AudioFile className={`text-green-500 ${iconSize}`} />;
         } else if (fileType === 'application/pdf') {
             return <PictureAsPdf className={`text-red-500 ${iconSize}`} />;
-        } else if (fileType.includes('document') || fileType.includes('word') || fileType.includes('msword') || 
-                   fileType.includes('wordprocessingml') || fileType.includes('vnd.openxmlformats-officedocument.wordprocessingml')) {
-            return <Description className={`text-blue-600 ${iconSize}`} />;
+        } else if (fileType.includes('document') || fileType.includes('word') || fileType.includes('msword') ||
+            fileType.includes('wordprocessingml') || fileType.includes('vnd.openxmlformats-officedocument.wordprocessingml')) {
+            return <Description className={`text-gray-600 ${iconSize}`} />;
         } else if (fileType.includes('sheet') || fileType.includes('excel') || fileType.includes('spreadsheetml') ||
-                   fileType.includes('vnd.openxmlformats-officedocument.spreadsheetml')) {
+            fileType.includes('vnd.openxmlformats-officedocument.spreadsheetml')) {
             return <TableChart className={`text-green-600 ${iconSize}`} />;
         } else if (fileType.includes('presentation') || fileType.includes('powerpoint') || fileType.includes('presentationml') ||
-                   fileType.includes('vnd.openxmlformats-officedocument.presentationml')) {
+            fileType.includes('vnd.openxmlformats-officedocument.presentationml')) {
             return <Slideshow className={`text-orange-600 ${iconSize}`} />;
         } else if (fileType.includes('zip') || fileType.includes('rar') || fileType.includes('7z')) {
             return <FolderZip className={`text-orange-500 ${iconSize}`} />;
@@ -64,7 +64,7 @@ const AttachmentsTab = ({ evidence, formatDateTime }) => {
     };
 
     const getFileTypeColor = (fileType) => {
-        if (fileType.startsWith('image/')) return 'bg-blue-100 text-blue-800';
+        if (fileType.startsWith('image/')) return 'bg-gray-100 text-gray-800';
         if (fileType.startsWith('video/')) return 'bg-purple-100 text-purple-800';
         if (fileType.startsWith('audio/')) return 'bg-green-100 text-green-800';
         if (fileType === 'application/pdf') return 'bg-red-100 text-red-800';
@@ -77,7 +77,7 @@ const AttachmentsTab = ({ evidence, formatDateTime }) => {
     // Add function to get user-friendly file type display
     const getDisplayFileType = (fileType) => {
         const lowerType = fileType.toLowerCase();
-        
+
         if (lowerType.includes('wordprocessingml') || lowerType.includes('msword')) {
             return 'DOCX';
         } else if (lowerType.includes('spreadsheetml') || lowerType.includes('excel')) {
@@ -166,13 +166,13 @@ const AttachmentsTab = ({ evidence, formatDateTime }) => {
                 <>
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold text-gray-700 flex items-center">
-                            <AttachFile className="mr-2 text-blue-600" fontSize="small" />
+                            <AttachFile className="mr-2 text-gray-600" fontSize="small" />
                             File Attachments
                         </h3>
                         <Chip
                             label={`${evidence.attachments.length} file${evidence.attachments.length > 1 ? 's' : ''}`}
                             size="small"
-                            className="bg-blue-50 text-blue-700 font-medium"
+                            className="bg-gray-100 text-gray-700 font-medium"
                         />
                     </div>
 
@@ -261,7 +261,7 @@ const AttachmentsTab = ({ evidence, formatDateTime }) => {
                                                     {canPreview(attachment.file_type) ? (
                                                         <button
                                                             onClick={() => handleAttachmentClick(attachment)}
-                                                            className="inline-flex items-center px-2 py-1 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors"
+                                                            className="inline-flex items-center px-2 py-1 bg-gray-700 text-white text-xs font-medium rounded hover:bg-gray-800 transition-colors"
                                                             title="Preview"
                                                         >
                                                             <Visibility fontSize="small" className="mr-1" style={{ fontSize: '14px' }} />
@@ -321,7 +321,7 @@ const AttachmentsTab = ({ evidence, formatDateTime }) => {
                 }}
             >
                 {/* Modal Header */}
-                <div className="bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-200 px-4 py-3">
+                <div className="bg-gray-100 border-b border-gray-200 px-4 py-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
                             <div className="bg-white p-1.5 rounded-lg shadow-sm">
@@ -333,7 +333,7 @@ const AttachmentsTab = ({ evidence, formatDateTime }) => {
                                     <Chip
                                         label={attachmentPreview.fileType}
                                         size="small"
-                                        className="bg-blue-100 text-blue-700 text-xs h-5"
+                                        className="bg-gray-200 text-gray-700 text-xs h-5"
                                         style={{ fontSize: '10px', height: '20px' }}
                                     />
                                     {attachmentPreview.file && (
@@ -450,7 +450,7 @@ const AttachmentsTab = ({ evidence, formatDateTime }) => {
                                         href={attachmentPreview.file.file_path}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200 no-underline shadow-lg hover:shadow-xl"
+                                        className="inline-flex items-center px-6 py-3 bg-gray-700 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors duration-200 no-underline shadow-lg hover:shadow-xl"
                                     >
                                         <Download className="mr-2" fontSize="small" />
                                         Download File
@@ -471,7 +471,7 @@ const AttachmentsTab = ({ evidence, formatDateTime }) => {
                             href={attachmentPreview.file?.file_path}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors duration-200 no-underline"
+                            className="inline-flex items-center px-3 py-1.5 bg-gray-700 text-white text-xs font-medium rounded hover:bg-gray-800 transition-colors duration-200 no-underline"
                         >
                             <Download className="mr-1" style={{ fontSize: '14px' }} />
                             Download

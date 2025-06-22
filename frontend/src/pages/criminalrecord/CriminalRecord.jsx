@@ -206,14 +206,12 @@ const CriminalRecord = () => {
             icon: <Gavel fontSize="small" />,
             label: 'Add Offence',
             onClick: handleAddOffence,
-            styles: 'w-full bg-amber-600 text-white hover:bg-amber-700 border-amber-600'
+            styles: 'w-full bg-gray-800 text-white hover:bg-gray-900 border-gray-800'
         }] : [])
-    ];
-
-    if (loading) {
+    ]; if (loading) {
         return (
             <div className="flex justify-center items-center h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-800"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-800"></div>
             </div>
         );
     }
@@ -248,7 +246,7 @@ const CriminalRecord = () => {
                     {
                         icon: <Print fontSize='small' />,
                         label: 'Print Record',
-                        styles: 'text-blue-700 border border-blue-700',
+                        styles: 'text-gray-800 border border-gray-800',
                         onClick: () => window.print()
                     },
                     isEditing ? {
@@ -260,19 +258,19 @@ const CriminalRecord = () => {
                         icon: <Edit fontSize='small' />,
                         label: 'Edit Record',
                         onClick: handleEditToggle,
-                        styles: 'text-blue-700 border border-blue-700'
+                        styles: 'text-gray-800 border border-gray-800'
                     },
                     isEditing ? {
                         icon: <Save fontSize='small' />,
                         label: 'Save',
                         onClick: handleSaveChanges,
-                        styles: 'bg-green-700 text-white'
+                        styles: 'bg-gray-800 text-white'
                     } : null,
-                    {
-                        icon: <History fontSize='small' />,
-                        onClick: () => navigate(`/recordhistory/criminalrecord/${criminalId}`),
-                        styles: 'bg-white rounded-full text-gray-700 border-purple-600'
-                    }
+                    // {
+                    //     icon: <History fontSize='small' />,
+                    //     onClick: () => navigate(`/recordhistory/criminalrecord/${criminalId}`),
+                    //     styles: 'bg-white rounded-full text-gray-700 border-gray-400'
+                    // }
                 ].filter(Boolean)}
             />
 
@@ -321,10 +319,9 @@ const CriminalRecord = () => {
                     </div>
 
                     {/* Right Sidebar */}
-                    <div className="lg:col-span-1 space-y-6">
-                        {/* Criminal Summary Card */}
+                    <div className="lg:col-span-1 space-y-6">                        {/* Criminal Summary Card */}
                         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                            <div className="bg-gradient-to-r from-gray-50 to-red-50 px-6 py-4 border-b border-gray-100">
+                            <div className="bg-gray-100 px-6 py-4 border-b border-gray-200">
                                 <h2 className="font-semibold text-gray-800">Criminal Summary</h2>
                             </div>
                             <div className="p-6 space-y-4">
@@ -341,13 +338,11 @@ const CriminalRecord = () => {
                                     <span className="font-medium text-lg">{calculateAge(criminalData.dob)} years</span>
                                 </div>
                             </div>
-                        </div>
-
-                        {/* Quick Actions */}
+                        </div>                        {/* Quick Actions */}
                         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                            <div className="bg-gradient-to-r from-gray-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
+                            <div className="bg-gray-100 px-6 py-4 border-b border-gray-200">
                                 <h2 className="font-semibold text-gray-800 flex items-center">
-                                    <DeviceHub className="h-5 w-5 mr-2 text-blue-600" />
+                                    <DeviceHub className="h-5 w-5 mr-2 text-gray-700" />
                                     Quick Actions
                                 </h2>
                             </div>

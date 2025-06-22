@@ -62,7 +62,7 @@ const CriminalProfile = ({ criminal, calculateAge, formatDate, isEditing, handle
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Left Column - Personal Info */}
                 <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                    <div className="bg-gradient-to-r from-gray-700 to-gray-900 p-6 flex flex-col items-center">
+                    <div className="bg-gray-800 p-6 flex flex-col items-center">
                         <div className="relative">
                             {profilePreview ? (
                                 <img

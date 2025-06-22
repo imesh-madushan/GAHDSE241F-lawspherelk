@@ -119,9 +119,8 @@ const LinkEvidenceModal = ({
                 />
 
                 {!popup.open && !showCreateEvidenceModal && (
-                    <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
-                        {/* Header */}
-                        <div className="bg-gradient-to-r from-indigo-600 to-indigo-800 text-white px-6 py-5 flex items-center justify-between">
+                    <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">                        {/* Header */}
+                        <div className="bg-gray-800 text-white px-6 py-5 flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="bg-white/20 p-2 rounded-lg">
                                     <LinkIcon className="text-white" />
@@ -161,35 +160,32 @@ const LinkEvidenceModal = ({
                                 )}
                             </div>
 
-                            {/* Create New Evidence Option */}
-                            <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                            {/* Create New Evidence Option */}                            <div className="mb-6 p-4 bg-gray-100 rounded-lg border border-gray-200">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <h4 className="font-medium text-blue-900">Don't see the evidence you need?</h4>
-                                        <p className="text-sm text-blue-700 mt-1">Create new evidence and it will be automatically linked to this offence.</p>
+                                        <h4 className="font-medium text-gray-900">Don't see the evidence you need?</h4>
+                                        <p className="text-sm text-gray-700 mt-1">Create new evidence and it will be automatically linked to this offence.</p>
                                     </div>
                                     <OutlinedButton
                                         action={{
                                             icon: <Add fontSize="small" />,
                                             label: 'Create New Evidence',
                                             onClick: handleCreateNewEvidence,
-                                            styles: 'bg-blue-600 text-white hover:bg-blue-700 border-blue-600'
+                                            styles: 'bg-gray-800 text-white hover:bg-gray-900 border-gray-800'
                                         }}
                                     />
                                 </div>
-                            </div>
-
-                            {/* Selected Evidence Display */}
+                            </div>                            {/* Selected Evidence Display */}
                             {selectedEvidence && (
-                                <div className="mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
-                                    <h4 className="font-medium text-indigo-900 mb-2">Selected Evidence:</h4>
-                                    <div className="text-sm text-indigo-700">
+                                <div className="mb-6 p-4 bg-gray-100 rounded-lg border border-gray-200">
+                                    <h4 className="font-medium text-gray-900 mb-2">Selected Evidence:</h4>
+                                    <div className="text-sm text-gray-700">
                                         <div className="font-medium">{selectedEvidence.type}</div>
-                                        <div className="text-xs text-indigo-600 mt-1">
+                                        <div className="text-xs text-gray-600 mt-1">
                                             ID: {selectedEvidence.evidence_id}
                                         </div>
                                         {selectedEvidence.details && (
-                                            <div className="text-xs text-indigo-600 mt-1">
+                                            <div className="text-xs text-gray-600 mt-1">
                                                 {selectedEvidence.details.length > 100
                                                     ? selectedEvidence.details.substring(0, 100) + '...'
                                                     : selectedEvidence.details
@@ -209,13 +205,12 @@ const LinkEvidenceModal = ({
                                         onClick: handleClose,
                                         styles: 'border-gray-300 text-gray-700 hover:bg-gray-100 h-11 px-6'
                                     }}
-                                />
-                                <OutlinedButton
+                                />                                <OutlinedButton
                                     action={{
                                         icon: <Save fontSize="small" />,
                                         label: linking ? 'Linking...' : 'Link Evidence',
                                         onClick: handleSubmit,
-                                        styles: 'bg-gradient-to-r from-indigo-600 to-indigo-800 text-white hover:from-indigo-700 hover:to-indigo-900 h-11 px-6 shadow-lg',
+                                        styles: 'bg-gray-800 text-white hover:bg-gray-900 h-11 px-6 shadow-lg',
                                         disabled: linking
                                     }}
                                 />

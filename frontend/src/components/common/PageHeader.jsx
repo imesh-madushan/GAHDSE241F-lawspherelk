@@ -39,7 +39,7 @@ const PageHeader = ({
                                 key={index}
                                 action={{
                                     ...action,
-                                    styles: action.styles || 'text-blue-700' // Default style if none provided
+                                    styles: action.styles || 'text-gray-800' // Default to neutral style
                                 }}
                             />
                         ))}
@@ -50,4 +50,4 @@ const PageHeader = ({
     );
 };
 
-export default PageHeader; 
+export default PageHeader;

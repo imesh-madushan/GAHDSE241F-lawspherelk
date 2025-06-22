@@ -7,9 +7,9 @@ const EvidenceTab = ({ evidence, formatDate, formatTime, isEditing }) => {
     const getEvidenceIcon = (type) => {
         switch (type.toLowerCase()) {
             case 'fingerprint':
-                return <Fingerprint className="text-blue-600" />;
+                return <Fingerprint className="text-gray-700" />;
             case 'cctv footage':
-                return <PhotoCamera className="text-purple-600" />;
+                return <PhotoCamera className="text-gray-700" />;
             default:
                 return <Description className="text-gray-600" />;
         }

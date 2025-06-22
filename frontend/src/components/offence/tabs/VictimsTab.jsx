@@ -29,7 +29,7 @@ const VictimsTab = ({ offence, formatDate, canAddVictim }) => {
                     {victims.map((victim, index) => (
                         <div
                             key={`${victim.nic}_${index}`}
-                            className="border border-gray-200 rounded-lg p-4 hover:border-red-300 transition-colors bg-white"
+                            className="border border-gray-200 rounded-lg p-4 hover:border-gray-400 transition-colors bg-white"
                         >
                             <div className="flex items-start">
                                 <div className="bg-red-100 p-2 rounded-lg mr-3 flex-shrink-0">
