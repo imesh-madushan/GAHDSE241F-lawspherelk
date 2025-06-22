@@ -101,7 +101,7 @@ const SearchInterface = ({ searchOptions = [], filters = [], onSearch }) => {
           ))}
           <button
             onClick={clearAllFilters}
-            className="ml-auto hover:cursor-pointer text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"
+            className="ml-auto hover:cursor-pointer text-xs font-medium text-gray-600 hover:text-gray-900 transition-colors"
           >
             Clear all
           </button>

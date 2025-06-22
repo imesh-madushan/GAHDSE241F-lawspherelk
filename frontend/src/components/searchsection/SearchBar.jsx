@@ -57,7 +57,7 @@ const SearchBar = ({
                                 onClick: () => setIsTypeDropdownOpen(!isTypeDropdownOpen),
                                 icon: <ChevronDown className={`ml-2 w-4 h-4 transition-transform duration-200 ${isTypeDropdownOpen ? 'rotate-180' : ''}`} />,
                                 label: searchOptions.find(option => option.value === searchType)?.label || 'Search by',
-                                styles: 'flex items-center justify-center text-blue-700 hover:bg-blue-700 hover:text-white h-11 w-50 px-4 py-0.5 text-sm font-medium rounded-sm bg-gray-50 border-0 border-gray-300 outline-none ring-0 hover:cursor-pointer transition-all',
+                                styles: 'flex items-center justify-center text-gray-800 hover:bg-gray-900 hover:text-white h-11 w-50 px-4 py-0.5 text-sm font-medium rounded-sm bg-gray-50 border-0 border-gray-300 outline-none ring-0 hover:cursor-pointer transition-all',
                             }}
                         />
 
@@ -72,7 +72,7 @@ const SearchBar = ({
                                                 setIsTypeDropdownOpen(false);
                                             }}
                                             className={`block w-full text-left px-4 py-2 text-sm ${searchType === option.value
-                                                ? 'bg-blue-50 text-blue-700 font-medium'
+                                                ? 'bg-blue-50 text-gray-700 font-medium'
                                                 : 'text-gray-700 hover:bg-gray-50'
                                                 }`}
                                         >
@@ -92,7 +92,7 @@ const SearchBar = ({
                                 onClick: () => setShowFilters(!showFilters),
                                 icon: <Filter fontSize='small' className='mr-2 w-4.5 h-4.5' />,
                                 label: 'Filters',
-                                styles: 'flex items-center justify-center text-blue-700 hover:bg-blue-700 hover:text-white h-11 w-30',
+                                styles: 'flex items-center justify-center text-gray-700 hover:bg-gray-700 hover:text-white h-11 w-30',
                             }}
                         />
                     )}
@@ -102,7 +102,7 @@ const SearchBar = ({
                             onClick: handleSearch,
                             icon: <Search fontSize='small' className='mr-2 w-5 h-5' />,
                             label: 'Search',
-                            styles: 'flex items-center justify-center text-blue-700 bg-blue-800 text-white hover:bg-blue-700 hover:text-white h-11 w-30',
+                            styles: 'flex items-center justify-center text-gray-700 bg-gray-800 text-white hover:bg-gray-700 hover:text-white h-11 w-30',
                         }}
                     />
                 </div>

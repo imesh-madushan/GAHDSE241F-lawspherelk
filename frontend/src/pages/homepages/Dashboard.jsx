@@ -1106,8 +1106,7 @@ const Dashboard = () => {
                     data={caseAnalyticsData}
                     margin={{ left: 10, right: 15, top: 15, bottom: 15 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />                    <XAxis
                       dataKey="name"
                       tick={{ fontSize: 10, fill: '#6b7280' }}
                       interval={0}
@@ -1115,7 +1114,10 @@ const Dashboard = () => {
                       textAnchor="end"
                       height={20}
                     />
-                    <YAxis tick={{ fontSize: 10, fill: '#6b7280' }} />
+                    <YAxis 
+                      tick={{ fontSize: 10, fill: '#6b7280' }} 
+                      allowDecimals={false}
+                    />
                     <Tooltip
                       formatter={(value) => [`${value} cases`, 'Total Cases']}
                       labelFormatter={(label) => `Case Type: ${label}`}

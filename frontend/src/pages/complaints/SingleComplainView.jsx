@@ -148,7 +148,7 @@ const SingleComplaintView = () => {
 
     // Only allow edit if complaint is not viewed or closed
     const canEdit =
-        (user.role === "OIC" || user.role === "Crime OIC" || user.id === complaint?.officer_id) &&
+        user.id === complaint?.officer_id &&
         complaint?.status === "new";
 
     const handleConfirmClose = async () => {

@@ -265,8 +265,8 @@ exports.searchComplaints = async (filters) => {
     }
     // Complaint ID filter
     if (filters.complain_id) {
-        query += ` AND complaints.complain_id = ?`;
-        params.push(filters.complain_id);
+        query += ` AND complaints.complain_id LIKE ?`;
+        params.push(`%${filters.complain_id}%`);
     }
     // Officer name filter
     if (filters.officer) {

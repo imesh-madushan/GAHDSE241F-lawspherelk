@@ -9,7 +9,8 @@ import {
     NavigateNext,
     NavigateBefore,
     KeyboardArrowDown,
-    Assignment
+    Assignment,
+    FingerprintRounded
 } from '@mui/icons-material';
 import { apiClient } from '../../config/apiConfig';
 import PageHeader from '../../components/common/PageHeader';
@@ -359,10 +360,10 @@ const InvestigationsPage = () => {
                         user.role === 'Inspector' ||
                         user.role === 'Sub Inspector'
                     ) ? [{
-                        icon: <Add fontSize='small' className='text-white rounded-full' />,
+                        icon: <Add fontSize='medium' className='text-white rounded-full' />,
                         label: 'Create Investigation',
                         onClick: () => setOpenCreateModal(true),
-                        styles: 'h-10 bg-gray-950 text-white border-black rounded-2xl'
+                        styles: 'h-10 bg-gray-800 text-white border-black rounded-2xl'
                     }] : [])
                 ]}
             />
@@ -410,7 +411,7 @@ const InvestigationsPage = () => {
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-10 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
+                                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
                                         <div
                                             className="flex items-center cursor-pointer hover:text-gray-700 transition-colors"
                                             onClick={() => handleSort('investigation_id')}
@@ -456,23 +457,57 @@ const InvestigationsPage = () => {
                                             className="hover:bg-gray-50 transition-colors cursor-pointer"
                                             onClick={() => navigate(`/investigations/${investigation.investigation_id}`)}
                                         >
-                                            <td className="px-10 py-6 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            <td className="px-6 py-6 whitespace-nowrap text-sm font-medium text-gray-900">
                                                 <Link
                                                     to={`/investigations/${investigation.investigation_id}`}
                                                     className="hover:underline text-gray-900 flex items-center"
                                                     onClick={(e) => e.stopPropagation()}
                                                 >
+                                                    <div className="bg-gray-100 p-1 rounded-lg mr-4 text-gray-900 flex-shrink-0">
+                                                        <FingerprintRounded fontSize="small" />
+                                                    </div>
                                                     <span className="font-semibold">{investigation.investigation_id}</span>
                                                 </Link>
-                                            </td>
-                                            <td className="px-10 py-6">
+                                            </td>                                            <td className="px-10 py-6">
                                                 <div className="max-w-md">
-                                                    <span className="text-sm text-gray-900 font-medium leading-relaxed block">
-                                                        {investigation.topic}
-                                                    </span>
-                                                    <span className="text-xs text-gray-500 mt-1 block">
-                                                        {investigation.location || 'Location not specified'}
-                                                    </span>
+                                                    <div className="group relative">
+                                                        <span className="text-sm text-gray-900 font-medium leading-relaxed block cursor-pointer">
+                                                            {
+                                                                (() => {
+                                                                    const topic = investigation.topic || 'Untitled Investigation';
+                                                                    const words = topic.split(' ');
+                                                                    return words.length > 5
+                                                                        ? words.slice(0, 5).join(' ') + '...'
+                                                                        : topic;
+                                                                })()
+                                                            }
+                                                        </span>
+                                                        {/* Tooltip for full topic */}
+                                                        {investigation.topic && investigation.topic.split(' ').length > 15 && (
+                                                            <div className="absolute left-0 top-full mt-1 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-2 py-1 z-10 max-w-sm break-words whitespace-normal">
+                                                                {investigation.topic}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="mt-1 group relative">
+                                                        <span className="text-xs text-gray-500 cursor-pointer">
+                                                            {
+                                                                (() => {
+                                                                    const location = investigation.location || 'Location not specified';
+                                                                    const words = location.split(' ');
+                                                                    return words.length > 6
+                                                                        ? words.slice(0, 6).join(' ') + '...'
+                                                                        : location;
+                                                                })()
+                                                            }
+                                                        </span>
+                                                        {/* Tooltip for full location */}
+                                                        {investigation.location && investigation.location.split(' ').length > 8 && (
+                                                            <div className="absolute left-0 top-full mt-1 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-2 py-1 z-10 max-w-sm break-words whitespace-normal">
+                                                                {investigation.location}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </td>
                                             <td className="px-10 py-6 whitespace-nowrap">
@@ -489,7 +524,7 @@ const InvestigationsPage = () => {
                                                         <CalendarMonth className="text-gray-600" style={{ fontSize: '1rem' }} />
                                                     </div>
                                                     <div className="flex flex-col space-y-1">
-                                                        <span className="font-medium">{formatDate(investigation.start_dt)}</span>
+                                                        <span className="">{formatDate(investigation.start_dt)}</span>
                                                         {investigation.start_dt && (
                                                             <span className="text-xs text-gray-500 flex items-center">
                                                                 <AccessTime className="mr-1.5" style={{ fontSize: '0.75rem' }} />
@@ -498,40 +533,50 @@ const InvestigationsPage = () => {
                                                         )}
                                                     </div>
                                                 </div>
-                                            </td>
-                                            <td className="px-10 py-6">
+                                            </td>                                            <td className="px-10 py-6">
                                                 {investigation.case_id ? (
-                                                    <div className="max-w-xs">
+                                                    <div className="max-w-xs group relative">
                                                         <Link
                                                             to={`/cases/${investigation.case_id}`}
-                                                            className="hover:underline text-blue-900 text-sm font-medium block"
+                                                            className="hover:underline text-blue-900 text-sm font-medium block cursor-pointer"
                                                             onClick={(e) => e.stopPropagation()}
                                                         >
-                                                            {investigation.case_topic || 'Untitled Case'}
+                                                            {
+                                                                (() => {
+                                                                    const caseTitle = investigation.case_topic || 'Untitled Case';
+                                                                    const words = caseTitle.split(' ');
+                                                                    return words.length > 5
+                                                                        ? words.slice(0, 5).join(' ') + '...'
+                                                                        : caseTitle;
+                                                                })()
+                                                            }
                                                         </Link>
-                                                        <span className="text-xs text-gray-500 mt-1 block">
-                                                            ID: {investigation.case_id}
-                                                        </span>
+                                                        {/* Tooltip for full case info */}
+                                                        {investigation.case_topic && investigation.case_topic.split(' ').length > 5 && (
+                                                            <div className="absolute left-0 top-full mt-1 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-2 py-1 z-10 break-words whitespace-normal">
+                                                                <div className="font-medium">{investigation.case_topic}</div>
+                                                                <div className="text-gray-300 mt-1">Case ID: {investigation.case_id}</div>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 ) : (
                                                     <span className="text-gray-400 italic">No case linked</span>
                                                 )}
                                             </td>
-                                            <td className="px-10 py-6 whitespace-nowrap">
-                                                <div className="flex flex-col space-y-2">
-                                                    <div className="flex items-center">
-                                                        <Group className="mr-2 text-gray-400" style={{ fontSize: '0.9rem' }} />
-                                                        <span className="bg-blue-50 text-blue-900 text-xs font-medium px-2 py-0.5 rounded-full">
-                                                            {investigation.officer_count || 0} Officers
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex items-center">
-                                                        <Fingerprint className="mr-2 text-gray-400" style={{ fontSize: '0.9rem' }} />
-                                                        <span className="bg-purple-50 text-purple-900 text-xs font-medium px-2 py-0.5 rounded-full">
-                                                            {investigation.evidence_count || 0} Evidence
-                                                        </span>
-                                                    </div>
+                                            <td className="px-10 py-6 whitespace-nowrap">                                                <div className="flex flex-col space-y-1.5">
+                                                <div className="flex items-center">
+                                                    <Group className="mr-1.5 text-gray-400" style={{ fontSize: '0.8rem' }} />
+                                                    <span className="bg-blue-50 text-blue-900 text-xs font-medium px-2 py-0.5 rounded-full">
+                                                        {investigation.officer_count || 0} Officers
+                                                    </span>
                                                 </div>
+                                                <div className="flex items-center">
+                                                    <Fingerprint className="mr-1.5 text-gray-400" style={{ fontSize: '0.8rem' }} />
+                                                    <span className="bg-purple-50 text-purple-900 text-xs font-medium px-2 py-0.5 rounded-full">
+                                                        {investigation.evidence_count || 0} Evidence
+                                                    </span>
+                                                </div>
+                                            </div>
                                             </td>
                                         </tr>
                                     ))

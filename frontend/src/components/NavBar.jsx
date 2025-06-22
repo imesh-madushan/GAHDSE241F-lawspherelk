@@ -83,7 +83,7 @@ const Navbar = ({ expanded }) => {
 
           <div className="flex items-center space-x-4">
             {/* TODO: Create notification backend */}
-            <NotificationButton count={55} notifications={[]} sideBarExpanded={expanded} />
+            <NotificationButton count={24} notifications={[]} sideBarExpanded={expanded} />
 
             {/* Profile Menu */}
             <div className="relative">

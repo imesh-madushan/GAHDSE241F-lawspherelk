@@ -331,50 +331,135 @@ exports.getAllEvidence = async (userRole, userId, filters = {}) => {
       offset = 0,
       sortBy = "collected_dt",
       sortOrder = "DESC",
+      officer_id,
+      include_user_and_cases
     } = filters;
+
+    // Base WHERE conditions for role-based filtering
+    let whereConditions = "WHERE 1=1";
+    const params = [];
+
+    if (officer_id) {
+      // Police Constable/Sergeant - only their collected evidences
+      whereConditions += " AND e.officer_id = ?";
+      params.push(officer_id);
+    } else if (include_user_and_cases) {
+      // Inspector/Sub Inspector - their evidences + their case-related evidences
+      whereConditions += ` AND (
+        e.officer_id = ? OR 
+        EXISTS (
+          SELECT 1 FROM case_evidance ce2 
+          JOIN cases c2 ON ce2.case_id = c2.case_id 
+          WHERE ce2.evidence_id = e.evidence_id AND c2.leader_id = ?
+        )
+      )`;
+      params.push(include_user_and_cases, include_user_and_cases);
+    }
 
     // Subquery for total count
     const totalCountQuery = `
-            SELECT COUNT(DISTINCT e.evidence_id) as total_count
-            FROM evidance e
-        `;
+      SELECT COUNT(DISTINCT e.evidence_id) as total_count
+      FROM evidance e
+      LEFT JOIN case_evidance ce ON ce.evidence_id = e.evidence_id
+      LEFT JOIN cases c ON ce.case_id = c.case_id
+      ${whereConditions}
+    `;
 
-    // Main query
+    // Main query with linked cases and complaint details
     let query = `
-            SELECT 
-                e.evidence_id,
-                e.type,
-                e.location,
-                e.details,
-                e.collected_dt,
-                e.officer_id,
-                e.investigation_id,
-                u.name as collected_by,
-                u.role as officer_role,
-                i.topic as investigation_topic,
-                i.status as investigation_status,
-                -- Prefer investigation's case, else case_evidance
-                COALESCE(i.case_id, ce.case_id) as case_id,
-                c.topic as case_topic,
-                c.status as case_status,
-                COUNT(w.nic) as witness_count
-            FROM evidance e
-            LEFT JOIN users u ON e.officer_id = u.user_id
-            LEFT JOIN investigation i ON e.investigation_id = i.investigation_id
-            LEFT JOIN case_evidance ce ON ce.evidence_id = e.evidence_id
-            LEFT JOIN cases c ON (i.case_id = c.case_id OR ce.case_id = c.case_id)
-            LEFT JOIN evidance_witnesses w ON e.evidence_id = w.evidence_id
-            GROUP BY e.evidence_id
-            ORDER BY e.${sortBy} ${sortOrder}
-            LIMIT ? OFFSET ?
-        `;
+      SELECT 
+        e.evidence_id,
+        e.type,
+        e.location,
+        e.details,
+        e.collected_dt,
+        e.officer_id,
+        e.investigation_id,
+        u.name as officer_name,
+        u.role as officer_role,
+        u.profile_pic as officer_profile,
+        i.topic as investigation_topic,
+        i.status as investigation_status,
+        -- Prefer investigation's case, else case_evidance
+        COALESCE(i.case_id, ce.case_id) as case_id,
+        c.topic as case_topic,
+        c.status as case_status,
+        c.case_type,
+        c.started_dt as case_started_dt,
+        c.complain_id,
+        -- Complaint details when case status is oicnotreviewed
+        CASE 
+          WHEN c.status = 'oicnotreviewed' THEN comp.description
+          ELSE NULL
+        END as complaint_description,
+        CASE 
+          WHEN c.status = 'oicnotreviewed' THEN comp.complain_dt
+          ELSE NULL
+        END as complaint_date,
+        CASE 
+          WHEN c.status = 'oicnotreviewed' THEN comp.status
+          ELSE NULL
+        END as complaint_status,
+        COUNT(DISTINCT w.nic) as witness_count,
+        -- Get all linked case IDs for this evidence
+        GROUP_CONCAT(DISTINCT ce_all.case_id) as linked_case_ids
+      FROM evidance e
+      LEFT JOIN users u ON e.officer_id = u.user_id
+      LEFT JOIN investigation i ON e.investigation_id = i.investigation_id
+      LEFT JOIN case_evidance ce ON ce.evidence_id = e.evidence_id
+      LEFT JOIN case_evidance ce_all ON ce_all.evidence_id = e.evidence_id
+      LEFT JOIN cases c ON (i.case_id = c.case_id OR ce.case_id = c.case_id)
+      LEFT JOIN complaints comp ON c.complain_id = comp.complain_id AND c.status = 'oicnotreviewed'
+      LEFT JOIN evidance_witnesses w ON e.evidence_id = w.evidence_id
+      ${whereConditions}
+      GROUP BY e.evidence_id
+      ORDER BY e.${sortBy} ${sortOrder}
+      LIMIT ? OFFSET ?
+    `;
+
+    // Add limit and offset to params
+    params.push(limit, offset);
 
     // Get total count
-    const [[{ total_count }]] = await db.query(totalCountQuery);
+    const [[{ total_count }]] = await db.query(totalCountQuery, params.slice(0, params.length - 2));
 
-    const [evidences] = await db.query(query, [limit, offset]);
-    // Attach total_count to each evidence for compatibility
-    evidences.forEach((e) => (e.total_count = total_count));
+    const [evidences] = await db.query(query, params);
+
+    // For each evidence, get all linked cases details
+    for (let evidence of evidences) {
+      if (evidence.linked_case_ids) {
+        const caseIds = evidence.linked_case_ids.split(',');
+        const [linkedCases] = await db.query(`
+          SELECT 
+            c.case_id,
+            c.topic as case_topic,
+            c.status as case_status,
+            c.case_type,
+            c.started_dt,
+            c.complain_id,
+            CASE 
+              WHEN c.status = 'oicnotreviewed' THEN comp.description
+              ELSE NULL
+            END as complaint_description,
+            CASE 
+              WHEN c.status = 'oicnotreviewed' THEN comp.complain_dt
+              ELSE NULL
+            END as complaint_date,
+            CASE 
+              WHEN c.status = 'oicnotreviewed' THEN comp.status
+              ELSE NULL
+            END as complaint_status
+          FROM cases c
+          LEFT JOIN complaints comp ON c.complain_id = comp.complain_id AND c.status = 'oicnotreviewed'
+          WHERE c.case_id IN (${caseIds.map(() => '?').join(',')})
+        `, caseIds);
+        
+        evidence.linked_cases = linkedCases;
+      } else {
+        evidence.linked_cases = [];
+      }
+      evidence.total_count = total_count;
+    }
 
     return evidences;
   } catch (error) {
@@ -401,49 +486,94 @@ exports.searchEvidence = async (filters, userRole, userId) => {
       offset = 0,
       sortBy = "collected_dt",
       sortOrder = "DESC",
+      officer_id,
+      include_user_and_cases
     } = filters;
+
+    // Base WHERE conditions for role-based filtering
+    let whereConditions = "WHERE 1=1";
+    const params = [];
+    const countParams = [];
+
+    // Apply role-based filtering
+    if (officer_id) {
+      // Police Constable/Sergeant - only their collected evidences
+      whereConditions += " AND e.officer_id = ?";
+      params.push(officer_id);
+      countParams.push(officer_id);
+    } else if (include_user_and_cases) {
+      // Inspector/Sub Inspector - their evidences + their case-related evidences
+      whereConditions += ` AND (
+        e.officer_id = ? OR 
+        EXISTS (
+          SELECT 1 FROM case_evidance ce2 
+          JOIN cases c2 ON ce2.case_id = c2.case_id 
+          WHERE ce2.evidence_id = e.evidence_id AND c2.leader_id = ?
+        )
+      )`;
+      params.push(include_user_and_cases, include_user_and_cases);
+      countParams.push(include_user_and_cases, include_user_and_cases);
+    }
 
     // Subquery for total count
     let countQuery = `
-            SELECT COUNT(DISTINCT e.evidence_id) as total_count
-            FROM evidance e
-            LEFT JOIN investigation i ON e.investigation_id = i.investigation_id
-            LEFT JOIN case_evidance ce ON ce.evidence_id = e.evidence_id
-            LEFT JOIN crimeoffence_evidance coe ON coe.evidence_id = e.evidence_id
-            LEFT JOIN cases c ON (i.case_id = c.case_id OR ce.case_id = c.case_id)
-            LEFT JOIN users u ON e.officer_id = u.user_id
-            WHERE 1=1
-        `;
+      SELECT COUNT(DISTINCT e.evidence_id) as total_count
+      FROM evidance e
+      LEFT JOIN investigation i ON e.investigation_id = i.investigation_id
+      LEFT JOIN case_evidance ce ON ce.evidence_id = e.evidence_id
+      LEFT JOIN crimeoffence_evidance coe ON coe.evidence_id = e.evidence_id
+      LEFT JOIN cases c ON (i.case_id = c.case_id OR ce.case_id = c.case_id)
+      LEFT JOIN users u ON e.officer_id = u.user_id
+      ${whereConditions}
+    `;
 
     let query = `
-            SELECT 
-                e.evidence_id,
-                e.type,
-                e.location,
-                e.details,
-                e.collected_dt,
-                e.officer_id,
-                e.investigation_id,
-                u.name as collected_by,
-                u.role as officer_role,
-                i.topic as investigation_topic,
-                i.status as investigation_status,
-                COALESCE(i.case_id, ce.case_id) as case_id,
-                c.topic as case_topic,
-                c.status as case_status,
-                COUNT(DISTINCT w.nic) as witness_count
-            FROM evidance e
-            LEFT JOIN users u ON e.officer_id = u.user_id
-            LEFT JOIN investigation i ON e.investigation_id = i.investigation_id
-            LEFT JOIN case_evidance ce ON ce.evidence_id = e.evidence_id
-            LEFT JOIN crimeoffence_evidance coe ON coe.evidence_id = e.evidence_id
-            LEFT JOIN cases c ON (i.case_id = c.case_id OR ce.case_id = c.case_id)
-            LEFT JOIN evidance_witnesses w ON e.evidence_id = w.evidence_id
-            WHERE 1=1
-        `;
-
-    const params = [];
-    const countParams = [];
+      SELECT 
+        e.evidence_id,
+        e.type,
+        e.location,
+        e.details,
+        e.collected_dt,
+        e.officer_id,
+        e.investigation_id,
+        u.name as officer_name,
+        u.role as officer_role,
+        u.profile_pic as officer_profile,
+        i.topic as investigation_topic,
+        i.status as investigation_status,
+        COALESCE(i.case_id, ce.case_id) as case_id,
+        c.topic as case_topic,
+        c.status as case_status,
+        c.case_type,
+        c.started_dt as case_started_dt,
+        c.complain_id,
+        -- Complaint details when case status is oicnotreviewed
+        CASE 
+          WHEN c.status = 'oicnotreviewed' THEN comp.description
+          ELSE NULL
+        END as complaint_description,
+        CASE 
+          WHEN c.status = 'oicnotreviewed' THEN comp.complain_dt
+          ELSE NULL
+        END as complaint_date,
+        CASE 
+          WHEN c.status = 'oicnotreviewed' THEN comp.status
+          ELSE NULL
+        END as complaint_status,
+        COUNT(DISTINCT w.nic) as witness_count,
+        -- Get all linked case IDs for this evidence
+        GROUP_CONCAT(DISTINCT ce_all.case_id) as linked_case_ids
+      FROM evidance e
+      LEFT JOIN users u ON e.officer_id = u.user_id
+      LEFT JOIN investigation i ON e.investigation_id = i.investigation_id
+      LEFT JOIN case_evidance ce ON ce.evidence_id = e.evidence_id
+      LEFT JOIN case_evidance ce_all ON ce_all.evidence_id = e.evidence_id
+      LEFT JOIN crimeoffence_evidance coe ON coe.evidence_id = e.evidence_id
+      LEFT JOIN cases c ON (i.case_id = c.case_id OR ce.case_id = c.case_id)
+      LEFT JOIN complaints comp ON c.complain_id = comp.complain_id AND c.status = 'oicnotreviewed'
+      LEFT JOIN evidance_witnesses w ON e.evidence_id = w.evidence_id
+      ${whereConditions}
+    `;
 
     if (type) {
       query += " AND e.type LIKE ?";
@@ -524,7 +654,43 @@ exports.searchEvidence = async (filters, userRole, userId) => {
     const [[{ total_count }]] = await db.query(countQuery, countParams);
 
     const [evidences] = await db.query(query, params);
-    evidences.forEach((e) => (e.total_count = total_count));
+
+    // For each evidence, get all linked cases details
+    for (let evidence of evidences) {
+      if (evidence.linked_case_ids) {
+        const caseIds = evidence.linked_case_ids.split(',');
+        const [linkedCases] = await db.query(`
+          SELECT 
+            c.case_id,
+            c.topic as case_topic,
+            c.status as case_status,
+            c.case_type,
+            c.started_dt,
+            c.complain_id,
+            CASE 
+              WHEN c.status = 'oicnotreviewed' THEN comp.description
+              ELSE NULL
+            END as complaint_description,
+            CASE 
+              WHEN c.status = 'oicnotreviewed' THEN comp.complain_dt
+              ELSE NULL
+            END as complaint_date,
+            CASE 
+              WHEN c.status = 'oicnotreviewed' THEN comp.status
+              ELSE NULL
+            END as complaint_status
+          FROM cases c
+          LEFT JOIN complaints comp ON c.complain_id = comp.complain_id AND c.status = 'oicnotreviewed'
+          WHERE c.case_id IN (${caseIds.map(() => '?').join(',')})
+        `, caseIds);
+        
+        evidence.linked_cases = linkedCases;
+      } else {
+        evidence.linked_cases = [];
+      }
+      evidence.total_count = total_count;
+    }
+
     return evidences;
   } catch (error) {
     console.error("Error searching evidence:", error);

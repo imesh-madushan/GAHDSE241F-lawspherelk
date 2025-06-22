@@ -325,10 +325,10 @@ const CasesPage = () => {
                 onBack={() => navigate(-1)}
                 actions={[
                     {
-                        icon: <Add fontSize='small' className='text-white rounded-full' />,
+                        icon: <Add fontSize='medium' className='text-white rounded-full' />,
                         label: 'Create Case',
                         onClick: () => navigate('/cases/create'),
-                        styles: 'h-10 bg-gray-950 text-white border-black rounded-2xl'
+                        styles: 'h-10 bg-gray-800 text-white border-black rounded-2xl'
                     }
                 ]}
             />
@@ -379,8 +379,8 @@ const CasesPage = () => {
                                         scope="col"
                                         className={
                                             showLeaderCol
-                                                ? "px-8 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6"
-                                                : "px-10 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5"
+                                                ? "px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6"
+                                                : "px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5"
                                         }
                                     >
                                         <div
@@ -461,7 +461,7 @@ const CasesPage = () => {
                                             className="hover:bg-gray-50 transition-colors cursor-pointer"
                                             onClick={() => navigate(`/cases/${caseData.case_id}`)}
                                         >
-                                            <td className={showLeaderCol ? "px-8 py-6 whitespace-nowrap text-sm font-medium text-gray-900" : "px-10 py-6 whitespace-nowrap text-sm font-medium text-gray-900"}>
+                                            <td className={showLeaderCol ? "px-6 py-6 whitespace-nowrap text-sm font-medium text-gray-900" : "px-10 py-6 whitespace-nowrap text-sm font-medium text-gray-900"}>
                                                 <Link
                                                     to={`/cases/${caseData.case_id}`}
                                                     className="hover:underline text-gray-900 flex items-center"
@@ -472,11 +472,18 @@ const CasesPage = () => {
                                                     </div>
                                                     <span className="font-semibold">{caseData.case_id}</span>
                                                 </Link>
-                                            </td>
-                                            <td className={showLeaderCol ? "px-8 py-6" : "px-10 py-6"}>
+                                            </td>                                            <td className={showLeaderCol ? "px-8 py-6" : "px-10 py-6"}>
                                                 <div className="max-w-md">
                                                     <span className="text-sm text-gray-900 font-medium leading-relaxed block">
-                                                        {caseData.topic || 'Untitled Case'}
+                                                        {
+                                                            (() => {
+                                                                const topic = caseData.topic || 'Untitled Case';
+                                                                const words = topic.split(' ');
+                                                                return words.length > 15
+                                                                    ? words.slice(0, 15).join(' ') + '...'
+                                                                    : topic;
+                                                            })()
+                                                        }
                                                     </span>
                                                     <span className="text-xs text-gray-500 mt-1 block">
                                                         {caseData.case_type}
@@ -497,7 +504,7 @@ const CasesPage = () => {
                                                         <CalendarMonth className="text-gray-600" style={{ fontSize: '1rem' }} />
                                                     </div>
                                                     <div className="flex flex-col space-y-1">
-                                                        <span className="font-medium">{formatDate(caseData.started_dt)}</span>
+                                                        <span className="">{formatDate(caseData.started_dt)}</span>
                                                         {caseData.started_dt && (
                                                             <span className="text-xs text-gray-500 flex items-center">
                                                                 <AccessTime className="mr-1.5" style={{ fontSize: '0.75rem' }} />

@@ -337,10 +337,10 @@ const ComplaintsPage = () => {
                 onBack={() => navigate(-1)}
                 actions={[
                     {
-                        icon: <Add fontSize='small' className='text-white rounded-full' />,
+                        icon: <Add fontSize='medium' className='text-white rounded-full' />,
                         label: 'Create Complaint',
                         onClick: handleCreateComplaint,
-                        styles: 'h-10 bg-gray-950 text-white border-black rounded-2xl'
+                        styles: 'h-10 bg-gray-800 text-white border-black rounded-2xl'
                     }
                 ]}
             />
@@ -392,8 +392,8 @@ const ComplaintsPage = () => {
                                         scope="col"
                                         className={
                                             showOfficerCol
-                                                ? "px-8 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5"
-                                                : "px-10 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4"
+                                                ? "px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5"
+                                                : "px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4"
                                         }
                                     >
                                         <div
@@ -464,7 +464,7 @@ const ComplaintsPage = () => {
                                             className="hover:bg-gray-50 transition-colors cursor-pointer"
                                             onClick={() => navigate(`/complaints/${complaint.complain_id}`)}
                                         >
-                                            <td className={showOfficerCol ? "px-8 py-6 whitespace-nowrap text-sm font-medium text-gray-900" : "px-10 py-6 whitespace-nowrap text-sm font-medium text-gray-900"}>
+                                            <td className={showOfficerCol ? "px-6 py-6 whitespace-nowrap text-sm font-medium text-gray-900" : "px-10 py-6 whitespace-nowrap text-sm font-medium text-gray-900"}>
                                                 <Link
                                                     to={`/complaints/${complaint.complain_id}`}
                                                     className="hover:underline text-gray-900 flex items-center"
@@ -505,7 +505,7 @@ const ComplaintsPage = () => {
                                                         <CalendarMonth className="text-gray-600" style={{ fontSize: '1rem' }} />
                                                     </div>
                                                     <div className="flex flex-col space-y-1">
-                                                        <span className="font-medium">{formatDate(complaint.complain_dt)}</span>
+                                                        <span className="">{formatDate(complaint.complain_dt)}</span>
                                                         {complaint.complain_dt && (
                                                             <span className="text-xs text-gray-500 flex items-center">
                                                                 <AccessTime className="mr-1.5" style={{ fontSize: '0.75rem' }} />
