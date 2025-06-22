@@ -523,7 +523,7 @@ exports.closeOnlineComplaint = async (req, res) => {
     const result = await onlineComplaintService.closeOnlineComplaint({
       complaint_id,
       case_id,
-      closed_by: req.user.user_id,
+      closed_by: user.user_id,
     });
 
     res.status(200).json({

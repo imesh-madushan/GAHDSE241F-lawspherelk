@@ -324,7 +324,7 @@ exports.viewOnlineComplaintWithFiles = async (complaint_id) => {
 // Get online complaint by ID with evidence files (works with current database schema)
 exports.getOnlineComplaintWithFiles = async (complaint_id) => {
   try {
-    const complaint = await this.getOnlineComplaintById(complaint_id);    // Get evidence files for this complaint using ACTUAL database columns
+    const complaint = await this.getOnlineComplaintById(complaint_id); // Get evidence files for this complaint using ACTUAL database columns
     if (complaint) {
       const [evidenceFiles] = await db.query(
         `SELECT 
@@ -339,7 +339,7 @@ exports.getOnlineComplaintWithFiles = async (complaint_id) => {
         ORDER BY uploaded_at DESC`,
         [complaint_id]
       );
-      
+
       complaint.evidence_files = evidenceFiles;
     }
 

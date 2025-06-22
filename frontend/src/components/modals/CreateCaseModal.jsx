@@ -5,7 +5,7 @@ import CustomOfficerDropdown from '../dropdowns/CustomOfficerDropdown';
 import StatusPopup from '../common/StatusPopup';
 import { apiClient } from '../../config/apiConfig';
 
-const CreateCaseModal = ({ open, onClose, complaintId, caseId }) => {
+const CreateCaseModal = ({ open, onClose, complaintId, caseId, isOnlineComplaint = false }) => {
     const [caseTopicInput, setCaseTopicInput] = useState('');
     const [selectedLeader, setSelectedLeader] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -56,23 +56,21 @@ const CreateCaseModal = ({ open, onClose, complaintId, caseId }) => {
         if (!validateForm()) return;
 
         setIsLoading(true);
-        setError(null);
-
-        try {
-            const response = await apiClient.post('/cases/create', {
+        setError(null); try {
+            const endpoint = isOnlineComplaint ? '/cases/create-from-online' : '/cases/create';
+            const response = await apiClient.post(endpoint, {
                 complaintId,
                 topic: caseTopicInput.trim(),
                 caseId: caseId,
                 leaderId: selectedLeader.id
-            });
-
-            if (response.data.success) {
+            }); if (response.data.success) {
+                const createdCaseId = response.data.caseId || caseId;
                 setPopup({
                     open: true,
                     status: "success",
                     message: "Case Created Successfully",
-                    description: `Case #${caseId} has been created and assigned to ${selectedLeader.name}.`,
-                    referenceLink: caseId ? `/cases/${caseId}` : null
+                    description: `Case #${createdCaseId} has been created and assigned to ${selectedLeader.name}.`,
+                    referenceLink: createdCaseId ? `/cases/${createdCaseId}` : null
                 });
             } else {
                 setPopup({

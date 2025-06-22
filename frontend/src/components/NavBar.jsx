@@ -83,7 +83,7 @@ const Navbar = ({ expanded }) => {
 
           <div className="flex items-center space-x-4">
             {/* TODO: Create notification backend */}
-            <NotificationButton count={24} notifications={[]} sideBarExpanded={expanded} />
+            {/* <NotificationButton count={24} notifications={[]} sideBarExpanded={expanded} /> */}
 
             {/* Profile Menu */}
             <div className="relative">
@@ -115,13 +115,13 @@ const Navbar = ({ expanded }) => {
                     <Person fontSize="small" className="mr-3 text-gray-600" />
                     My Profile
                   </button>
-                  <button
+                  {/* <button
                     onClick={handleSettingsClick}
                     className="w-full text-left px-5 py-4 text-gray-700 hover:bg-gray-50 flex items-center transition-colors font-medium cursor-pointer text-base"
                   >
                     <Settings fontSize="small" className="mr-3 text-gray-600" />
                     Settings
-                  </button>
+                  </button> */}
                   <div className="border-t border-gray-200 mt-1">
                     <button
                       onClick={handleLogoutClick}

@@ -80,7 +80,7 @@ const SingleOnlineComplaintView = () => {
         },
         closeComplaint: {
             icon: <Close fontSize='small' />,
-            label: 'Close Complaint',
+            label: 'Reject Complaint',
             onClick: () => setShowCloseConfirmation(true),
             styles: 'bg-red-600 text-white hover:bg-red-700 border-red-600 h-10'
         },
@@ -98,6 +98,7 @@ const SingleOnlineComplaintView = () => {
             const { data } = await apiClient.get(`/complaints/online/${complaintId}`);
 
             if (data.complaint) {
+                console.log("Fetched complaint data:", data.complaint);
                 setComplaint(data.complaint);
                 setEditedComplaint(data.complaint);
             } else {
@@ -115,8 +116,7 @@ const SingleOnlineComplaintView = () => {
     // Determine permissions
     const canStartCase = () => {
         return hasPermission &&
-            complaint?.case?.status === "oicnotreviewed" &&
-            complaint?.status !== "closed";
+            complaint?.status === "new";
     };
 
     const canCloseComplaint = () => {
@@ -126,15 +126,12 @@ const SingleOnlineComplaintView = () => {
     const canViewRelatedCase = () => {
         if (
             complaint?.status === "new" ||
-            complaint?.case?.status === "oicnotreviewed" ||
-            complaint?.case?.status === "oicrejected"
+            complaint.case == null
         ) {
             return false;
         }
         return hasPermission;
     };
-
-    const canEdit = hasPermission && complaint?.status === "new";
 
     const handleConfirmClose = async () => {
         try {
@@ -411,15 +408,13 @@ const SingleOnlineComplaintView = () => {
                                     isEditing={false}
                                 />
 
-                                {canStartCase() && (
+                                {/* {canStartCase() && (
                                     <OutlinedButton action={actions.startCase} />
-                                )}
+                                )} */}
 
                                 {canViewRelatedCase() && (
                                     <OutlinedButton action={actions.viewrelatedcase} />
-                                )}
-
-                                {(canCloseComplaint() && complaint.case?.status === "oicnotreviewed") && (
+                                )}                                {canCloseComplaint() && (
                                     <OutlinedButton action={actions.closeComplaint} />
                                 )}
                             </div>
@@ -645,12 +640,12 @@ const SingleOnlineComplaintView = () => {
                 </div>
             </div>
 
-            {/* Modals */}
+            {            /* Modals */}
             <CreateCaseModal
                 open={showStartCaseModal}
                 onClose={() => setShowStartCaseModal(false)}
                 complaintId={complaintId}
-                caseId={complaint.case?.case_id}
+                caseId={null} // No pre-existing case for online complaints
                 isOnlineComplaint={true}
             />
 

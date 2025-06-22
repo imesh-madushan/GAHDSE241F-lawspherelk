@@ -220,3 +220,46 @@ exports.updateCase = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+// Create case from online complaint (for OIC/Crime OIC)
+exports.createCaseFromOnlineComplaint = async (req, res) => {
+  try {
+    const { complaintId, topic, leaderId } = req.body;
+
+    if (!complaintId || !topic || !leaderId) {
+      return res.status(400).json({
+        success: false,
+        message: "Complaint ID, topic, and leader ID are required",
+      });
+    }
+
+    // Check if user has permission to create cases
+    if (req.user.role !== "OIC" && req.user.role !== "Crime OIC") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Only OIC and Crime OIC can create cases.",
+      });
+    }
+
+    // Create case from online complaint
+    const result = await caseService.createCaseFromOnlineComplaint({
+      complaintId,
+      topic,
+      leaderId,
+      createdBy: req.user.user_id,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Case created successfully from online complaint",
+      caseId: result.caseId,
+    });
+  } catch (error) {
+    console.error("Error creating case from online complaint:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};

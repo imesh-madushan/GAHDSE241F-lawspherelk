@@ -473,6 +473,49 @@ exports.updateCase = async (case_id, updateData, updatedBy) => {
   }
 };
 
+// Create case from online complaint
+exports.createCaseFromOnlineComplaint = async (caseData) => {
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const { complaintId, topic, leaderId, createdBy } = caseData;
+
+    // Generate case ID
+    const caseId = await generateUniqueId("cases");
+
+    // Insert new case
+    await connection.query(
+      `INSERT INTO cases (
+        case_id, topic, case_type, status, started_dt, leader_id, complain_id
+      ) VALUES (?, ?, ?, ?, NOW(), ?, ?)`,
+      [
+        caseId,
+        topic,
+        "Online Complaint Case",
+        "inprogress",
+        leaderId,
+        complaintId,
+      ]
+    );
+
+    // Update online complaint status to 'viewed'
+    await connection.query(
+      "UPDATE online_complaints SET status = ? WHERE complaint_id = ?",
+      ["viewed", complaintId]
+    );
+
+    await connection.commit();
+    return { caseId };
+  } catch (err) {
+    await connection.rollback();
+    console.error("[ERROR] Failed to create case from online complaint:", err);
+    throw err;
+  } finally {
+    connection.release();
+  }
+};
+
 //get case status by case_id
 exports.getCaseStatus = async (case_id) => {
   try {
@@ -500,4 +543,3 @@ exports.getCaseLeader = async (case_id) => {
     throw error;
   }
 };
-
