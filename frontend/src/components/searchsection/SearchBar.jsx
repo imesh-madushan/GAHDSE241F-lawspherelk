@@ -47,7 +47,7 @@ const SearchBar = ({
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder="Search criminal records..."
+                        placeholder="Search records..."
                         className="block w-full pl-8 ml-1 pr-3 py-1 text-gray-900 ring-0  outline-none transition-all duration-200"
                         data-testid="search-input"
                     />

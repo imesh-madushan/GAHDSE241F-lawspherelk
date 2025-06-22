@@ -62,7 +62,7 @@ const AuditBatchCard = ({ batch, onClick }) => {
                     {/* Left side with batch ID and timestamp */}
                     <div className="flex items-start mb-3 sm:mb-0">
                         <div className="p-2 bg-gray-50 rounded-full mr-3">
-                            <History className="text-blue-600" />
+                            <History className="text-gray-800" />
                         </div>
                         <div>
                             <h4 className="font-medium text-gray-900">Batch: {batch.batchId}</h4>
@@ -99,7 +99,6 @@ const AuditBatchCard = ({ batch, onClick }) => {
                 {/* Tables and actions section */}
                 <div className="mt-4 border-t pt-3 border-gray-100">
                     <div className="flex items-center text-sm text-gray-600 mb-2">
-                        <TableChart className="h-4 w-4 mr-1 text-gray-500" />
                         <span className="mr-1 font-medium">Tables affected:</span>
                         <span className="text-gray-700">
                             {tablesAffected.join(', ')}
