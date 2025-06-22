@@ -55,20 +55,20 @@ exports.searchAuditLogs = async (req, res) => {
     });
   }
 
-  //   const token = req.cookies.authtoken;
-  //   if (!token) {
-  //     return res.status(401).json({ message: "No token provided" });
-  //   }
+  const token = req.cookies.authtoken;
+  if (!token) {
+    return res.status(401).json({ message: "No token provided" });
+  }
 
-  //   const user = await getUserFromCookies(token);
-  //   if (!user) {
-  //     return res.status(401).json({ message: "Unauthorized" });
-  //   }
+  const user = await getUserFromCookies(token);
+  if (!user) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
 
-  //   // Only allow certain roles to access audit logs
-  //   if (!["OIC", "Crime OIC", "Admin"].includes(user.role)) {
-  //     return res.status(403).json({ message: "Access denied" });
-  //   }
+  // Only allow certain roles to access audit logs
+  if (!["OIC", "Crime OIC", "Admin"].includes(user.role)) {
+    return res.status(403).json({ message: "Access denied" });
+  }
 
   try {
     const auditLogs = await auditService.searchAuditLogs(searchParam);

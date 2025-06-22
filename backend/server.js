@@ -14,21 +14,21 @@ const crimeOffenceRoutes = require("./routes/crimeOffenceRoutes");
 const investigationRoutes = require("./routes/investigationRoutes");
 const evidenceRoutes = require("./routes/evidenceRoutes");
 const auditRoutes = require("./routes/auditRoutes");
-// const {
-//   decryptRequest,
-//   encryptResponse,
-// } = require("./middlewares/encryptionMiddleware");
+const {
+  decryptRequest,
+  encryptResponse,
+} = require("./middlewares/encryptionMiddleware");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
-// app.use(corsMiddleware);
+app.use(corsMiddleware);
 app.use(cookieParser());
 
 // encryption and decryption between frontend and backend calls
-// app.use(decryptRequest);
-// app.use(encryptResponse);
+app.use(decryptRequest);
+app.use(encryptResponse);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/complaints", complaintRoutes);
