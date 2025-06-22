@@ -596,3 +596,24 @@ exports.getLeaderByInvestigationId = async (investigationId) => {
     throw error;
   }
 }
+
+exports.getInvestigationOfficersIds = async (investigationId) => {
+  try {
+    const [rows] = await db.query(
+      `
+            SELECT u.user_id
+            FROM investigation_officer io
+            JOIN users u ON io.officer_id = u.user_id
+            WHERE io.investigation_id = ?
+        `,
+      [investigationId]
+    );
+    if (rows.length === 0) {
+      return [];
+    }
+    return rows.map((row) => row.user_id);
+  } catch (error) {
+    console.error("Error fetching investigation officers:", error);
+    throw error;
+  }
+};

@@ -9,8 +9,9 @@ import CustomOfficerDropdown from '../dropdowns/CustomOfficerDropdown';
 const dropOfficerRoles = [
     'OIC',
     'Crime OIC',
-    'Police Constable',
-    'Forensic Officer'
+    'Forensic Officer',
+    'Inspector',
+    'Sub Inspector',
 ];
 
 const CreateInvestigationModal = ({ open, onClose, canCreate = false, context = 'general', contextId = null }) => {

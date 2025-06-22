@@ -179,7 +179,7 @@ exports.createInvestigation = async (req, res) => {
     if (
       user.role !== "OIC" &&
       user.role !== "Crime OIC" &&
-      user.role !== caseLeader
+      user.user_id !== caseLeader
     ) {
       return res.status(403).json({
         message:

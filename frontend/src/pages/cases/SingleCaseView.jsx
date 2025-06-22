@@ -835,7 +835,7 @@ const SingleCaseView = () => {
               <div className="bg-gradient-to-r from-gray-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
                 <h2 className="font-semibold text-gray-800 flex items-center">
                   <Person className="h-5 w-5 mr-2 text-blue-600" />
-                  Assigned Officers
+                  Active Officers
                 </h2>
               </div>
               <div className="p-4">

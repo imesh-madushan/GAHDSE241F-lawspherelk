@@ -122,17 +122,6 @@ def serve_file(filename):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/health', methods=['GET'])
-def health_check():
-    """Health check endpoint"""
-    return jsonify({
-        'status': 'healthy', 
-        'service': 'file-server',
-        'version': '1.0.0',
-        'storage_path': UPLOAD_FOLDER,
-        'timestamp': datetime.datetime.now().isoformat()
-    }), 200
-
 if __name__ == '__main__':
     print(f"🚀 Starting file server on http://localhost:5001")
     print(f"📁 Files will be stored in: {UPLOAD_FOLDER}")

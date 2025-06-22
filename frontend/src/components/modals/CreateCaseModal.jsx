@@ -32,7 +32,8 @@ const CreateCaseModal = ({ open, onClose, complaintId, caseId }) => {
         'OIC',
         'Crime OIC',
         'Police Constable',
-        'Forensic Officer'
+        'Forensic Officer',
+        'Sergeant',
     ];
 
     const validateForm = () => {

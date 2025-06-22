@@ -173,8 +173,15 @@ exports.updateCase = async (req, res) => {
     if (!case_id) {
       return res.status(400).json({ message: "Case ID is required" });
     }
+    console.log(user.user_id, leader_id);
+
+    const case_leader = await caseService.getCaseLeader(case_id);
+    if (!case_leader) {
+      return res.status(404).json({ message: "Case leader not found" });
+    }
+
     if (
-      user.user_id !== leader_id &&
+      user.user_id !== case_leader &&
       user.role !== "OIC" &&
       user.role !== "Crime OIC"
     ) {

@@ -127,9 +127,7 @@ const SingleComplaintView = () => {
     const canCloseComplaint = () => {
         return (user.role === "Crime OIC" || user.role === "OIC") &&
             complaint?.status !== "closed";
-    };
-
-    const canViewRelatedCase = () => {
+    }; const canViewRelatedCase = () => {
         // Hide if complaint is new, or case is oicnotreviewed or oicrejected
         if (
             complaint?.status === "new" ||
@@ -138,7 +136,13 @@ const SingleComplaintView = () => {
         ) {
             return false;
         }
-        return true;
+
+        // Check if user has permission to view the case
+        const isOIC = user.role === "OIC";
+        const isCrimeOIC = user.role === "Crime OIC";
+        const isCaseLeader = complaint?.case?.leader_id === user.id;
+
+        return isOIC || isCrimeOIC || isCaseLeader;
     };
 
 
@@ -548,17 +552,18 @@ const SingleComplaintView = () => {
                                 ) : complaint.case.status !== 'oicnotreviewed' ? (
                                     <div className="border border-blue-100 rounded-lg overflow-hidden">
                                         <div className="bg-blue-50 p-4">
-                                            <div className="flex justify-between items-start">
-                                                <div>
-                                                    <h4 className="font-medium text-blue-900">Case #{complaint.case.case_id}</h4>
-                                                    <p className="text-blue-700 mt-1">{complaint.case.topic || "No topic available"}</p>
-                                                </div>
-                                                <Link
-                                                    to={`/cases/${complaint.case.case_id}`}
-                                                    className="bg-blue-100 text-blue-700 hover:bg-blue-200 p-2 rounded-lg transition-colors"
-                                                >
-                                                    <RemoveRedEye className="h-5 w-5" />
-                                                </Link>
+                                            <div className="flex justify-between items-start">                                                <div>
+                                                <h4 className="font-medium text-blue-900">Case #{complaint.case.case_id}</h4>
+                                                <p className="text-blue-700 mt-1">{complaint.case.topic || "No topic available"}</p>
+                                            </div>
+                                                {canViewRelatedCase() && (
+                                                    <Link
+                                                        to={`/cases/${complaint.case.case_id}`}
+                                                        className="bg-blue-100 text-blue-700 hover:bg-blue-200 p-2 rounded-lg transition-colors"
+                                                    >
+                                                        <RemoveRedEye className="h-5 w-5" />
+                                                    </Link>
+                                                )}
                                             </div>
                                         </div>
 

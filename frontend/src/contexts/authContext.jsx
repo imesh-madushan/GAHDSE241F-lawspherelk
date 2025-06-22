@@ -1,4 +1,3 @@
-// authContext.js
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { apiClient } from '../config/apiConfig';
 
@@ -29,21 +28,9 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       // User not authenticated
+      console.error('Auth check error:', error);
       setUser(null);
 
-      // // Auto login for development - remove this in production
-      // try {
-      //   const loginResponse = await apiClient.post('/auth/login', {
-      //     username: 'user1',
-      //     password: 'abcd1234'
-      //   });
-
-      //   if (loginResponse.data.user) {
-      //     setUser(loginResponse.data.user);
-      //   }
-      // } catch (loginError) {
-      //   console.error('Auto login failed:', loginError);
-      // }
     } finally {
       setLoading(false);
     }
