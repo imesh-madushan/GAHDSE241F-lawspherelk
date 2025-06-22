@@ -1,7 +1,9 @@
 require("dotenv").config();
 const express = require("express");
-const corsMiddleware = require("./middlewares/corsMiddleware");
 const cookieParser = require("cookie-parser");
+
+// Import CORS middleware
+const corsMiddleware = require("./middlewares/corsMiddleware");
 
 // routes
 const authRoutes = require("./routes/authRoutes");

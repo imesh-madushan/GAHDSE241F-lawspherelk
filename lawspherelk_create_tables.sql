@@ -291,10 +291,11 @@ CREATE TABLE IF NOT EXISTS online_complaint_evidence (
   evidence_id VARCHAR(36) NOT NULL,
   complaint_id VARCHAR(36) NOT NULL,
   file_name VARCHAR(255) NOT NULL,
+  original_name VARCHAR(255) DEFAULT NULL,
   file_type VARCHAR(100) NOT NULL,
   file_size BIGINT DEFAULT NULL,
-  file_data LONGBLOB NOT NULL, -- Store the actual file here
-  uploaded_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  file_url TEXT NOT NULL,
+  uploaded_dt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (evidence_id),
   KEY complaint_id (complaint_id)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;

@@ -59,16 +59,18 @@ def upload_file():
         # Get folder from request form data
         folder = request.form.get('folder', 'temp')
         evidence_id = request.form.get('evidence_id', '')
-        
-        # Determine the upload directory based on folder type
+          # Determine the upload directory based on folder type
         if folder == 'users':
             # For officers: create users folder structure
             upload_dir = os.path.join(UPLOAD_FOLDER, 'users')
         elif folder == 'criminals':
             # For criminals: create criminals folder structure  
             upload_dir = os.path.join(UPLOAD_FOLDER, 'criminals')
+        elif folder == 'online_evidences':
+            # For online complaint evidences: evidence_id = complaint_id
+            upload_dir = os.path.join(UPLOAD_FOLDER, 'online_evidences', evidence_id)
         elif evidence_id:
-            # For evidence: evidence_id = "EVD123456"
+            # For regular evidences: evidence_id = "EVD123456"
             upload_dir = os.path.join(UPLOAD_FOLDER, 'evidences', evidence_id)
         else:
             upload_dir = os.path.join(UPLOAD_FOLDER, 'temp')

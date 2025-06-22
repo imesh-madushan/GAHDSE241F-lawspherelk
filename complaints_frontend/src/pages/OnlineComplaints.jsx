@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Send, 
-  User, 
-  FileText, 
+import React, { useState } from 'react';
+import {
+  Send,
+  User,
+  FileText,
   AlertTriangle,
   Mail,
   CheckCircle,
@@ -20,12 +20,12 @@ const OnlineComplaintForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [successComplaintId, setSuccessComplaintId] = useState(null);
-  
+
   const [complaintData, setComplaintData] = useState({
     description: '',
     complaintType: ''
   });
-  
+
   const [complainantData, setComplainantData] = useState({
     nic: '',
     name: '',
@@ -34,13 +34,13 @@ const OnlineComplaintForm = () => {
     address: '',
     dob: ''
   });
-  
+
   const [fieldErrors, setFieldErrors] = useState({});
   const [evidenceFiles, setEvidenceFiles] = useState([]);
   const [evidenceError, setEvidenceError] = useState(null);
 
 
-  
+
   const validateStep1 = () => {
     const errors = {};
     if (!complaintData.complaintType) {
@@ -57,33 +57,33 @@ const OnlineComplaintForm = () => {
 
   const validateStep2 = () => {
     const errors = {};
-    
+
     if (!complainantData.name.trim()) {
       errors.name = 'Full name is required';
     }
-    
+
     if (!complainantData.nic.trim()) {
       errors.nic = 'NIC number is required';
     } else if (!/^(\d{9}[vVxX]|\d{12})$/.test(complainantData.nic.trim())) {
       errors.nic = 'Invalid NIC format (e.g., 123456789V or 199812345678)';
     }
-    
+
     if (!complainantData.phone.trim()) {
       errors.phone = 'Phone number is required';
     } else if (!/^0\d{9}$/.test(complainantData.phone.trim())) {
       errors.phone = 'Invalid phone format (10 digits starting with 0)';
     }
-    
+
     if (!complainantData.email.trim()) {
       errors.email = 'Email address is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(complainantData.email.trim())) {
       errors.email = 'Invalid email format';
     }
-    
+
     if (!complainantData.address.trim()) {
       errors.address = 'Address is required';
     }
-    
+
     if (!complainantData.dob) {
       errors.dob = 'Date of birth is required';
     } else {
@@ -100,7 +100,7 @@ const OnlineComplaintForm = () => {
         errors.dob = 'You must be at least 5 years old to file a complaint';
       }
     }
-    
+
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -171,36 +171,53 @@ const OnlineComplaintForm = () => {
       setCurrentStep(1);
     }
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validateStep2()) {
+      return;
+    }
+
     setIsSubmitting(true);
     setFieldErrors({});
     setEvidenceError(null);
+
     try {
-      // Prepare data for API
-      const onlineComplaintData = {
-        complaint_type: complaintData.complaintType,
-        description: complaintData.description,
-        complainant_full_name: complainantData.name,
-        nic_no: complainantData.nic,
-        dob: complainantData.dob,
-        phone_no: complainantData.phone,
-        email: complainantData.email,
-        address: complainantData.address,
-        // evidence: evidenceFiles 
-      };
-      console.log('[DEBUG] Submitting complaint payload:', onlineComplaintData);
-      // If you want to send files later, use FormData and append fields/files
-      // const formData = new FormData();
-      // Object.entries(onlineComplaintData).forEach(([key, value]) => formData.append(key, value));
-      // evidenceFiles.forEach((file) => formData.append('evidence', file));
-      // Send to backend
-      const response = await apiClient.post('/complaints/online/create', onlineComplaintData);
+      // Use FormData to send both form data and files
+      const formData = new FormData();
+
+      // Append form fields
+      formData.append('complaint_type', complaintData.complaintType);
+      formData.append('description', complaintData.description);
+      formData.append('complainant_full_name', complainantData.name);
+      formData.append('nic_no', complainantData.nic);
+      formData.append('dob', complainantData.dob);
+      formData.append('phone_no', complainantData.phone);
+      formData.append('email', complainantData.email);
+      formData.append('address', complainantData.address);
+
+      // Append evidence files
+      evidenceFiles.forEach((file) => {
+        formData.append('evidence', file);
+      });
+
+      console.log('[DEBUG] Submitting complaint with files:', {
+        fieldsCount: 8,
+        filesCount: evidenceFiles.length,
+        fileNames: evidenceFiles.map(f => f.name)
+      });
+
+      // Send to backend with proper headers for file upload
+      const response = await apiClient.post('/complaints/online/create', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
       console.log('[DEBUG] API response:', response.data);
       setSuccessComplaintId(response.data.complaint_id);
       setShowSuccess(true);
-      
+
     } catch (err) {
       console.error('[ERROR] Failed to submit complaint:', err);
       if (err.response && err.response.data && err.response.data.message) {
@@ -244,8 +261,8 @@ const OnlineComplaintForm = () => {
       </div>
     );
   }
-  
-  {/* Main Form Container */}
+
+  {/* Main Form Container */ }
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
 
@@ -333,9 +350,8 @@ const OnlineComplaintForm = () => {
                     name="complaintType"
                     value={complaintData.complaintType}
                     onChange={handleComplaintChange}
-                    className={`w-full px-4 py-4 border rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 text-gray-900 ${
-                      fieldErrors.complaintType ? 'border-red-500 bg-red-50' : 'border-gray-200 hover:border-gray-300'
-                    }`}
+                    className={`w-full px-4 py-4 border rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 text-gray-900 ${fieldErrors.complaintType ? 'border-red-500 bg-red-50' : 'border-gray-200 hover:border-gray-300'
+                      }`}
                   >
                     <option value="">Choose a category that best describes your complaint</option>
                     {caseTypes.map(type => (
@@ -361,9 +377,8 @@ const OnlineComplaintForm = () => {
                     onChange={handleComplaintChange}
                     placeholder="Please provide a clear and detailed description of your complaint. Include relevant dates, locations, and any other important information that will help us understand your situation better..."
                     rows={6}
-                    className={`w-full px-4 py-4 border rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 resize-none text-gray-900 ${
-                      fieldErrors.description ? 'border-red-500 bg-red-50' : 'border-gray-200 hover:border-gray-300'
-                    }`}
+                    className={`w-full px-4 py-4 border rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 resize-none text-gray-900 ${fieldErrors.description ? 'border-red-500 bg-red-50' : 'border-gray-200 hover:border-gray-300'
+                      }`}
                   />
                   <div className="flex justify-between items-center mt-2">
                     {fieldErrors.description ? (
@@ -396,7 +411,7 @@ const OnlineComplaintForm = () => {
                     }}
                     style={{ minHeight: '120px' }}
                   >
-                    <svg className="w-10 h-10 text-blue-400 mb-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 16V4m0 0l-4 4m4-4l4 4"/><rect x="4" y="16" width="16" height="4" rx="2"/></svg>
+                    <svg className="w-10 h-10 text-blue-400 mb-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 16V4m0 0l-4 4m4-4l4 4" /><rect x="4" y="16" width="16" height="4" rx="2" /></svg>
                     <span className="text-blue-700 font-semibold">Click or drag files here to upload</span>
                     <span className="text-xs text-gray-500 mt-1">Images, audio, video, documents. Max 10 files, 50MB each.</span>
                     <input
@@ -421,11 +436,11 @@ const OnlineComplaintForm = () => {
                             />
                           ) : file.type.startsWith('audio/') ? (
                             <span className="w-10 h-10 bg-blue-50 rounded flex items-center justify-center border border-blue-100 mr-3">
-                              <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 19V6l12-2v13"/><circle cx="6" cy="18" r="3"/></svg>
+                              <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 19V6l12-2v13" /><circle cx="6" cy="18" r="3" /></svg>
                             </span>
                           ) : file.type.startsWith('video/') ? (
                             <span className="w-10 h-10 bg-blue-50 rounded flex items-center justify-center border border-blue-100 mr-3">
-                              <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                              <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3" /></svg>
                             </span>
                           ) : (
                             <span className="w-10 h-10 bg-blue-50 rounded flex items-center justify-center border border-blue-100 mr-3">
@@ -492,9 +507,8 @@ const OnlineComplaintForm = () => {
                       value={complainantData.name}
                       onChange={handleComplainantChange}
                       placeholder="Enter full name"
-                      className={`w-full px-4 py-3 border rounded-xl bg-white focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-300 text-gray-900 ${
-                        fieldErrors.name ? 'border-red-500 bg-red-50' : 'border-gray-200'
-                      }`}
+                      className={`w-full px-4 py-3 border rounded-xl bg-white focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-300 text-gray-900 ${fieldErrors.name ? 'border-red-500 bg-red-50' : 'border-gray-200'
+                        }`}
                     />
                     {fieldErrors.name && (
                       <div className="flex items-center mt-1 text-red-600 text-xs">
@@ -510,7 +524,7 @@ const OnlineComplaintForm = () => {
                     </label>
                     <div className="relative">
                       <span className="absolute left-3 top-3 text-gray-400">
-                        <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                        <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
                       </span>
                       <input
                         type="text"
@@ -518,9 +532,8 @@ const OnlineComplaintForm = () => {
                         value={complainantData.nic}
                         onChange={handleComplainantChange}
                         placeholder="123456789V or 199812345678"
-                        className={`w-full pl-10 pr-4 py-3 border rounded-xl bg-white focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-300 text-gray-900 ${
-                          fieldErrors.nic ? 'border-red-500 bg-red-50' : 'border-gray-200'
-                        }`}
+                        className={`w-full pl-10 pr-4 py-3 border rounded-xl bg-white focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-300 text-gray-900 ${fieldErrors.nic ? 'border-red-500 bg-red-50' : 'border-gray-200'
+                          }`}
                       />
                     </div>
                     {fieldErrors.nic && (
@@ -538,7 +551,7 @@ const OnlineComplaintForm = () => {
                     <div className="relative">
                       <span className="absolute left-3 top-3 text-gray-400">
                         {/* Calendar icon */}
-                        <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                        <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
                       </span>
                       <input
                         type="date"
@@ -546,9 +559,8 @@ const OnlineComplaintForm = () => {
                         value={complainantData.dob}
                         onChange={handleComplainantChange}
                         placeholder="mm/dd/yyyy"
-                        className={`w-full pl-10 pr-4 py-3 border rounded-xl bg-white focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-300 text-gray-900 ${
-                          fieldErrors.dob ? 'border-red-500 bg-red-50' : 'border-gray-200'
-                        }`}
+                        className={`w-full pl-10 pr-4 py-3 border rounded-xl bg-white focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-300 text-gray-900 ${fieldErrors.dob ? 'border-red-500 bg-red-50' : 'border-gray-200'
+                          }`}
                       />
                     </div>
                     {fieldErrors.dob && (
@@ -573,9 +585,8 @@ const OnlineComplaintForm = () => {
                         value={complainantData.phone}
                         onChange={handleComplainantChange}
                         placeholder="0771234567"
-                        className={`w-full pl-10 pr-4 py-3 border rounded-xl bg-white focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-300 text-gray-900 ${
-                          fieldErrors.phone ? 'border-red-500 bg-red-50' : 'border-gray-200'
-                        }`}
+                        className={`w-full pl-10 pr-4 py-3 border rounded-xl bg-white focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-300 text-gray-900 ${fieldErrors.phone ? 'border-red-500 bg-red-50' : 'border-gray-200'
+                          }`}
                       />
                     </div>
                     {fieldErrors.phone && (
@@ -596,9 +607,8 @@ const OnlineComplaintForm = () => {
                       value={complainantData.email}
                       onChange={handleComplainantChange}
                       placeholder="example@email.com"
-                      className={`w-full px-4 py-3 border rounded-xl bg-white focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-300 text-gray-900 ${
-                        fieldErrors.email ? 'border-red-500 bg-red-50' : 'border-gray-200'
-                      }`}
+                      className={`w-full px-4 py-3 border rounded-xl bg-white focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-300 text-gray-900 ${fieldErrors.email ? 'border-red-500 bg-red-50' : 'border-gray-200'
+                        }`}
                     />
                     {fieldErrors.email && (
                       <div className="flex items-center mt-1 text-red-600 text-xs">
@@ -615,7 +625,7 @@ const OnlineComplaintForm = () => {
                     <div className="relative">
                       <span className="absolute left-3 top-3 text-gray-400">
                         {/* MapPin icon */}
-                        <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 21c-4.418 0-8-4.03-8-9a8 8 0 1 1 16 0c0 4.97-3.582 9-8 9z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 21c-4.418 0-8-4.03-8-9a8 8 0 1 1 16 0c0 4.97-3.582 9-8 9z" /><circle cx="12" cy="12" r="3" /></svg>
                       </span>
                       <textarea
                         name="address"
@@ -623,9 +633,8 @@ const OnlineComplaintForm = () => {
                         onChange={handleComplainantChange}
                         placeholder="Enter full address"
                         rows={2}
-                        className={`w-full pl-10 pr-4 py-3 border rounded-xl bg-white focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-300 resize-none text-gray-900 ${
-                          fieldErrors.address ? 'border-red-500 bg-red-50' : 'border-gray-200'
-                        }`}
+                        className={`w-full pl-10 pr-4 py-3 border rounded-xl bg-white focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-300 resize-none text-gray-900 ${fieldErrors.address ? 'border-red-500 bg-red-50' : 'border-gray-200'
+                          }`}
                       />
                     </div>
                     {fieldErrors.address && (
@@ -643,7 +652,7 @@ const OnlineComplaintForm = () => {
                     className="flex items-center px-6 py-3 rounded-xl bg-white border border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition-all duration-200"
                   >
                     <span className="mr-2">
-                      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+                      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" /></svg>
                     </span>
                     Cancel
                   </button>
