@@ -238,6 +238,7 @@ const CreateComplaintModal = ({ open, onClose }) => {
                                                 Complaint Type <span className="text-red-500">*</span>
                                             </label>
                                             <select
+                                                name='complaintType'
                                                 value={complaintType}
                                                 onChange={(e) => {
                                                     setComplaintType(e.target.value);
@@ -417,8 +418,8 @@ const CreateComplaintModal = ({ open, onClose }) => {
                             <OutlinedButton
                                 action={{
                                     icon: <Send fontSize="small" />,
-                                    label: creatingComplaint ? 'Creating...' : 'Create Complaint',
-                                    ariaLabel: 'Create Complaint',
+                                    label: creatingComplaint ? 'Creating...' : 'Submit Complaint',
+                                    ariaLabel: 'Submit Complaint',
                                     onClick: handleSubmitComplaint,
                                     styles: 'bg-gradient-to-r from-blue-600 to-blue-800 text-white hover:from-blue-700 hover:to-blue-900 h-11 px-6 shadow-lg',
                                     disabled: creatingComplaint

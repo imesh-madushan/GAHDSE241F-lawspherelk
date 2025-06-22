@@ -1,4 +1,5 @@
 const evidenceService = require("../services/evidenceService");
+const investigationService = require("../services/investigationService");
 const caseService = require("../services/caseService");
 const { getUserFromCookies } = require("../middlewares/authMiddleware");
 const axios = require("axios");
@@ -104,6 +105,27 @@ exports.createEvidence = async (req, res) => {
           success: false,
           message: "Case ID is required when linking to case",
         });
+      }
+
+      // only authorized users can create evidence
+      if (
+        user.role !== "OIC" &&
+        user.role !== "Crime OIC" &&
+        user.user_id !== caseService.getCaseLeader(case_id)
+      ) {
+        //then check if the user is an investigation officer
+        if (investigation_id) {
+          const investigationOfficers =
+            await investigationService.getInvestigationOfficersIds(
+              investigation_id
+            );
+          if (!investigationOfficers.includes(user.user_id)) {
+            return res.status(403).json({
+              success: false,
+              message: "You are not authorized to create evidence",
+            });
+          }
+        }
       }
 
       // First create the evidence record to get an evidence_id

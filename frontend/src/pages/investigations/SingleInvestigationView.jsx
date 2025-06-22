@@ -109,10 +109,20 @@ const SingleInvestigationView = () => {
     const canManageOfficers = () => {
         if (!investigation || !user) return false;
         // Prevent add/remove if investigation is closed
-        if (investigation.status === 'closed') return false;
-        return user.role === 'OIC' ||
+        if (investigation.status === 'closed') return false; return user.role === 'OIC' ||
             user.role === 'Crime OIC' ||
             user.user_id === investigation.leader_id;
+    };
+
+    const canViewRelatedCase = () => {
+        if (!investigation || !user) return false;
+
+        // Check if user has permission to view the case
+        const isOIC = user.role === "OIC";
+        const isCrimeOIC = user.role === "Crime OIC";
+        const isCaseLeader = investigation?.leader_id === user.user_id;
+
+        return isOIC || isCrimeOIC || isCaseLeader;
     };
 
     const canAddEvidence = () => {
@@ -480,17 +490,18 @@ const SingleInvestigationView = () => {
 
                             <div className="border border-blue-100 rounded-lg overflow-hidden">
                                 <div className="bg-blue-50 p-4">
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <h4 className="font-medium text-blue-900">Case #{investigation.case_id}</h4>
-                                            <p className="text-blue-700 mt-1">{investigation.case_topic || "No topic available"}</p>
-                                        </div>
-                                        <Link
-                                            to={`/cases/${investigation.case_id}`}
-                                            className="bg-blue-100 text-blue-700 hover:bg-blue-200 p-2 rounded-lg transition-colors"
-                                        >
-                                            <BusinessCenter className="h-5 w-5" />
-                                        </Link>
+                                    <div className="flex justify-between items-start">                                        <div>
+                                        <h4 className="font-medium text-blue-900">Case #{investigation.case_id}</h4>
+                                        <p className="text-blue-700 mt-1">{investigation.case_topic || "No topic available"}</p>
+                                    </div>
+                                        {canViewRelatedCase() && (
+                                            <Link
+                                                to={`/cases/${investigation.case_id}`}
+                                                className="bg-blue-100 text-blue-700 hover:bg-blue-200 p-2 rounded-lg transition-colors"
+                                            >
+                                                <BusinessCenter className="h-5 w-5" />
+                                            </Link>
+                                        )}
                                     </div>
                                 </div>
 
