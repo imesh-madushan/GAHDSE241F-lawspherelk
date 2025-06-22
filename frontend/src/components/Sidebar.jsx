@@ -35,7 +35,7 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
       { id: 'notes', label: 'Notes', icon: <Summarize /> },
       { id: 'officers', label: 'Officer Management', icon: <People /> },
       // { id: 'analytics', label: 'Analytics', icon: <BarChart /> },
-      { id: 'recordhistory', label: 'Records History', icon: <History /> },
+      { id: 'audit', label: 'Audit Logs', icon: <History /> },
       // { id: 'settings', label: 'Settings', icon: <Settings /> }
     ],
     'Crime OIC': [
@@ -49,7 +49,7 @@ const Sidebar = ({ activeItem, setActiveItem, expanded, setExpanded }) => {
       { id: 'officers', label: 'Officers', icon: <People /> },
       { id: 'notes', label: 'notes', icon: <Summarize /> },
       // { id: 'analytics', label: 'Analytics', icon: <BarChart /> },
-      { id: 'recordhistory', label: 'Records History', icon: <History /> },
+      { id: 'audit', label: 'Audit Logs', icon: <History /> },
       // { id: 'settings', label: 'Settings', icon: <Settings /> }
     ],
     'Inspector': [
