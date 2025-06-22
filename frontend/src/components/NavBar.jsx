@@ -75,7 +75,7 @@ const Navbar = ({ expanded }) => {
             <div className="flex items-center cursor-pointer" onClick={() => navigate('/dashboard')}>
               <div>
                 <div className="font-bold text-white text-xl tracking-wide">{getDashboardTitle()}</div>
-                <div className="text-xs text-yellow-300 font-medium tracking-wider">SRI LANKA POLICE</div>
+                <div className="text-xs text-yellow-300 font-medium tracking-wider">SRI LANKA POLICE - Galle</div>
               </div>
             </div>
           </div>

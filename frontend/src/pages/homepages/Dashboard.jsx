@@ -47,31 +47,24 @@ const Dashboard = () => {
   const [recentCases, setRecentCases] = useState([]);
   const [officers, setOfficers] = useState([]);
   const [investigations, setInvestigations] = useState([]); // Add investigations state
-  const [statsValues, setStatsValues] = useState([]); //to store the stats count
+  const [evidences, setEvidences] = useState([]); // Add evidences state
   const [isLoadingComplaints, setIsLoadingComplaints] = useState(true);
   const [isLoadingCases, setIsLoadingCases] = useState(true);
   const [isLoadingOfficers, setIsLoadingOfficers] = useState(true);
   const [isLoadingInvestigations, setIsLoadingInvestigations] = useState(true); // Add loading state
-  const [isLoadingStats, setIsLoadingStats] = useState(true);
-
-  // Add error state variables
-  const [complaintsError, setComplaintsError] = useState(null);
-  const [casesError, setCasesError] = useState(null);
-  const [officersError, setOfficersError] = useState(null);
-  const [statsError, setStatsError] = useState(null);
-  // Monthly complaints chart states
+  const [isLoadingEvidences, setIsLoadingEvidences] = useState(true); // Add evidences loading state
+  const [isLoadingStats, setIsLoadingStats] = useState(true);  // Monthly complaints chart states
   const [complaintsChartData, setComplaintsChartData] = useState([]);
   const [complaintTimePeriod, setComplaintTimePeriod] = useState('monthly');
   const [complaintTypeFilter, setComplaintTypeFilter] = useState('all');
-
   const { user } = useAuth();
-  const [actions, setActions] = useState([]);
   const [calculatedStats, setCalculatedStats] = useState([]);
-  const [recentActivities, setRecentActivities] = useState([]);
-  // Chart states
+  const [recentActivities, setRecentActivities] = useState([]);  // Chart states
   const [caseTypeFilter, setCaseTypeFilter] = useState('all');
   const [caseAnalyticsData, setCaseAnalyticsData] = useState([]);
-  const [caseStatusData, setCaseStatusData] = useState([]);  // NEW: Additional chart states
+
+  // NEW: Additional chart states
+  const [evidenceAnalyticsData, setEvidenceAnalyticsData] = useState([]); // NEW: Evidence chart data
 
   // Function to prepare chart data - wrapped in useCallback
   const prepareCaseTypeChartData = useCallback((cases, filter = 'all') => {
@@ -115,6 +108,29 @@ const Dashboard = () => {
       { name: 'Closed', value: statusCounts.closed, color: '#10B981' }
     ];
   }, []);
+  // Function to prepare evidence chart data by evidence type
+  const prepareEvidenceChartData = useCallback((evidences) => {
+    if (!evidences || evidences.length === 0) return [];
+    const evidencesByType = {};
+
+    evidences.forEach(evidence => {
+      console.log('Processing evidence:', evidence);
+      if (!evidence.type) return;
+
+      if (!evidencesByType[evidence.type]) {
+        evidencesByType[evidence.type] = 0;
+      }
+
+      evidencesByType[evidence.type]++;
+    });
+
+    // Convert to the format needed by Recharts
+    return Object.entries(evidencesByType).map(([type, count]) => ({
+      name: type,
+      value: count,
+      color: getChartColor(type)
+    })).sort((a, b) => b.value - a.value); // Sort by count descending
+  }, []);
 
   // Get a color based on case type for consistent colors in charts
   const getChartColor = (type) => {
@@ -133,8 +149,7 @@ const Dashboard = () => {
 
     // Return the mapped color or a default color
     return colorMap[type] || '#6B7280';
-  };
-  // Function to prepare complaint chart data by time period (daily, weekly, monthly, yearly)
+  };  // Function to prepare complaint chart data by time period (daily, weekly, monthly, yearly)
   const prepareComplaintChartData = useCallback((complaints, filter = 'all', timePeriod = 'monthly') => {
     if (!complaints || complaints.length === 0) return [];
 
@@ -220,20 +235,19 @@ const Dashboard = () => {
 
     return chartData;
   }, []);
-
   // Get available complaint types from complaints data
-  const extractComplaintTypes = useCallback((complaints) => {
-    if (!complaints || complaints.length === 0) return [];
+  // const extractComplaintTypes = useCallback((complaints) => {
+  //   if (!complaints || complaints.length === 0) return [];
 
-    const typesSet = new Set();
-    complaints.forEach(complaint => {
-      if (complaint.case_type) {
-        typesSet.add(complaint.case_type);
-      }
-    });
+  //   const typesSet = new Set();
+  //   complaints.forEach(complaint => {
+  //     if (complaint.case_type) {
+  //       typesSet.add(complaint.case_type);
+  //     }
+  //   });
 
-    return Array.from(typesSet);
-  }, []);
+  //   return Array.from(typesSet);
+  // }, []);
 
   // Handle filter change for case types chart
   const handleCaseTypeFilterChange = (e) => {
@@ -289,14 +303,12 @@ const Dashboard = () => {
       default:
         // Default: see all data
         relevantCases = cases;
-        relevantComplaints = complaints;
-    }
-
-    // Filter current month data based on relevant data
+        relevantComplaints = complaints
+    }    // Filter current month data based on relevant data
     const thisMonthCases = relevantCases.filter(c => new Date(c.started_dt || c.created_at) >= thisMonth);
-    const lastMonthCases = relevantCases.filter(c =>
-      new Date(c.started_dt || c.created_at) >= lastMonth && new Date(c.started_dt || c.created_at) < thisMonth
-    );
+    // const lastMonthCases = relevantCases.filter(c =>
+    //   new Date(c.started_dt || c.created_at) >= lastMonth && new Date(c.started_dt || c.created_at) < thisMonth
+    // );
     const thisMonthComplaints = relevantComplaints.filter(c => new Date(c.complain_dt) >= thisMonth);
     const lastMonthComplaints = relevantComplaints.filter(c =>
       new Date(c.complain_dt) >= lastMonth && new Date(c.complain_dt) < thisMonth
@@ -752,7 +764,6 @@ const Dashboard = () => {
     if (diffInHours < 48) return "1 day ago";
     return `${Math.floor(diffInHours / 24)} days ago`;
   };
-
   // Set actions directly based on user role
   useEffect(() => {
     if (user && user.role) {
@@ -779,7 +790,9 @@ const Dashboard = () => {
         ]
       };
 
-      setActions(roleActions[user.role] || roleActions['Police Constable'] || []);
+      // Store actions for potential future use
+      const currentActions = roleActions[user.role] || roleActions['Police Constable'] || [];
+      console.log('User actions:', currentActions); // For potential future use
     }
   }, [user]);
 
@@ -793,7 +806,7 @@ const Dashboard = () => {
     }
     catch (error) {
       console.error('Error fetching complaints:', error);
-      setComplaintsError('Failed to load complaints.');
+      // setComplaintsError('Failed to load complaints.');
     } finally {
       setIsLoadingComplaints(false);
     }
@@ -804,13 +817,12 @@ const Dashboard = () => {
       if (data.cases) {
         setRecentCases(data.cases); // Store ALL cases
       }
-    }
-    catch (error) {
+    } catch (error) {
       if (error.response && error.response.status === 404) {
         console.log(error.response.data.message);
       } else {
         console.error('Error fetching cases:', error);
-        setCasesError('Failed to load cases.');
+        // setCasesError('Failed to load cases.');
       }
     } finally {
       setIsLoadingCases(false);
@@ -826,9 +838,7 @@ const Dashboard = () => {
       console.error('Error fetching investigations:', error);
     } finally {
       setIsLoadingInvestigations(false);
-    }
-
-    // Fetch officers
+    }    // Fetch officers
     try {
       const res = await apiClient.post('/officers/getAll');
       if (res.data.officers) {
@@ -836,9 +846,21 @@ const Dashboard = () => {
       }
     } catch (error) {
       console.error('Error fetching officers:', error);
-      setOfficersError('Failed to load officers.');
+      // setOfficersError('Failed to load officers.');
     } finally {
       setIsLoadingOfficers(false);
+    }
+
+    // Fetch evidences
+    try {
+      const { data } = await apiClient.get('/evidences/getAllEvidence');
+      if (data.evidences) {
+        setEvidences(data.evidences); // Store ALL evidences
+      }
+    } catch (error) {
+      console.error('Error fetching evidences:', error);
+    } finally {
+      setIsLoadingEvidences(false);
     }
   }, []); // Remove user?.role dependency since we're fetching all data
 
@@ -854,13 +876,12 @@ const Dashboard = () => {
 
       // Generate recent activities
       const activities = generateRecentActivities(user.role, recentCases, recentComplaints, officers, investigations);
-      setRecentActivities(activities);
-
-      // Prepare chart data (only for ongoing cases and new complaints)
-      if (recentCases.length > 0) {
-        setCaseAnalyticsData(prepareCaseTypeChartData(recentCases, caseTypeFilter));
-        setCaseStatusData(prepareStatusChartData(recentCases));
-      }
+      setRecentActivities(activities);      // Prepare chart data (only for ongoing cases and new complaints)
+      // NOTE: Case analytics data is now handled in a separate useEffect with role-based filtering
+      // if (recentCases.length > 0) {
+      //   setCaseAnalyticsData(prepareCaseTypeChartData(recentCases, caseTypeFilter));
+      //   // setCaseStatusData(prepareStatusChartData(recentCases));
+      // }
 
       // Set loading stats to false when all calculations are done
       setIsLoadingStats(false);
@@ -885,38 +906,74 @@ const Dashboard = () => {
     caseTypeFilter
   ]);
 
-  // Stats processing is now handled by the dashboardData structure
-  // Role-specific stats are now dynamically loaded from the dashboard data
-  // Icons are now directly used in the components
-
+  // Get stat color for the progress bar
   const getStatColor = (color) => {
     const colors = {
-      blue: 'bg-gradient-to-r from-black to-blue-700 ',
-      green: 'bg-gradient-to-r from-black to-green-700 ',
-      purple: 'bg-gradient-to-r from-black to-purple-700 ',
-      orange: 'bg-gradient-to-r from-black to-orange-700 ',
-      red: 'bg-gradient-to-r from-black to-red-700 ',
-      yellow: 'bg-gradient-to-r from-black to-yellow-700 '
+      blue: 'bg-gradient-to-r from-black to-blue-700',
+      green: 'bg-gradient-to-r from-black to-green-700',
+      purple: 'bg-gradient-to-r from-black to-purple-700',
+      orange: 'bg-gradient-to-r from-black to-orange-700',
+      red: 'bg-gradient-to-r from-black to-red-700',
+      yellow: 'bg-gradient-to-r from-black to-yellow-700'
     };
     return colors[color] || colors.blue;
   };
+  // Reset chart data when user changes to avoid stale data
+  useEffect(() => {
+    if (user?.role) {
+      setCaseAnalyticsData([]);
+      setEvidenceAnalyticsData([]);
+      setComplaintsChartData([]);
+    }
+  }, [user?.user_id, user?.role]);
 
-  // Process complaints data when it loads or filters change
+  // Process complaints data when it loads or filters change - with role-based filtering
   useEffect(() => {
-    // Skip on initial render when we don't have data yet
-    if (recentComplaints.length > 0) {
-      // Update complaints chart data based on filter changes
-      setComplaintsChartData(prepareComplaintChartData(recentComplaints, complaintTypeFilter, complaintTimePeriod));
+    if (recentComplaints.length > 0 && user?.role) {
+      let filteredComplaints = recentComplaints;
+
+      // Apply role-based filtering for complaints charts
+      if (user.role === 'Sergeant' || user.role === 'Police Constable') {
+        // Show only complaints created by this user
+        filteredComplaints = recentComplaints.filter(c => c.officer_id === user.user_id || c.created_by === user.user_id);
+      }
+      // OIC and Crime OIC see all complaints (no filtering needed)
+
+      const chartData = prepareComplaintChartData(filteredComplaints, complaintTypeFilter, complaintTimePeriod);
+      setComplaintsChartData(chartData);
     }
-  }, [recentComplaints, complaintTimePeriod, complaintTypeFilter, prepareComplaintChartData]);
-  // Process case data when it loads or filter changes - use ALL cases for charts
+  }, [recentComplaints, complaintTimePeriod, complaintTypeFilter, user, prepareComplaintChartData]);
+
+  // Process case data when it loads or filter changes - with role-based filtering
   useEffect(() => {
-    if (recentCases.length > 0) {
-      // Use ALL cases for chart data, not filtered
-      setCaseAnalyticsData(prepareCaseTypeChartData(recentCases, caseTypeFilter));
-      setCaseStatusData(prepareStatusChartData(recentCases));
+    if (recentCases.length > 0 && user?.role) {
+      let filteredCases = recentCases;
+
+      // Apply role-based filtering for case charts
+      if (user.role === 'Inspector') {
+        // Show only cases where user is the leader
+        filteredCases = recentCases.filter(c => c.leader_id === user.user_id);
+      } else if (user.role === 'Sub Inspector') {
+        // Show only cases where user is assigned
+        filteredCases = recentCases.filter(c => c.assigned_officer_id === user.user_id);
+      }
+
+
+      const analyticsData = prepareCaseTypeChartData(filteredCases, caseTypeFilter);
+      setCaseAnalyticsData(analyticsData);
+      // setCaseStatusData(prepareStatusChartData(filteredCases));
     }
-  }, [recentCases, caseTypeFilter, prepareCaseTypeChartData, prepareStatusChartData]);
+  }, [recentCases, caseTypeFilter, user, prepareCaseTypeChartData]);
+  // Process evidence data when it loads - for roles that should see evidence chart
+  useEffect(() => {
+    if (evidences.length > 0 && user?.role && !['OIC', 'Crime OIC', 'Inspector', 'Sub Inspector', 'Forensic Analyst'].includes(user.role)) {
+
+      //filter evidences created by this user
+      const filteredEvidences = evidences.filter(e => e.officer_id === user.user_id)
+      setEvidenceAnalyticsData(prepareEvidenceChartData(filteredEvidences));
+      console.log('Filtered evidences for evidence chart:', filteredEvidences.length);
+    }
+  }, [evidences, user, prepareEvidenceChartData]);
 
   if (!user || isLoadingStats) {
     return (
@@ -982,11 +1039,18 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Complaints Trend - Takes 2/3 width */}
           <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-3 sm:space-y-0">
-              <div>
-                <h3 className="text-xl font-semibold text-black">Complaints Trend</h3>
-                <p className="text-sm text-gray-500 mt-1">Track complaint patterns over time</p>
-              </div>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-3 sm:space-y-0">              <div>
+              <h3 className="text-xl font-semibold text-black">
+                {user?.role && ['OIC', 'Crime OIC', 'Inspector'].includes(user.role)
+                  ? 'All Complaints Trend'
+                  : 'My Complaints Trend'}
+              </h3>
+              <p className="text-sm text-gray-500 mt-1">
+                {user?.role && ['OIC', 'Crime OIC', 'Inspector'].includes(user.role)
+                  ? 'Track all complaint patterns over time'
+                  : 'Track your complaint patterns over time'}
+              </p>
+            </div>
               <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
                 <CustomDropdown
                   options={[
@@ -1024,8 +1088,7 @@ const Dashboard = () => {
                   <div className="text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-2"></div>
                     <p className="text-gray-500 text-sm">Loading complaints trend...</p>
-                  </div>
-                </div>
+                  </div>                </div>
               ) : complaintsChartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={complaintsChartData} margin={{ left: 0, right: 10, top: 10, bottom: 10 }}>
@@ -1068,85 +1131,165 @@ const Dashboard = () => {
                 </div>
               )}
             </div>
-          </div>
-
-          {/*  Case Distribution */}
+          </div>          {/* Role-based Chart - Case Distribution or Evidence Distribution */}
           <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-3 sm:space-y-0">
-              <div>
-                <h3 className="text-xl font-semibold text-black">Case Distribution</h3>
-                <p className="text-sm text-gray-500 mt-1">Overview of case types in the system</p>
-              </div>
-              <CustomDropdown
-                options={[
-
-                  { value: 'all', label: 'All Case Types' },
-                  ...caseTypes.map(type => ({ value: type, label: type }))
-                ]}
-                value={caseTypeFilter}
-                onChange={handleCaseTypeFilterChange}
-                name="caseType"
-                className="w-48"
-                icon={FilterList}
-                theme="black"
-              />
-            </div>
-
-            <div className="h-64 overflow-x-auto bg-gray-50 rounded-lg p-4">
-              {isLoadingCases ? (
-                <div className="h-full flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-2"></div>
-                    <p className="text-gray-500 text-sm">Loading case analytics...</p>
+            {/* Show Case Distribution for OIC, Crime OIC, Inspector, Sub Inspector */}
+            {user?.role && ['OIC', 'Crime OIC', 'Inspector', 'Sub Inspector'].includes(user.role) ? (
+              <>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-3 sm:space-y-0">
+                  <div>
+                    <h3 className="text-xl font-semibold text-black">
+                      {user.role === 'OIC' || user.role === 'Crime OIC' ? 'All Cases Distribution' : 'My Cases Distribution'}
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {user.role === 'OIC' || user.role === 'Crime OIC'
+                        ? 'Overview of all case types in the system'
+                        : 'Overview of your assigned case types'}
+                    </p>
                   </div>
+                  <CustomDropdown
+                    options={[
+                      { value: 'all', label: 'All Case Types' },
+                      ...caseTypes.map(type => ({ value: type, label: type }))
+                    ]}
+                    value={caseTypeFilter}
+                    onChange={handleCaseTypeFilterChange}
+                    name="caseType"
+                    className="w-48"
+                    icon={FilterList}
+                    theme="black"
+                  />
                 </div>
-              ) : caseAnalyticsData && caseAnalyticsData.length > 0 ? (
-                <ResponsiveContainer width={Math.max(500, caseAnalyticsData.length * 50)} height="100%">
-                  <RechartsBarChart
-                    data={caseAnalyticsData}
-                    margin={{ left: 10, right: 15, top: 15, bottom: 15 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />                    <XAxis
-                      dataKey="name"
-                      tick={{ fontSize: 10, fill: '#6b7280' }}
-                      interval={0}
-                      angle={-10}
-                      textAnchor="end"
-                      height={20}
-                    />
-                    <YAxis 
-                      tick={{ fontSize: 10, fill: '#6b7280' }} 
-                      allowDecimals={false}
-                    />
-                    <Tooltip
-                      formatter={(value) => [`${value} cases`, 'Total Cases']}
-                      labelFormatter={(label) => `Case Type: ${label}`}
-                      contentStyle={{
-                        backgroundColor: 'white',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                      }}
-                    />
-                    <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                      {caseAnalyticsData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Bar>
-                  </RechartsBarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-full flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <BarChart className="w-8 h-8 text-gray-400" />
+
+                <div className="h-64 overflow-x-auto bg-gray-50 rounded-lg p-4">
+                  {isLoadingCases ? (
+                    <div className="h-full flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-2"></div>
+                        <p className="text-gray-500 text-sm">Loading case analytics...</p>
+                      </div>
                     </div>
-                    <p className="text-black font-medium">No case data available</p>
-                    <p className="text-gray-400 text-sm mt-1">Cases will appear here once created</p>
+                  ) : caseAnalyticsData && caseAnalyticsData.length > 0 ? (
+                    <ResponsiveContainer width={Math.max(500, caseAnalyticsData.length * 50)} height="100%">
+                      <RechartsBarChart
+                        data={caseAnalyticsData}
+                        margin={{ left: 10, right: 15, top: 15, bottom: 15 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis
+                          dataKey="name"
+                          tick={{ fontSize: 10, fill: '#6b7280' }}
+                          interval={0}
+                          angle={-10}
+                          textAnchor="end"
+                          height={20}
+                        />
+                        <YAxis
+                          tick={{ fontSize: 10, fill: '#6b7280' }}
+                          allowDecimals={false}
+                        />
+                        <Tooltip
+                          formatter={(value) => [`${value} cases`, 'Total Cases']}
+                          labelFormatter={(label) => `Case Type: ${label}`}
+                          contentStyle={{
+                            backgroundColor: 'white',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                          }}
+                        />
+                        <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                          {caseAnalyticsData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Bar>
+                      </RechartsBarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-full flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <BarChart className="w-8 h-8 text-gray-400" />
+                        </div>
+                        <p className="text-black font-medium">No case data available</p>
+                        <p className="text-gray-400 text-sm mt-1">Cases will appear here once created</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              /* Show Evidence Distribution for other roles */
+              <>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-3 sm:space-y-0">
+                  <div>
+                    <h3 className="text-xl font-semibold text-black">Evidence Distribution</h3>
+                    <p className="text-sm text-gray-500 mt-1">Overview of evidence types in the system</p>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-gray-600">
+                    <Science className="w-4 h-4" />
+                    <span>Evidence Analysis</span>
                   </div>
                 </div>
-              )}
-            </div>
+
+                <div className="h-64 overflow-x-auto bg-gray-50 rounded-lg p-4">
+                  {isLoadingEvidences ? (
+                    <div className="h-full flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-2"></div>
+                        <p className="text-gray-500 text-sm">Loading evidence analytics...</p>
+                      </div>
+                    </div>
+                  ) : evidenceAnalyticsData && evidenceAnalyticsData.length > 0 ? (
+                    <ResponsiveContainer width={Math.max(500, evidenceAnalyticsData.length * 50)} height="100%">
+                      <RechartsBarChart
+                        data={evidenceAnalyticsData}
+                        margin={{ left: 10, right: 15, top: 15, bottom: 15 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis
+                          dataKey="name"
+                          tick={{ fontSize: 10, fill: '#6b7280' }}
+                          interval={0}
+                          angle={-10}
+                          textAnchor="end"
+                          height={20}
+                        />
+                        <YAxis
+                          tick={{ fontSize: 10, fill: '#6b7280' }}
+                          allowDecimals={false}
+                        />
+                        <Tooltip
+                          formatter={(value) => [`${value} evidence`, 'Total Evidence']}
+                          labelFormatter={(label) => `Evidence Type: ${label}`}
+                          contentStyle={{
+                            backgroundColor: 'white',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                          }}
+                        />
+                        <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                          {evidenceAnalyticsData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Bar>
+                      </RechartsBarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-full flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <Science className="w-8 h-8 text-gray-400" />
+                        </div>
+                        <p className="text-black font-medium">No evidence data available</p>
+                        <p className="text-gray-400 text-sm mt-1">Evidence will appear here once added</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
 
