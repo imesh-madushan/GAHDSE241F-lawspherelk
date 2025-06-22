@@ -13,6 +13,7 @@ const criminalRoutes = require("./routes/criminalRoutes");
 const crimeOffenceRoutes = require("./routes/crimeOffenceRoutes");
 const investigationRoutes = require("./routes/investigationRoutes");
 const evidenceRoutes = require("./routes/evidenceRoutes");
+const auditRoutes = require("./routes/auditRoutes");
 const {
   decryptRequest,
   encryptResponse,
@@ -38,6 +39,7 @@ app.use("/api/criminals", criminalRoutes);
 app.use("/api/crimeoffences", crimeOffenceRoutes);
 app.use("/api/investigations", investigationRoutes);
 app.use("/api/evidences", evidenceRoutes);
+app.use("/api/audit", auditRoutes);
 
 
 app.listen(PORT, () => {
