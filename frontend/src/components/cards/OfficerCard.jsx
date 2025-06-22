@@ -40,7 +40,7 @@ const OfficerCard = ({ officer, size = "medium", className = "" }) => {
     return (
         <div
             className={`flex items-center rounded-lg transition-all cursor-pointer
-                hover:shadow-sm hover:bg-gray-50
+                hover:shadow-sm hover:bg-gray-100
                 ${containerClasses[size]} 
                 ${className}`}
             onClick={() => {
@@ -51,7 +51,7 @@ const OfficerCard = ({ officer, size = "medium", className = "" }) => {
         >
             <div className="flex items-center w-full space-x-3">
                 {/* Officer Avatar */}
-                <div className={`relative ${sizeClasses[size]} rounded-full flex-shrink-0 overflow-hidden border-2 border-gray-200 shadow-sm`}>
+                <div className={`relative ${sizeClasses[size]} rounded-full flex-shrink-0 overflow-hidden border-2 border-gray-300 shadow-sm`}>
                     {officer.profilePic || officer.profile_pic || officer.image ? (
                         <img
                             src={officer.profilePic || officer.profile_pic || officer.image}
@@ -59,7 +59,7 @@ const OfficerCard = ({ officer, size = "medium", className = "" }) => {
                             className="h-full w-full object-cover"
                         />
                     ) : (
-                        <div className="h-full w-full bg-gradient-to-br from-gray-500 to-gray-700 flex items-center justify-center text-white font-medium">
+                        <div className="h-full w-full bg-gray-700 flex items-center justify-center text-white font-medium">
                             {getInitials(officer.name)}
                         </div>
                     )}
@@ -73,7 +73,7 @@ const OfficerCard = ({ officer, size = "medium", className = "" }) => {
                         </div>
 
                         {user && officer.id === user.user_id && (
-                            <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-medium flex-shrink-0">
+                            <span className="px-2 py-0.5 rounded-full bg-gray-200 text-gray-700 text-xs font-medium flex-shrink-0">
                                 you
                             </span>
                         )}
@@ -84,7 +84,7 @@ const OfficerCard = ({ officer, size = "medium", className = "" }) => {
                             {officer.role || "Officer"}
                         </div>
                         {officer.type && (
-                            <div className="ml-2 px-2 py-0.5 bg-blue-100 text-xs rounded-full text-blue-700 whitespace-nowrap flex-shrink-0">
+                            <div className="ml-2 px-2 py-0.5 bg-gray-300 text-xs rounded-full text-gray-800 whitespace-nowrap flex-shrink-0">
                                 {officer.type}
                             </div>
                         )}

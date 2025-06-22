@@ -68,7 +68,7 @@ const SingleCaseView = () => {
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedCase, setEditedCase] = useState({});
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('evidence');
   const [allOfficers, setAllOfficers] = useState([]);
   const [popup, setPopup] = useState({ open: false, status: 'success', message: '', description: '', referenceLink: null });
   const [pendingUpdate, setPendingUpdate] = useState(null);
@@ -184,37 +184,37 @@ const SingleCaseView = () => {
   const handleCreateNote = () => {
     setShowCreateNoteModal(true);
   };
-  // Define quick actions
+  // Define quick actions with police-style black/gray styling
   const quickActions = [
     ...(canAddEvidence() ? [{
       icon: <Attachment fontSize="small" />,
       label: 'Add Evidence',
       onClick: handleAddEvidence,
-      styles: 'w-full bg-blue-600 text-white hover:bg-blue-700 border-blue-600'
+      styles: 'w-full bg-gray-800 text-white hover:bg-black border-none'
     }] : []),
     ...(canAddInvestigation() ? [{
       icon: <FormatListBulleted fontSize="small" />,
       label: 'New Investigation',
       onClick: handleAddInvestigation,
-      styles: 'w-full bg-indigo-600 text-white hover:bg-indigo-700 border-indigo-600'
+      styles: 'w-full bg-gray-800 text-white hover:bg-black border-none'
     }] : []),
     ...(canAddOffence() ? [{
       icon: <Gavel fontSize="small" />,
       label: 'File Crime Offence',
       onClick: handleAddOffence,
-      styles: 'w-full bg-amber-600 text-white hover:bg-amber-700 border-amber-600'
+      styles: 'w-full bg-gray-800 text-white hover:bg-black border-none'
     }] : []),
     ...(canCreateNote() ? [{
       icon: <Note fontSize="small" />,
       label: 'Add Note',
       onClick: handleCreateNote,
-      styles: 'w-full bg-purple-600 text-white hover:bg-purple-700 border-purple-600'
+      styles: 'w-full bg-gray-800 text-white hover:bg-black border-none'
     }] : []),
     ...(canCreateReport() ? [{
       icon: <Description fontSize="small" />,
       label: 'Generate Report',
       onClick: handleCreateReport,
-      styles: 'w-full bg-green-600 text-white hover:bg-green-700 border-green-600'
+      styles: 'w-full bg-gray-800 text-white hover:bg-black border-none'
     }] : [])
   ];
 
@@ -585,33 +585,33 @@ const SingleCaseView = () => {
               styles: 'bg-green-600 text-white border-green-600 hover:bg-green-700'
             } : null
           ].filter(Boolean) : []),
-          {
-            icon: <History fontSize='small' />,
-            onClick: () => navigate(`/recordhistory/cases/${caseId}`),
-            styles: 'bg-white rounded-full text-gray-700 border-purple-600'
-          }
+          // {
+          //   icon: <History fontSize='small' />,
+          //   onClick: () => navigate(`/recordhistory/cases/${caseId}`),
+          //   styles: 'bg-white rounded-full text-gray-700 border-purple-600'
+          // }
 
         ]}
       />
 
       <div className="container mx-auto px-4 py-6">
         {/* Top Card - Case Header */}
-        <div className="bg-white rounded-xl shadow-sm mb-6">
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-5 border-b border-gray-100">
+        <div className="bg-white rounded-lg shadow-sm mb-6 border border-gray-200">
+          <div className="bg-gray-100 p-5 border-b border-gray-200">
             <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
               <div className="flex items-center">
-                <div className="bg-blue-100 p-3 rounded-lg mr-4">
-                  <Folder className="text-blue-700" />
+                <div className="bg-gray-300 p-3 rounded-lg mr-4">
+                  <Folder className="text-gray-800" />
                 </div>
                 <div>
-                  <div className="text-gray-500 text-sm font-medium">Case Reference</div>
+                  <div className="text-gray-700 text-sm font-medium uppercase tracking-wide">Case Reference</div>
                   <h1 className="text-xl font-bold text-gray-900">{'#' + caseData.case_id}</h1>
                 </div>
               </div>
 
               <div className="flex flex-wrap gap-3 items-center">
-                <div className="flex items-center text-gray-500 px-3 py-1">
-                  <CalendarToday className="h-4 w-4 mr-2 text-blue-600" />
+                <div className="flex items-center text-gray-700 px-3 py-2 bg-white rounded">
+                  <CalendarToday className="h-4 w-4 mr-2 text-gray-700" />
                   <span className="text-sm font-medium">
                     {formatDate(caseData.started_dt)}
                   </span>
@@ -624,7 +624,7 @@ const SingleCaseView = () => {
                   handleInputChange={handleInputChange}
                 />
 
-                <div className="bg-blue-50 px-3 py-1 rounded-full text-blue-700 text-sm font-medium border border-blue-100">
+                <div className="bg-gray-200 px-3 py-2 rounded text-gray-800 text-sm font-medium">
                   <ScatterPlot fontSize="small" className="mr-1" />
                   {caseData.case_type || "Unknown Type"}
                 </div>
@@ -638,10 +638,10 @@ const SingleCaseView = () => {
           {/* Left Content - Main Case Details */}
           <div className="lg:col-span-2 space-y-6">
             {/* Case Info Card */}
-            <div className="bg-white rounded-xl shadow-sm ">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="p-6">
                 <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                  <InfoOutlined className="h-5 w-5 mr-2 text-blue-600" />
+                  <InfoOutlined className="h-5 w-5 mr-2 text-gray-800" />
                   Case Topic
                 </h2>
 
@@ -651,11 +651,11 @@ const SingleCaseView = () => {
                     name="topic"
                     value={editedCase.topic}
                     onChange={handleInputChange}
-                    className="w-full p-3 border border-blue-300 rounded-lg bg-blue-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-gray-800 focus:border-gray-800"
                     placeholder="Enter case topic"
                   />
                 ) : (
-                  <div className="bg-gray-50 p-5 rounded-lg text-gray-800">
+                  <div className="bg-gray-50 p-5 rounded-lg text-gray-800 border border-gray-200">
                     <h3 className="text-xl font-medium">{capitalizeFirstLetter(caseData.topic) || "No topic provided"}</h3>
                   </div>
                 )}
@@ -689,7 +689,7 @@ const SingleCaseView = () => {
                             type: "Case Leader"
                           }}
                           size="medium"
-                          className="bg-white/50 border border-gray-200 hover:border-blue-300 shadow-sm"
+                          className="bg-white border border-gray-200 hover:border-gray-400 shadow-sm"
                         />
                       ) : (
                         <div className="inline-flex items-center bg-yellow-50 px-3 py-1 rounded-md text-yellow-700 text-sm">
@@ -721,10 +721,11 @@ const SingleCaseView = () => {
               activeTab={activeTab}
               setActiveTab={setActiveTab}
               tabCounts={tabCounts}
+              neutralMode={true}
             />
 
             {/* Tab Content */}
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
               <div className="p-6">
                 {activeTab === 'overview' && (
                   <div>
@@ -734,8 +735,8 @@ const SingleCaseView = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="bg-gray-50 p-4 rounded-lg">
                         <div className="flex items-center mb-2">
-                          <BarChart className="text-blue-600 mr-2" />
-                          <h4 className="text-gray-700 font-medium">Case Progress</h4>
+                          <BarChart className="text-gray-800 mr-2" />
+                          <h4 className="text-gray-800 font-medium">Case Progress</h4>
                         </div>
                         <div className="mt-4">
                           <div className="flex justify-between mb-1">
@@ -746,7 +747,7 @@ const SingleCaseView = () => {
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div
-                              className="bg-blue-600 h-2 rounded-full"
+                              className="bg-gray-800 h-2 rounded-full"
                               style={{ width: `${Math.min(100, (caseData.evidence?.length || 0) * 10)}%` }}
                             ></div>
                           </div>
@@ -760,7 +761,7 @@ const SingleCaseView = () => {
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div
-                              className="bg-green-600 h-2 rounded-full"
+                              className="bg-gray-800 h-2 rounded-full"
                               style={{ width: `${Math.min(100, (caseData.investigations?.length || 0) * 20)}%` }}
                             ></div>
                           </div>
@@ -774,7 +775,7 @@ const SingleCaseView = () => {
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div
-                              className="bg-purple-600 h-2 rounded-full"
+                              className="bg-gray-800 h-2 rounded-full"
                               style={{ width: `${Math.min(100, (caseData.reports?.length || 0) * 25)}%` }}
                             ></div>
                           </div>
@@ -783,8 +784,8 @@ const SingleCaseView = () => {
 
                       <div className="bg-gray-50 p-4 rounded-lg">
                         <div className="flex items-center mb-2">
-                          <Security className="text-blue-600 mr-2" />
-                          <h4 className="text-gray-700 font-medium">Offence Information</h4>
+                          <Security className="text-gray-800 mr-2" />
+                          <h4 className="text-gray-800 font-medium">Offence Information</h4>
                         </div>
                         {caseData.offences?.length > 0 ? (
                           <div className="space-y-3">
@@ -864,10 +865,10 @@ const SingleCaseView = () => {
             />
 
             {/* Assigned Officers */}
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="bg-gradient-to-r from-gray-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div className="bg-gray-100 px-6 py-4 border-b border-gray-200">
                 <h2 className="font-semibold text-gray-800 flex items-center">
-                  <Person className="h-5 w-5 mr-2 text-blue-600" />
+                  <Person className="h-5 w-5 mr-2 text-gray-800" />
                   Active Officers
                 </h2>
               </div>
@@ -889,10 +890,10 @@ const SingleCaseView = () => {
 
             {/* Quick Actions */}
             {quickActions.length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div className="bg-gradient-to-r from-gray-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <div className="bg-gray-100 px-6 py-4 border-b border-gray-200">
                   <h2 className="font-semibold text-gray-800 flex items-center">
-                    <DeviceHub className="h-5 w-5 mr-2 text-blue-600" />
+                    <DeviceHub className="h-5 w-5 mr-2 text-gray-800" />
                     Quick Actions
                   </h2>
                 </div>

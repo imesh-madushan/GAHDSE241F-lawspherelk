@@ -125,7 +125,7 @@ const CustomOfficerDropdown = ({
         }
 
         return (
-            <div className={`flex-shrink-0 ${sizeClasses} rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-medium shadow-sm`}>
+            <div className={`flex-shrink-0 ${sizeClasses} rounded-full bg-gradient-to-br from-gray-500 to-gray-700 flex items-center justify-center text-white font-medium shadow-sm`}>
                 {getInitials(officer?.name || "??")}
             </div>
         );
@@ -137,7 +137,7 @@ const CustomOfficerDropdown = ({
             <div
                 onClick={() => setIsOpen(!isOpen)}
                 className={`w-full border rounded-lg p-2 flex items-center justify-between cursor-pointer transition-all 
-                    ${isOpen ? 'border-blue-400 ring-2 ring-blue-100 shadow-md' : 'border-gray-200 hover:border-blue-300'}`}
+                    ${isOpen ? 'border-gray-400 ring-2 ring-gray-100 shadow-md' : 'border-gray-200 hover:border-gray-300'}`}
             >
                 <div className="flex items-center flex-1 min-w-0">
                     {selectedOfficer ? (
@@ -188,7 +188,7 @@ const CustomOfficerDropdown = ({
                                 placeholder="Search officers..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 sm:text-sm"
                             />
                         </div>
                     </div>
@@ -197,13 +197,13 @@ const CustomOfficerDropdown = ({
                     <div className="max-h-60 overflow-y-auto py-1">
                         {isLoading ? (
                             <div className="flex justify-center items-center py-4">
-                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-500"></div>
                             </div>
                         ) : filteredOfficers.length > 0 ? (
                             filteredOfficers.map(officer => (
                                 <div
                                     key={officer.id}
-                                    className={`px-4 py-2 hover:bg-blue-50 cursor-pointer flex items-center transition-colors ${selectedOfficerId === officer.id ? 'bg-blue-50' : ''
+                                    className={`px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center transition-colors ${selectedOfficerId === officer.id ? 'bg-gray-50' : ''
                                         }`}
                                     onClick={() => handleSelect(officer)}
                                 >
@@ -213,7 +213,7 @@ const CustomOfficerDropdown = ({
                                         <div className="flex items-center">
                                             <div className="text-xs text-gray-500 truncate">{officer.role || "Officer"}</div>
                                             {officer.id === selectedOfficerId && (
-                                                <div className="ml-2 px-1.5 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                                <div className="ml-2 px-1.5 py-0.5 bg-gray-100 text-gray-800 text-xs rounded-full">
                                                     Selected
                                                 </div>
                                             )}

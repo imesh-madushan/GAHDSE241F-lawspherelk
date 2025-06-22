@@ -14,22 +14,22 @@ const ReportsTab = ({ caseData, canEdit, formatDate }) => {
                     <div key={index} className="rounded-lg bg-white p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                         <div className="flex justify-between items-start mb-2">
                             <h4 className="font-semibold text-gray-800">{report.type}</h4>
-                            <span className="px-2 py-1 text-xs rounded-md bg-green-100 text-green-800 font-medium">
+                            <span className="px-2 py-1 text-xs rounded-md bg-gray-200 text-gray-800 font-medium">
                                 {report.status}
                             </span>
                         </div>
                         <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
                             <p className="flex items-center">
-                                <Person fontSize="small" className="mr-1 text-blue-600" />
+                                <Person fontSize="small" className="mr-1 text-gray-700" />
                                 Officer: {report.officer}
                             </p>
                             <p className="flex items-center">
-                                <CalendarToday fontSize="small" className="mr-1 text-blue-600" />
+                                <CalendarToday fontSize="small" className="mr-1 text-gray-700" />
                                 Created: {formatDate(report.created_dt)}
                             </p>
                         </div>
                         <div className="flex justify-end mt-2">
-                            <button className="text-blue-600 hover:text-blue-800 text-sm flex items-center transition-colors">
+                            <button className="bg-gray-800 text-white text-sm flex items-center px-3 py-1 rounded transition-colors">
                                 <Visibility fontSize="small" className="mr-1" />
                                 View Report
                             </button>

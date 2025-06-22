@@ -1,31 +1,43 @@
 import React from 'react';
-import { DeviceHub, Attachment, FormatListBulleted, Assignment, Gavel } from '@mui/icons-material';
 
-const TabNavigation = ({ activeTab, setActiveTab, tabCounts = {} }) => {
-    const tabs = [
-        { id: 'evidence', icon: <Attachment fontSize="small" />, label: 'Evidence' },
-        { id: 'investigations', icon: <FormatListBulleted fontSize="small" />, label: 'Investigations' },
-        { id: 'offences', icon: <Gavel fontSize="small" />, label: 'Offences' },
-        { id: 'reports', icon: <Assignment fontSize="small" />, label: 'Reports' }
-    ];
+const tabList = [
+    { key: 'evidence', label: 'Evidence' },
+    { key: 'investigations', label: 'Investigations' },
+    { key: 'offences', label: 'Offences' },
+    { key: 'reports', label: 'Reports' }
+];
 
+const TabNavigation = ({ activeTab, setActiveTab, tabCounts, neutralMode }) => {
     return (
-        <div className="mb-6 flex overflow-x-auto bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="flex w-full">
-                {tabs.map(tab => (
-                    <button
-                        key={tab.id}
-                        className={`flex-1 px-6 py-4 flex items-center justify-center border-b-2 whitespace-nowrap transition-all duration-200 hover:bg-gray-50
-                        ${activeTab === tab.id
-                                ? 'border-blue-600 text-blue-600 font-medium bg-blue-50'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
-                        onClick={() => setActiveTab(tab.id)}
-                    >
-                        <span className="mr-2 flex items-center justify-center">{tab.icon}</span>
-                        <span className="font-medium">{tab.label}</span>
-                    </button>
-                ))}
-            </div>
+        <div className="w-full border-b border-gray-300 bg-gray-50 mb-4">
+            <nav className="flex space-x-2 px-4 pt-2">
+                {tabList.map(tab => {
+                    const isActive = activeTab === tab.key;
+                    return (
+                        <button
+                            key={tab.key}
+                            onClick={() => setActiveTab(tab.key)}
+                            className={
+                                isActive
+                                    ? 'px-4 py-2 rounded-t bg-gray-800 text-white font-semibold shadow-sm'
+                                    : 'px-4 py-2 rounded-t bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium'
+                            }
+                            style={{ outline: 'none', border: 'none' }}
+                        >
+                            {tab.label}
+                            {tabCounts && tabCounts[tab.key] > 0 && (
+                                <span className={
+                                    isActive
+                                        ? 'ml-2 inline-block text-xs bg-black text-white rounded-full px-2 py-0.5'
+                                        : 'ml-2 inline-block text-xs bg-gray-400 text-gray-100 rounded-full px-2 py-0.5'
+                                }>
+                                    {tabCounts[tab.key]}
+                                </span>
+                            )}
+                        </button>
+                    );
+                })}
+            </nav>
         </div>
     );
 };

@@ -23,8 +23,8 @@ const EvidenceTab = ({ caseData, canAddEvidence }) => {
                             <div className="p-4">
                                 <div className="flex items-start justify-between mb-3">
                                     <div className="flex items-center">
-                                        <div className="p-2 bg-gray-50 rounded-lg mr-3">
-                                            {item.type === 'fingerprint' ? <Fingerprint className="text-blue-600" /> : <Description className="text-gray-600" />}
+                                        <div className="p-2 bg-gray-100 rounded-lg mr-3">
+                                            {item.type === 'fingerprint' ? <Fingerprint className="text-gray-800" /> : <Description className="text-gray-600" />}
                                         </div>
                                         <div>
                                             <h4 className="font-medium text-gray-900">{item.type}</h4>
@@ -71,7 +71,7 @@ const EvidenceTab = ({ caseData, canAddEvidence }) => {
                                                 type: "Evidence Collector"
                                             }}
                                             size="small"
-                                            className="bg-gray-50 p-3"
+                                            className="bg-gray-100 p-3"
                                         />
                                     </div>
                                 </div>
@@ -80,7 +80,7 @@ const EvidenceTab = ({ caseData, canAddEvidence }) => {
                     ))}
                 </div>
             ) : (
-                <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="text-center py-8 bg-gray-100 rounded-lg border border-gray-200">
                     <p className="text-gray-500">No evidence records found</p>
                 </div>
             )}

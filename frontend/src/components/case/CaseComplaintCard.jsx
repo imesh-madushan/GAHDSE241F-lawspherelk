@@ -19,9 +19,9 @@ const CaseComplaintCard = ({ complaint, formatDate, onViewFullComplaint }) => {
   if (!complaint || Object.keys(complaint).length === 0) {
     return (
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div className="bg-gradient-to-r from-gray-50 to-amber-50 px-6 py-4 border-b border-gray-100">
+        <div className="bg-gray-100 px-6 py-4 border-b border-gray-200">
           <h2 className="font-semibold text-gray-800 flex items-center">
-            <Assignment className="h-5 w-5 mr-2 text-amber-600" />
+            <Assignment className="h-5 w-5 mr-2 text-gray-700" />
             Related Complaint
           </h2>
         </div>
@@ -34,9 +34,9 @@ const CaseComplaintCard = ({ complaint, formatDate, onViewFullComplaint }) => {
 
   return (
     <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-      <div className="bg-gradient-to-r from-gray-50 to-amber-50 px-6 py-4 border-b border-gray-100">
+      <div className="bg-gray-100 px-6 py-4 border-b border-gray-200">
         <h2 className="font-semibold text-gray-800 flex items-center">
-          <Assignment className="h-5 w-5 mr-2 text-amber-600" />
+          <Assignment className="h-5 w-5 mr-2 text-gray-700" />
           Related Complaint
         </h2>
       </div>
@@ -44,8 +44,8 @@ const CaseComplaintCard = ({ complaint, formatDate, onViewFullComplaint }) => {
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
-            <div className="bg-amber-100 p-1.5 rounded mr-3">
-              <Assignment className="text-amber-700 h-5 w-5" />
+            <div className="bg-gray-200 p-1.5 rounded mr-3">
+              <Assignment className="text-gray-700 h-5 w-5" />
             </div>
             <div>
               <span className="text-xs text-gray-500">Complaint ID</span>
@@ -76,14 +76,14 @@ const CaseComplaintCard = ({ complaint, formatDate, onViewFullComplaint }) => {
             <OfficerCard
               officer={complaintOfficer}
               size="small"
-              className="bg-white/60 border border-gray-100 hover:border-blue-200 shadow-sm"
+              className="bg-white/60 border border-gray-200 hover:border-gray-400 shadow-sm"
             />
           </div>
         )}
 
         <button
           onClick={onViewFullComplaint}
-          className="w-full mt-2 text-blue-600 hover:cursor-pointer hover:text-white hover:bg-blue-600 text-sm py-2 px-4 border border-blue-200 rounded-lg flex items-center justify-center transition-colors duration-200"
+          className="w-full mt-2 bg-gray-800 text-white text-sm py-2 px-4 rounded-lg flex items-center justify-center transition-colors duration-200"
         >
           <Visibility fontSize="small" className="mr-2" />
           View Full Complaint
