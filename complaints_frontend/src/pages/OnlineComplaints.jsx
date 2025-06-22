@@ -13,11 +13,13 @@ import {
 } from 'lucide-react';
 import govLogo from '../assets/Sri Lanka Government.jpg';
 import { apiClient } from '../config/apiConfig';
+import { caseTypes } from '../../data';
 
 const OnlineComplaintForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [successComplaintId, setSuccessComplaintId] = useState(null);
   
   const [complaintData, setComplaintData] = useState({
     description: '',
@@ -37,33 +39,6 @@ const OnlineComplaintForm = () => {
   const [evidenceFiles, setEvidenceFiles] = useState([]);
   const [evidenceError, setEvidenceError] = useState(null);
 
-  const caseTypes = [
-    'Criminal',
-    'Civil Dispute',
-    'Child Abuse',
-    'Missing Person',
-    'Domestic Violence',
-    'Drug Offense',
-    'Motorcycle Theft',
-    'Land Dispute',
-    'Assault and Battery',
-    'Murder/Homicide',
-    'Illegal Firearms Possession',
-    'Sexual Abuse',
-    'Human Trafficking',
-    'Public Disturbance',
-    'Fraud or Financial Crime',
-    'Cyber Crime',
-    'Robbery',
-    'Rape',
-    'Bribery or Corruption',
-    'Terrorism or Extremism',
-    'Traffic Accident',
-    'Illegal Construction or Land Grabbing',
-    'Suicide or Sudden Death Investigation',
-    'Political Protest',
-    
-  ];
 
   
   const validateStep1 = () => {
@@ -148,7 +123,7 @@ const OnlineComplaintForm = () => {
 
   const handleEvidenceChange = (e) => {
     const files = Array.from(e.target.files);
-    // Accept only images and pdf/doc/docx files, max 5 files, each max 5MB
+    // Validate file types and sizes
     const allowedTypes = [
       'image/jpeg', 'image/png', 'image/gif', 'image/webp',
       'application/pdf',
@@ -197,38 +172,42 @@ const OnlineComplaintForm = () => {
     }
   };
 
-  const handleSubmit = async () => {
-    console.log('[TEST] Submit button clicked'); // Log when submit is clicked
-    if (!validateStep2()) return;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setIsSubmitting(true);
     setFieldErrors({});
     setEvidenceError(null);
-
-    // Prepare the payload for backend (evidence upload not included yet)
-    const payload = {
-      description: complaintData.description,
-      complain_type: complaintData.complaintType,
-      complainer: { ...complainantData },
-      evidence_details: 'Online evidence not implemented yet' // Placeholder for now
-    };
-
     try {
-      // Use fetch directly to POST to backend
-      const response = await fetch('/api/complaints/online/create',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        }
-      );
-      const data = await response.json();
-      if (response.ok) {
-        setShowSuccess(true);
-      } else {
-        setFieldErrors({ api: data.message || 'Submission failed' });
-      }
+      // Prepare data for API
+      const onlineComplaintData = {
+        complaint_type: complaintData.complaintType,
+        description: complaintData.description,
+        complainant_full_name: complainantData.name,
+        nic_no: complainantData.nic,
+        dob: complainantData.dob,
+        phone_no: complainantData.phone,
+        email: complainantData.email,
+        address: complainantData.address,
+        // evidence: evidenceFiles 
+      };
+      console.log('[DEBUG] Submitting complaint payload:', onlineComplaintData);
+      // If you want to send files later, use FormData and append fields/files
+      // const formData = new FormData();
+      // Object.entries(onlineComplaintData).forEach(([key, value]) => formData.append(key, value));
+      // evidenceFiles.forEach((file) => formData.append('evidence', file));
+      // Send to backend
+      const response = await apiClient.post('/complaints/online/create', onlineComplaintData);
+      console.log('[DEBUG] API response:', response.data);
+      setSuccessComplaintId(response.data.complaint_id);
+      setShowSuccess(true);
+      
     } catch (err) {
-      setFieldErrors({ api: 'Network error. Please try again.' });
+      console.error('[ERROR] Failed to submit complaint:', err);
+      if (err.response && err.response.data && err.response.data.message) {
+        setFieldErrors({ general: err.response.data.message });
+      } else {
+        setFieldErrors({ general: 'Failed to submit complaint.' });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -242,6 +221,7 @@ const OnlineComplaintForm = () => {
     setShowSuccess(false);
   };
 
+  { /* Success message  */ }
   if (showSuccess) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 flex items-center justify-center p-4">
@@ -251,7 +231,7 @@ const OnlineComplaintForm = () => {
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Complaint Submitted Successfully!</h2>
           <p className="text-gray-600 mb-6">
-            Your complaint has been received and assigned reference number <span className="font-mono font-semibold text-blue-600">#CPL-2024-0001</span>. 
+            Your complaint has been received and assigned reference number <span className="font-mono font-semibold text-blue-600">{successComplaintId ? `#${successComplaintId}` : ''}</span>.
             You will receive updates via email.
           </p>
           <button
@@ -264,9 +244,11 @@ const OnlineComplaintForm = () => {
       </div>
     );
   }
-
+  
+  {/* Main Form Container */}
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+
       {/* Header */}
       <div className="bg-gradient-to-r from-[#1a3261] to-[#19387a] shadow-md border-b border-[#14244a] rounded-tr-2xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -396,7 +378,7 @@ const OnlineComplaintForm = () => {
                   </div>
                 </div>
 
-                {/* Evidence Upload Card (screenshot-inspired, all file types) */}
+                {/* Evidence Upload Card */}
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
                   <label className="text-sm font-semibold text-gray-800 mb-3 flex items-center">
                     <FileText className="w-4 h-4 mr-2 text-blue-600" />
