@@ -12,7 +12,7 @@ exports.createNote = async (noteData, createdBy) => {
     const batchId = await generateBatchId();
 
     // Insert the note
-    const result = await connection.query(
+    await connection.query(
       `INSERT INTO notes (note_id, reference_table, reference_id, description, created_by, receiver_id, read_status, created_dt) 
        VALUES (?, ?, ?, ?, ?, ?, DEFAULT, NOW())`,
       [

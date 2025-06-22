@@ -13,7 +13,8 @@ import {
     People,
     History,
     AttachFile,
-    Add
+    Add,
+    Note
 } from '@mui/icons-material';
 import { apiClient } from '../../config/apiConfig';
 import PageHeader from '../../components/common/PageHeader';
@@ -29,6 +30,7 @@ import OfficerCard from '../../components/cards/OfficerCard';
 import { evidenceTypes } from '../../../data';
 import AttachmentsTab from '../../components/evidence/tabs/AttachmentsTab';
 import UploadAttachmentModal from '../../components/modals/UploadAttachmentModal';
+import CreateNoteModal from '../../components/modals/CreateNoteModal';
 
 const SingleEvidenceView = () => {
     const { evidenceId } = useParams();
@@ -59,11 +61,11 @@ const SingleEvidenceView = () => {
         related: 0
     });
     const [showUploadModal, setShowUploadModal] = useState(false);
+    const [showCreateNoteModal, setShowCreateNoteModal] = useState(false);
 
-    const navigate = useNavigate();
-
-    useEffect(() => {
+    const navigate = useNavigate(); useEffect(() => {
         fetchEvidenceDetails();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [evidenceId]);
 
     // Check if user has edit permissions
@@ -74,9 +76,7 @@ const SingleEvidenceView = () => {
             user.role === 'Crime OIC' ||
             user.user_id === evidence.officer_id // officer_id is the user_id of the collector
         );
-    }
-
-    // Permission checks
+    }    // Permission checks
     const canAddAttachments = () => {
         if (!evidence || !user) return false;
 
@@ -90,6 +90,28 @@ const SingleEvidenceView = () => {
         );
     };
 
+    const dropOfficerRolesForeNotes = [
+        'Police Constable',
+        'Forensic Officer',
+        'Sergeant',
+        'Sub Inspector',
+        'Inspector',
+    ];
+
+    // Notes: Crime OIC, OIC, and evidence creator can create notes for evidence
+    const canCreateNote = () => {
+        if (!evidence || !user) return false;
+        return (
+            user.role === 'OIC' ||
+            user.role === 'Crime OIC' ||
+            user.user_id === evidence.officer_id
+        );
+    };
+
+    const handleCreateNote = () => {
+        setShowCreateNoteModal(true);
+    };
+
     // Define quick actions
     const quickActions = [
         ...(canAddAttachments() ? [{
@@ -97,6 +119,12 @@ const SingleEvidenceView = () => {
             label: 'Upload Attachment',
             onClick: () => setShowUploadModal(true),
             styles: 'bg-blue-600 text-white hover:bg-blue-700 border-blue-600'
+        }] : []),
+        ...(canCreateNote() ? [{
+            icon: <Note fontSize="small" />,
+            label: 'Add Note',
+            onClick: handleCreateNote,
+            styles: 'bg-purple-600 text-white hover:bg-purple-700 border-purple-600'
         }] : [])
     ];
 
@@ -503,9 +531,7 @@ const SingleEvidenceView = () => {
                         )}
                     </div>
                 </div>
-            </div>
-
-            {/* Upload Attachment Modal */}
+            </div>            {/* Upload Attachment Modal */}
             {showUploadModal && (
                 <UploadAttachmentModal
                     open={showUploadModal}
@@ -517,6 +543,18 @@ const SingleEvidenceView = () => {
                     }}
                 />
             )}
+
+            {/* Create Note Modal */}
+            <CreateNoteModal
+                open={showCreateNoteModal}
+                onClose={() => setShowCreateNoteModal(false)}
+                canCreate={canCreateNote()}
+                context="evidence"
+                contextId={evidenceId}
+                contextData={evidence}
+                dropOfficerRoles={dropOfficerRolesForeNotes}
+                allowedOfficerIds={[evidence.officer_id]}  // Only the collecting officer can be assigned
+            />
         </div>
     );
 };

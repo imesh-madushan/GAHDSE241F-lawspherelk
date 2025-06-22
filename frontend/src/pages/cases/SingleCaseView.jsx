@@ -6,7 +6,7 @@ import {
   Gavel, Attachment, Visibility, VisibilityOff, Add,
   Description, Timeline, DeviceHub, BarChart,
   Cancel, ScatterPlot, InfoOutlined,
-  History
+  History, Note
 } from '@mui/icons-material';
 import { apiClient } from '../../config/apiConfig';
 import { format } from 'date-fns';
@@ -21,13 +21,14 @@ import StatusBadge from '../../components/badges/StatusBadge';
 import { useAuth } from '../../contexts/AuthContext';
 import OfficerCard from '../../components/cards/OfficerCard';
 import CustomOfficerDropdown from '../../components/dropdowns/CustomOfficerDropdown';
-import { caseStatusList, complainStatusList } from '../../../data';
+import { caseStatusList } from '../../../data';
 import StatusPopup from '../../components/common/StatusPopup';
 import { capitalizeFirstLetter } from '../../utils/Preprocessors';
 import CreateEvidenceModal from '../../components/modals/CreateEvidenceModal';
 import CreateInvestigationModal from '../../components/modals/CreateInvestigationModal';
 import CreateOffenceModal from '../../components/modals/CreateOffenceModal';
 // import CreateReportModal from '../../components/modals/CreateReportModal';
+import CreateNoteModal from '../../components/modals/CreateNoteModal';
 import OutlinedButton from '../../components/buttons/OutlinedButton';
 
 const SingleCaseView = () => {
@@ -77,14 +78,15 @@ const SingleCaseView = () => {
     offences: 0,
     reports: 0
   });
-  const [showCreateEvidenceModal, setShowCreateEvidenceModal] = useState(false);
-  const [showCreateInvestigationModal, setShowCreateInvestigationModal] = useState(false);
+  const [showCreateEvidenceModal, setShowCreateEvidenceModal] = useState(false); const [showCreateInvestigationModal, setShowCreateInvestigationModal] = useState(false);
   const [showCreateOffenceModal, setShowCreateOffenceModal] = useState(false);
-  const [showCreateReportModal, setShowCreateReportModal] = useState(false);
+  const [showCreateNoteModal, setShowCreateNoteModal] = useState(false);
 
   // Permission checks - If case is closed, ONLY OIC can do anything
   const isCaseClosed = caseData.status === "closed";
   const isOIC = user.role === "OIC";
+  const isCrimeOIC = user.role === "Crime OIC";
+  const isLeader = user.user_id === caseData.leader_id;
 
   const canEdit = () => {
     if (isCaseClosed) return false;
@@ -117,15 +119,22 @@ const SingleCaseView = () => {
     if (isCaseClosed) return false;
     return (user.user_id == caseData.leader_id || isOIC || user.role === "Crime OIC") && caseData.status !== 'closed';
   };
-
   // Reports: For closed cases, only OIC can create reports
   const canCreateReport = () => {
+    return (
+      isOIC ||
+      isCrimeOIC ||
+      isLeader
+    );
+  };
+
+  // Notes: Case leader, OIC, Crime OIC, and team members can create notes
+  const canCreateNote = () => {
     return (
       user.user_id == caseData.leader_id ||
       isOIC ||
       user.role === "Crime OIC" ||
-      user.role === "Sub Inspector" ||
-      user.role === "Sergeant"
+      caseData.assignedOfficers?.some(officer => officer.user_id === user.user_id)
     );
   };
 
@@ -161,11 +170,20 @@ const SingleCaseView = () => {
     }
     setShowCreateOffenceModal(true);
   };
-
   const handleCreateReport = () => {
-    setShowCreateReportModal(true);
+    // setShowCreateReportModal(true);
+    setPopup({
+      open: true,
+      status: 'info',
+      message: 'Feature Coming Soon',
+      description: 'Report creation functionality will be available in the next update.',
+      referenceLink: null
+    });
   };
 
+  const handleCreateNote = () => {
+    setShowCreateNoteModal(true);
+  };
   // Define quick actions
   const quickActions = [
     ...(canAddEvidence() ? [{
@@ -186,9 +204,15 @@ const SingleCaseView = () => {
       onClick: handleAddOffence,
       styles: 'w-full bg-amber-600 text-white hover:bg-amber-700 border-amber-600'
     }] : []),
+    ...(canCreateNote() ? [{
+      icon: <Note fontSize="small" />,
+      label: 'Add Note',
+      onClick: handleCreateNote,
+      styles: 'w-full bg-purple-600 text-white hover:bg-purple-700 border-purple-600'
+    }] : []),
     ...(canCreateReport() ? [{
       icon: <Description fontSize="small" />,
-      label: 'Make New Report',
+      label: 'Generate Report',
       onClick: handleCreateReport,
       styles: 'w-full bg-green-600 text-white hover:bg-green-700 border-green-600'
     }] : [])
@@ -198,13 +222,22 @@ const SingleCaseView = () => {
     'OIC',
     'Crime OIC',
     'Police Constable',
-    'Forensic Officer'
+    'Forensic Officer',
+    'Sergeant',
+  ];
+
+  const dropOfficerRolesForeNotes = [
+    'Police Constable',
+    'Forensic Officer',
+    'Sergeant',
+    'Sub Inspector',
+    'Inspector',
   ];
 
   const formatDate = (dateString) => {
     try {
       return format(new Date(dateString), 'MMM dd, yyyy • h:mm a');
-    } catch (e) {
+    } catch {
       return 'N/A';
     }
   };
@@ -899,7 +932,6 @@ const SingleCaseView = () => {
         context="case"
         contextId={caseId}
       />
-
       <CreateOffenceModal
         open={showCreateOffenceModal}
         onClose={() => setShowCreateOffenceModal(false)}
@@ -908,13 +940,16 @@ const SingleCaseView = () => {
         contextId={caseId}
       />
 
-      {/* <CreateReportModal
-        open={showCreateReportModal}
-        onClose={() => setShowCreateReportModal(false)}
-        canCreate={canCreateReport()}
+      <CreateNoteModal
+        open={showCreateNoteModal}
+        onClose={() => setShowCreateNoteModal(false)}
+        canCreate={canCreateNote()}
         context="case"
         contextId={caseId}
-      /> */}
+        contextData={caseData}
+        dropOfficerRoles={dropOfficerRolesForeNotes}
+        allowedOfficerIds={[caseData.leader_id]}
+      />
 
       <StatusPopup
         open={popup.open}

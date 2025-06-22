@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
     Search, CalendarToday, Person, Edit, LocationOn,
     BusinessCenter, Add, Remove, Save, Cancel, History,
-    Group, Description, FolderOpen, Assignment, DeviceHub
+    Group, Description, FolderOpen, Assignment, DeviceHub, Note
 } from '@mui/icons-material';
 import { apiClient } from '../../config/apiConfig';
 import { useAuth } from '../../contexts/AuthContext';
@@ -17,6 +17,7 @@ import StatusPopup from '../../components/common/StatusPopup';
 import ConfirmationPopup from '../../components/common/ConfirmationPopup';
 import CustomOfficerDropdown from '../../components/dropdowns/CustomOfficerDropdown';
 import CreateEvidenceModal from '../../components/modals/CreateEvidenceModal';
+import CreateNoteModal from '../../components/modals/CreateNoteModal';
 
 const investigationStatusList = [
     { value: 'inprogress', label: 'In Progress', colorVariant: 'blue' },
@@ -36,32 +37,30 @@ const SingleInvestigationView = () => {
     const [confirmationPopup, setConfirmationPopup] = useState({ open: false, type: '', data: null });
     const [availableOfficers, setAvailableOfficers] = useState([]);
     const [selectedOfficerToAdd, setSelectedOfficerToAdd] = useState(null);
-    const [showAddOfficer, setShowAddOfficer] = useState(false);
-    const [selectedOfficersForAdd, setSelectedOfficersForAdd] = useState([]);
+    const [showAddOfficer, setShowAddOfficer] = useState(false); const [selectedOfficersForAdd, setSelectedOfficersForAdd] = useState([]);
     const [openCreateEvidenceModal, setOpenCreateEvidenceModal] = useState(false);
-
-    // Format date helper function
+    const [openCreateNoteModal, setOpenCreateNoteModal] = useState(false);    // Format date helper function
     const formatDate = (dateString) => {
         try {
             return format(new Date(dateString), 'MMM dd, yyyy • h:mm a');
-        } catch (e) {
+        } catch {
             return 'N/A';
         }
-    };
-
-    const formatDateOnly = (dateString) => {
+    }; const formatDateOnly = (dateString) => {
         try {
             return format(new Date(dateString), 'MMM dd, yyyy');
-        } catch (e) {
+        } catch {
             return 'N/A';
         }
-    };
-
-    useEffect(() => {
-        fetchInvestigationData();
-        if (canManageOfficers()) {
-            fetchAvailableOfficers();
-        }
+    }; useEffect(() => {
+        const fetchData = async () => {
+            await fetchInvestigationData();
+            if (canManageOfficers()) {
+                await fetchAvailableOfficers();
+            }
+        };
+        fetchData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [investigationId]);
 
     const fetchInvestigationData = async () => {
@@ -123,9 +122,7 @@ const SingleInvestigationView = () => {
         const isCaseLeader = investigation?.leader_id === user.user_id;
 
         return isOIC || isCrimeOIC || isCaseLeader;
-    };
-
-    const canAddEvidence = () => {
+    }; const canAddEvidence = () => {
         if (!investigation || !user) return false;
         if (investigation.status === 'closed') return false;
         const isWorkingOfficer = investigation.officers?.some(o => o.user_id === user.user_id);
@@ -134,6 +131,26 @@ const SingleInvestigationView = () => {
             user.user_id === investigation.leader_id ||
             isWorkingOfficer;
     };
+
+    // Notes: Case leader, investigation team members, OIC, and Crime OIC can create notes
+    const canCreateNote = () => {
+        if (!investigation || !user) return false;
+        const isWorkingOfficer = investigation.officers?.some(o => o.user_id === user.user_id);
+        const isCaseLeader = investigation.case_leader_id === user.user_id;
+        return user.role === 'OIC' ||
+            user.role === 'Crime OIC' ||
+            isCaseLeader ||
+            isWorkingOfficer;
+    };
+
+
+    const dropOfficerRolesForeNotes = [
+        'Police Constable',
+        'Forensic Officer',
+        'Sergeant',
+        'Sub Inspector',
+        'Inspector',
+    ];
 
     // Edit handlers
     const handleEditToggle = () => {
@@ -283,15 +300,8 @@ const SingleInvestigationView = () => {
             });
         }
         setConfirmationPopup({ open: false, type: '', data: null });
-    };
-
-    const handlePopupClose = () => {
+    }; const handlePopupClose = () => {
         setPopup({ ...popup, open: false });
-    };
-
-    // Evidence creation handler
-    const handleCreateEvidence = () => {
-        setOpenCreateEvidenceModal(true);
     };
 
     const handleEvidenceModalClose = () => {
@@ -305,6 +315,10 @@ const SingleInvestigationView = () => {
         setOpenCreateEvidenceModal(true);
     };
 
+    const handleCreateNote = () => {
+        setOpenCreateNoteModal(true);
+    };
+
     // Define quick actions
     const quickActions = [
         ...(canAddEvidence() ? [{
@@ -312,6 +326,12 @@ const SingleInvestigationView = () => {
             label: 'Add Evidence',
             onClick: handleAddEvidence,
             styles: 'w-full bg-blue-600 text-white hover:bg-blue-700 border-blue-600'
+        }] : []),
+        ...(canCreateNote() ? [{
+            icon: <Note fontSize="small" />,
+            label: 'Add Note',
+            onClick: handleCreateNote,
+            styles: 'w-full bg-purple-600 text-white hover:bg-purple-700 border-purple-600'
         }] : [])
     ];
 
@@ -727,15 +747,25 @@ const SingleInvestigationView = () => {
                 variant="danger"
                 onConfirm={() => handleRemoveOfficer(confirmationPopup.data?.user_id)}
                 onCancel={() => setConfirmationPopup({ open: false, type: '', data: null })}
-            />
-
-            {/* Create Evidence Modal */}
+            />            {/* Create Evidence Modal */}
             <CreateEvidenceModal
                 open={openCreateEvidenceModal}
                 onClose={handleEvidenceModalClose}
                 canCreate={canAddEvidence()}
                 context="investigation"
                 contextId={investigationId}
+            />
+
+            {/* Create Note Modal */}
+            <CreateNoteModal
+                open={openCreateNoteModal}
+                onClose={() => setOpenCreateNoteModal(false)}
+                canCreate={canCreateNote()}
+                context="investigation"
+                contextId={investigationId}
+                contextData={investigation}
+                dropOfficerRoles={dropOfficerRolesForeNotes}
+                allowedOfficerIds={[investigation.leader_id, ...investigation.officers.map(o => o.user_id)]}
             />
         </div>
     );

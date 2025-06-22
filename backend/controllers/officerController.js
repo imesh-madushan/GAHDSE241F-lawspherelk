@@ -53,6 +53,7 @@ exports.searchOfficers = async (req, res) => {
     pageSize: req.body.pageSize || 12,
     dropIds: req.body.dropIds || [],
     dropRoles: req.body.dropRoles || [],
+    extraIds: req.body.extraIds || [],
   };
 
   const token = req.cookies.authtoken;

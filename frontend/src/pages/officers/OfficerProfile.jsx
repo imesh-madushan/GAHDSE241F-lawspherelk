@@ -195,7 +195,6 @@ const OfficerProfile = () => {
     { id: 'complaints', icon: <NotificationImportant fontSize="small" />, label: 'Complaints', count: officerData?.complaints?.length },
     { id: 'investigations', icon: <FormatListBulleted fontSize="small" />, label: 'Investigations', count: officerData?.investigations?.length },
     { id: 'evidence', icon: <Attachment fontSize="small" />, label: 'Evidence', count: officerData?.evidence?.length },
-    { id: 'forensic', icon: <Description fontSize="small" />, label: 'Forensic Reports', count: officerData?.forensicReports?.length },
     { id: 'reports', icon: <Assignment fontSize="small" />, label: 'Reports', count: officerData?.reports?.length }
   ];
 
@@ -209,8 +208,6 @@ const OfficerProfile = () => {
         return <InvestigationsTab data={officerData.investigations} />;
       case 'evidence':
         return <EvidenceTab data={officerData.evidence} />;
-      case 'forensic':
-        return <ForensicReportsTab data={officerData.forensicReports} />;
       case 'reports':
         return <ReportsTab data={officerData.reports} />;
       default:

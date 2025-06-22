@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
     Gavel, CalendarToday, Person, Edit, RemoveRedEye, BusinessCenter, LocalOffer,
     Phone, LocationOn, FindInPage, PersonAdd, Folder, Close, Email, Badge,
-    Save, Cancel, History, AccessTime, Warning, Scale, FolderOpen, Assignment, DeviceHub
+    Save, Cancel, History, AccessTime, Warning, Scale, FolderOpen, Assignment, DeviceHub, Note
 } from '@mui/icons-material';
 import { apiClient } from '../../config/apiConfig';
 import { useAuth } from '../../contexts/AuthContext';
@@ -21,6 +21,7 @@ import VictimsTab from '../../components/offence/tabs/VictimsTab';
 import CreateEvidenceModal from '../../components/modals/CreateEvidenceModal';
 import LinkEvidenceModal from '../../components/modals/LinkEvidenceModal';
 import CreateVictimModal from '../../components/modals/CreateVictimModal';
+import CreateNoteModal from '../../components/modals/CreateNoteModal';
 
 const SingleOffenceView = () => {
     const { offenceId } = useParams();
@@ -37,16 +38,14 @@ const SingleOffenceView = () => {
     const [tabCounts, setTabCounts] = useState({
         evidence: 0,
         victims: 0
-    });
-    const [showCreateEvidenceModal, setShowCreateEvidenceModal] = useState(false);
+    }); const [showCreateEvidenceModal, setShowCreateEvidenceModal] = useState(false);
     const [showLinkEvidenceModal, setShowLinkEvidenceModal] = useState(false);
     const [showCreateVictimModal, setShowCreateVictimModal] = useState(false);
-
-    // Format date helper function
+    const [showCreateNoteModal, setShowCreateNoteModal] = useState(false);    // Format date helper function
     const formatDate = (dateString) => {
         try {
             return format(new Date(dateString), 'MMM dd, yyyy • h:mm a');
-        } catch (e) {
+        } catch {
             return 'N/A';
         }
     };
@@ -56,7 +55,7 @@ const SingleOffenceView = () => {
         if (!dateString) return '';
         try {
             return new Date(dateString).toISOString().slice(0, 16);
-        } catch (e) {
+        } catch {
             return '';
         }
     };
@@ -75,6 +74,8 @@ const SingleOffenceView = () => {
             victims: offenceData.victims?.length || 0
         });
     };
+
+
 
     useEffect(() => {
         const fetchOffenceData = async () => {
@@ -109,6 +110,14 @@ const SingleOffenceView = () => {
     const isCrimeOIC = user?.role === "Crime OIC";
     const isLeader = user?.user_id === offence?.case_leader_id;
 
+    const dropOfficerRolesForeNotes = [
+        'Police Constable',
+        'Forensic Officer',
+        'Sergeant',
+        'Sub Inspector',
+        'Inspector',
+    ];
+
     const canEditOffence = () => {
         if (isOffenceLocked(offence)) return false;
         return isOIC || isCrimeOIC || isLeader;
@@ -127,12 +136,15 @@ const SingleOffenceView = () => {
     const canAddVictimToOffence = () => {
         if (isOffenceLocked(offence)) return false;
         return isOIC || isCrimeOIC || isLeader;
-    };
-
-    // Reports: For closed cases, only OIC can create reports
+    };    // Reports: For closed cases, only OIC can create reports
     const canCreateReport = () => {
         console.log("Checking if user can create report for offence:", offence);
         return (isLeader || isOIC || isCrimeOIC);
+    };
+
+    // Notes: Crime OIC, OIC, and case leader can create notes for crime offences
+    const canCreateNote = () => {
+        return isOIC || isCrimeOIC || isLeader;
     };
 
     // Edit handlers
@@ -275,10 +287,12 @@ const SingleOffenceView = () => {
                 description: err.response?.data?.message || ""
             });
         }
+    }; const handlePopupClose = () => {
+        setPopup({ ...popup, open: false });
     };
 
-    const handlePopupClose = () => {
-        setPopup({ ...popup, open: false });
+    const handleCreateNote = () => {
+        setShowCreateNoteModal(true);
     };
 
     // Quick actions (always show Make New Report if allowed, match SingleCaseView style)
@@ -295,11 +309,11 @@ const SingleOffenceView = () => {
             onClick: () => setShowCreateVictimModal(true),
             styles: 'w-full bg-red-600 text-white hover:bg-red-700 border-red-600'
         }] : []),
-        ...(canCreateReport() ? [{
-            icon: <Assignment fontSize="small" />,
-            label: 'Make New Report',
-            onClick: () => navigate(`/reports/create?offenceId=${offenceId}`),
-            styles: 'w-full bg-green-600 text-white hover:bg-green-700 border-green-600'
+        ...(canCreateNote() ? [{
+            icon: <Note fontSize="small" />,
+            label: 'Add Note',
+            onClick: handleCreateNote,
+            styles: 'w-full bg-purple-600 text-white hover:bg-purple-700 border-purple-600'
         }] : [])
     ];
 
@@ -685,14 +699,24 @@ const SingleOffenceView = () => {
                 onClose={() => setShowLinkEvidenceModal(false)}
                 offenceId={offenceId}
                 caseId={offence?.case_id}
-            />
-
-            {/* Create Victim Modal */}
+            />            {/* Create Victim Modal */}
             <CreateVictimModal
                 open={showCreateVictimModal}
                 onClose={() => setShowCreateVictimModal(false)}
                 offenceId={offenceId}
                 canCreate={canAddVictimToOffence()}
+            />
+
+            {/* Create Note Modal */}
+            <CreateNoteModal
+                open={showCreateNoteModal}
+                onClose={() => setShowCreateNoteModal(false)}
+                canCreate={canCreateNote()}
+                context="offence"
+                contextId={offenceId}
+                contextData={offence}
+                dropOfficerRoles={dropOfficerRolesForeNotes}
+                allowedOfficerIds={[offence?.case_leader_id]}
             />
         </div>
     );

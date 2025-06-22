@@ -7,7 +7,7 @@ const CustomOfficerDropdown = ({
     selectedOfficerId,
     onOfficerSelect,
     setError,
-    className = ""
+    className = "",
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');

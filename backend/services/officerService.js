@@ -53,7 +53,9 @@ exports.searchOfficers = async (filters, userRole, userId) => {
     pageSize = 12,
     dropIds,
     dropRoles,
+    extraIds
   } = filters;
+
   let query = `SELECT
                 u.user_id AS id,
                 u.name,
@@ -118,6 +120,34 @@ exports.searchOfficers = async (filters, userRole, userId) => {
   params.push(pageSize, offset);
 
   const [officers] = await db.query(query, params);
+
+  // If extraIds are provided, fetch and append them
+  if (extraIds && extraIds.length > 0) {
+    const extraQuery = `
+      SELECT
+        u.user_id AS id,
+        u.name,
+        u.role,
+        u.email,
+        u.phone,
+        u.nic,
+        u.profile_pic AS image,
+        (SELECT COUNT(*) FROM Cases c WHERE c.leader_id = u.user_id AND c.status = 'inprogress') AS leading_ongoing_cases,
+        l.account_locked
+      FROM Users u
+      LEFT JOIN Login l ON u.user_id = l.user_id
+      WHERE u.user_id IN (?)
+    `;
+    const [extraOfficers] = await db.query(extraQuery, [extraIds]);
+    //add to officers if not already present
+    const existingIds = new Set(officers.map((o) => o.id));
+    extraOfficers.forEach((o) => {
+      if (!existingIds.has(o.id)) {
+        officers.push(o);
+      }
+    });
+  }
+
   return officers;
 };
 

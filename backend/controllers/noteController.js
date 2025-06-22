@@ -43,7 +43,6 @@ exports.createNote = async (req, res) => {
       description,
       receiver_id,
     };
-
     // Create the note
     const result = await noteService.createNote(noteData, user.user_id);
 
