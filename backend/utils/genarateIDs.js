@@ -14,49 +14,50 @@ const idPatterns = {
     usersessions:    { prefix: "S",    column: "session_id" },
     audit_log:       { prefix: "AUD",  column: "audit_id" },
     attachments:     { prefix: "ATT",  column: "attachment_id" },
-    notes:           { prefix: "N",    column: "note_id" },
+    notes:           { prefix: "NOTE",    column: "note_id" },
 };
 
 // Helper to generate a random ID with a prefix and N digits
 function randomId(prefix, digits = 10) {
-    const num = Math.floor(Math.random() * Math.pow(10, digits));
-    return `${prefix}${num.toString().padStart(digits, "0")}`;
+  const num = Math.floor(Math.random() * Math.pow(10, digits));
+  return `${prefix}${num.toString().padStart(digits, "0")}`;
 }
 
 // Generate a unique ID for a given table
 const generateUniqueId = async (table) => {
-    const pattern = idPatterns[table];
-    if (!pattern) throw new Error(`Unknown table for ID generation: ${table}`);
+  const pattern = idPatterns[table];
+  if (!pattern) throw new Error(`Unknown table for ID generation: ${table}`);
 
-    let unique = false;
-    let maxAttempts = 10;
-    let newId = "";
-    while (!unique && maxAttempts > 0) {
-        newId = randomId(pattern.prefix);
-        const query = `SELECT 1 FROM \`${table}\` WHERE \`${pattern.column}\` = ? LIMIT 1`;
-        const [rows] = await db.query(query, [newId]);
-        if (rows.length === 0) unique = true;
-        maxAttempts--;
-    }
-    return newId;
+  let unique = false;
+  let maxAttempts = 10;
+  let newId = "";
+  while (!unique && maxAttempts > 0) {
+    newId = randomId(pattern.prefix);
+    const query = `SELECT 1 FROM \`${table}\` WHERE \`${pattern.column}\` = ? LIMIT 1`;
+    const [rows] = await db.query(query, [newId]);
+    if (rows.length === 0) unique = true;
+    maxAttempts--;
+  }
+  return newId;
 };
 
 const generateBatchId = async () => {
-    const prefix = "B";
-    let unique = false;
-    let maxAttempts = 10;
-    let newId = "";
-    while (!unique && maxAttempts > 0) {
-        newId = randomId(prefix);
-        const query = `SELECT 1 FROM \`audit_log\` WHERE \`batch_id\` = ? LIMIT 1`;
-        const [rows] = await db.query(query, [newId]);
-        if (rows.length === 0) unique = true;
-        maxAttempts--;
-    }
-    return newId;
-}
+  const prefix = "B";
+  let unique = false;
+  let maxAttempts = 10;
+  let newId = "";
+  while (!unique && maxAttempts > 0) {
+    newId = randomId(prefix);
+    const query = `SELECT 1 FROM \`audit_log\` WHERE \`batch_id\` = ? LIMIT 1`;
+    const [rows] = await db.query(query, [newId]);
+    if (rows.length === 0) unique = true;
+    maxAttempts--;
+  }
+  return newId;
+};
 
 module.exports = {
-    generateUniqueId,
-    generateBatchId
+  generateUniqueId,
+  generateBatchId,
+  generateNoteID: async () => await generateUniqueId("notes"),
 };
