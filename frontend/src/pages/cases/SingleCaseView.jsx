@@ -10,6 +10,7 @@ import {
 } from '@mui/icons-material';
 import { apiClient } from '../../config/apiConfig';
 import { format } from 'date-fns';
+import { downloadCaseReport, validateCaseForReport } from '../../utils/reportUtils';
 import PageHeader from '../../components/common/PageHeader';
 import TabNavigation from '../../components/case/TabNavigation';
 import EvidenceTab from '../../components/case/tabs/EvidenceTab';
@@ -166,19 +167,86 @@ const SingleCaseView = () => {
         description: 'Cannot add new offence to a closed case.',
         referenceLink: null
       });
-      return;
-    }
+      return;    }
     setShowCreateOffenceModal(true);
   };
-  const handleCreateReport = () => {
-    // setShowCreateReportModal(true);
-    setPopup({
-      open: true,
-      status: 'info',
-      message: 'Feature Coming Soon',
-      description: 'Report creation functionality will be available in the next update.',
-      referenceLink: null
-    });
+    const handleCreateReport = async () => {
+    try {
+      // Validate case data before generating report
+      const validation = validateCaseForReport(caseData);
+      
+      if (!validation.isValid) {
+        setPopup({
+          open: true,
+          status: 'error',
+          message: 'Cannot Generate Report',
+          description: `Please fix the following issues: ${validation.errors.join(', ')}`,
+          referenceLink: null
+        });
+        return;
+      }
+
+      // Show warnings if any
+      if (validation.warnings.length > 0) {
+        setPopup({
+          open: true,
+          status: 'warning',
+          message: 'Report Generation Warning',
+          description: `Note: ${validation.warnings.join(', ')}. Report will still be generated.`,
+          referenceLink: null
+        });
+        
+        // Continue after showing warning
+        setTimeout(async () => {
+          await generateReport();
+        }, 2000);
+        return;
+      }
+
+      await generateReport();
+
+    } catch (error) {
+      console.error('Error in handleCreateReport:', error);
+      setPopup({
+        open: true,
+        status: 'error',
+        message: 'Report Generation Failed',
+        description: error.message || 'An unexpected error occurred while generating the report.',
+        referenceLink: null
+      });
+    }
+  };
+
+  const generateReport = async () => {
+    try {
+      setPopup({
+        open: true,
+        status: 'info',
+        message: 'Generating Report...',
+        description: 'Please wait while we generate your comprehensive case report PDF.',
+        referenceLink: null
+      });
+
+      const result = await downloadCaseReport(caseId);
+
+      setPopup({
+        open: true,
+        status: 'success',
+        message: 'Report Generated Successfully',
+        description: `Case report has been generated and downloaded as ${result.filename}`,
+        referenceLink: null
+      });
+
+    } catch (error) {
+      console.error('Error generating report:', error);
+      setPopup({
+        open: true,
+        status: 'error',
+        message: 'Report Generation Failed',
+        description: error.message || 'Failed to generate case report. Please try again.',
+        referenceLink: null
+      });
+    }
   };
 
   const handleCreateNote = () => {

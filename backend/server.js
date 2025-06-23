@@ -18,6 +18,7 @@ const evidenceRoutes = require("./routes/evidenceRoutes");
 const noteRoutes = require("./routes/noteRoutes");
 const auditRoutes = require("./routes/auditRoutes");
 const onlineComplaintRoutes = require("./routes/onlineComplaintRoutes");
+const reportRoutes = require("./routes/reportRoutes");
 const {
   decryptRequest,
   encryptResponse,
@@ -46,6 +47,7 @@ app.use("/api/investigations", investigationRoutes);
 app.use("/api/evidences", evidenceRoutes);
 app.use("/api/notes", noteRoutes);
 app.use("/api/audit", auditRoutes);
+app.use("/api/reports", reportRoutes);
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
