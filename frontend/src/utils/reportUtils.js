@@ -7,23 +7,28 @@
  */
 export const downloadCaseReport = async (caseId) => {
   try {
-    const response = await fetch(`http://localhost:5000/api/reports/case/${caseId}/pdf`, {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    const response = await fetch(
+      `http://localhost:5000/api/reports/case/${caseId}/pdf`,
+      {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to generate report');
+      throw new Error(errorData.message || "Failed to generate report");
     }
 
     // Get the filename from Content-Disposition header
-    const contentDisposition = response.headers.get('Content-Disposition');
-    let filename = `Case_Report_${caseId}_${new Date().toISOString().slice(0, 10)}.pdf`;
-    
+    const contentDisposition = response.headers.get("Content-Disposition");
+    let filename = `Case_Report_${caseId}_${new Date()
+      .toISOString()
+      .slice(0, 10)}.pdf`;
+
     if (contentDisposition) {
       const filenameMatch = contentDisposition.match(/filename="(.+)"/);
       if (filenameMatch) {
@@ -33,25 +38,24 @@ export const downloadCaseReport = async (caseId) => {
 
     // Convert response to blob
     const blob = await response.blob();
-    
+
     // Create download link
     const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
     link.download = filename;
-    
+
     // Trigger download
     document.body.appendChild(link);
     link.click();
-    
+
     // Cleanup
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
 
     return { success: true, filename };
-
   } catch (error) {
-    console.error('Error downloading case report:', error);
+    console.error("Error downloading case report:", error);
     throw error;
   }
 };
@@ -63,24 +67,26 @@ export const downloadCaseReport = async (caseId) => {
  */
 export const getReportHistory = async (caseId) => {
   try {
-    const response = await fetch(`http://localhost:5000/api/reports/case/${caseId}/history`, {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    const response = await fetch(
+      `http://localhost:5000/api/reports/case/${caseId}/history`,
+      {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to get report history');
+      throw new Error(errorData.message || "Failed to get report history");
     }
 
     const data = await response.json();
     return data.reports;
-
   } catch (error) {
-    console.error('Error getting report history:', error);
+    console.error("Error getting report history:", error);
     throw error;
   }
 };
@@ -91,13 +97,13 @@ export const getReportHistory = async (caseId) => {
  * @returns {string}
  */
 export const formatFileSize = (bytes) => {
-  if (bytes === 0) return '0 Bytes';
-  
+  if (bytes === 0) return "0 Bytes";
+
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 };
 
 /**
@@ -110,33 +116,33 @@ export const validateCaseForReport = (caseData) => {
   const errors = [];
 
   if (!caseData.case_id) {
-    errors.push('Case ID is missing');
+    errors.push("Case ID is missing");
   }
 
   if (!caseData.topic) {
-    warnings.push('Case topic is not set');
+    warnings.push("Case topic is not set");
   }
 
   if (!caseData.leader_name) {
-    warnings.push('Case leader is not assigned');
+    warnings.push("Case leader is not assigned");
   }
 
   if (!caseData.evidence || caseData.evidence.length === 0) {
-    warnings.push('No evidence has been collected for this case');
+    warnings.push("No evidence has been collected for this case");
   }
 
   if (!caseData.investigations || caseData.investigations.length === 0) {
-    warnings.push('No investigations have been recorded for this case');
+    warnings.push("No investigations have been recorded for this case");
   }
 
   if (!caseData.offences || caseData.offences.length === 0) {
-    warnings.push('No crime offences have been filed for this case');
+    warnings.push("No crime offences have been filed for this case");
   }
 
   return {
     isValid: errors.length === 0,
     errors,
     warnings,
-    canGenerate: errors.length === 0
+    canGenerate: errors.length === 0,
   };
 };

@@ -167,14 +167,15 @@ const SingleCaseView = () => {
         description: 'Cannot add new offence to a closed case.',
         referenceLink: null
       });
-      return;    }
+      return;
+    }
     setShowCreateOffenceModal(true);
   };
-    const handleCreateReport = async () => {
+  const handleCreateReport = async () => {
     try {
       // Validate case data before generating report
       const validation = validateCaseForReport(caseData);
-      
+
       if (!validation.isValid) {
         setPopup({
           open: true,
@@ -195,7 +196,7 @@ const SingleCaseView = () => {
           description: `Note: ${validation.warnings.join(', ')}. Report will still be generated.`,
           referenceLink: null
         });
-        
+
         // Continue after showing warning
         setTimeout(async () => {
           await generateReport();

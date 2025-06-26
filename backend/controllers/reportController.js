@@ -5,7 +5,7 @@ const reportService = require("../services/reportService");
 exports.generateCaseReport = async (req, res) => {
   try {
     const { caseId } = req.params;
-    
+
     // Verify authentication
     const token = req.cookies.authtoken;
     if (!token) {
@@ -20,8 +20,8 @@ exports.generateCaseReport = async (req, res) => {
     // Check if user has permission to generate reports
     const allowedRoles = ["OIC", "Crime OIC", "Sub Inspector", "Inspector"];
     if (!allowedRoles.includes(user.role)) {
-      return res.status(403).json({ 
-        message: "Access denied. Insufficient permissions to generate reports." 
+      return res.status(403).json({
+        message: "Access denied. Insufficient permissions to generate reports.",
       });
     }
 
@@ -33,23 +33,25 @@ exports.generateCaseReport = async (req, res) => {
     const report = await reportService.generateCaseReport(caseId, user.user_id);
 
     // Set response headers for PDF download
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${report.fileName}"`);
-    res.setHeader('Content-Length', report.fileSize);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${report.fileName}"`
+    );
+    res.setHeader("Content-Length", report.fileSize);
 
     // Send the PDF buffer
     res.send(report.buffer);
-
   } catch (error) {
     console.error("Error generating case report:", error);
-    
-    if (error.message === 'Case not found') {
+
+    if (error.message === "Case not found") {
       return res.status(404).json({ message: "Case not found" });
     }
-    
-    res.status(500).json({ 
+
+    res.status(500).json({
       message: "Failed to generate case report",
-      error: error.message 
+      error: error.message,
     });
   }
 };
@@ -58,7 +60,7 @@ exports.generateCaseReport = async (req, res) => {
 exports.getReportHistory = async (req, res) => {
   try {
     const { caseId } = req.params;
-    
+
     // Verify authentication
     const token = req.cookies.authtoken;
     if (!token) {
@@ -72,16 +74,15 @@ exports.getReportHistory = async (req, res) => {
 
     // For now, we'll return empty array since we're not storing report history in database
     // This can be extended later to track report generation history
-    res.status(200).json({ 
+    res.status(200).json({
       message: "Report history retrieved successfully",
-      reports: []
+      reports: [],
     });
-
   } catch (error) {
     console.error("Error retrieving report history:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Failed to retrieve report history",
-      error: error.message 
+      error: error.message,
     });
   }
 };
